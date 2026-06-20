@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>gym-coach</title>
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #141414;
+      --surface2: #1E1E1E;
+      --accent: #FF3800;
+      --accent-dim: rgba(255,56,0,0.10);
+      --text1: #EBEBEB;
+      --text2: #777777;
+      --text3: #383838;
+      --green: #22C55E;
+      --border: #222222;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text1);
+      font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 110px;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky; top: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 12px;
+      z-index: 100;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .logo { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+    .date-label { font-size: 12px; color: var(--text2); }
+    .routine-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .progress-bar { display: flex; gap: 5px; }
+    .progress-dot { flex: 1; height: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
+    .progress-dot.done { background: var(--accent); }
+
+    /* ── Intro ── */
+    .intro-card {
+      margin: 14px 16px;
+      padding: 14px 16px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255,56,0,0.18);
+      border-radius: 12px;
+    }
+    .intro-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+    .intro-text { font-size: 14px; color: var(--text1); line-height: 1.65; white-space: pre-wrap; }
+
+    /* ── Exercise card ── */
+    .exercise-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .exercise-card.completed { border-color: rgba(34,197,94,0.35); }
+
+    .card-header { padding: 13px 15px 10px; border-bottom: 1px solid var(--border); }
+    .exercise-num { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 0.12em; margin-bottom: 3px; }
+    .exercise-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+    .exercise-tag {
+      display: inline-block; margin-top: 6px;
+      padding: 2px 9px;
+      background: rgba(255,184,0,0.12); border: 1px solid rgba(255,184,0,0.28);
+      border-radius: 20px; font-size: 10px; color: #FFB800; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+
+    .card-meta { padding: 10px 15px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; }
+    .meta-value { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .meta-value.muted { color: var(--text2); font-weight: 400; font-size: 12px; }
+
+    .memo-row { padding: 8px 15px; background: var(--surface2); font-size: 12px; color: var(--text2); line-height: 1.4; border-bottom: 1px solid var(--border); }
+
+    .card-body { padding: 13px 15px; }
+    .weight-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .weight-label { font-size: 12px; color: var(--text2); width: 58px; flex-shrink: 0; }
+    .weight-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text1);
+      font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums;
+      padding: 8px 10px; width: 86px; text-align: center;
+      -webkit-appearance: none; appearance: none;
+    }
+    .weight-input:focus { outline: none; border-color: var(--accent); }
+    .weight-unit { font-size: 12px; color: var(--text2); }
+
+    .sets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 8px; }
+    .set-item { display: flex; flex-direction: column; gap: 4px; }
+    .set-label { font-size: 10px; color: var(--text3); text-align: center; text-transform: uppercase; letter-spacing: 0.06em; }
+    .set-input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text1);
+      font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+      padding: 10px 4px; text-align: center; width: 100%;
+      -webkit-appearance: none; appearance: none;
+    }
+    .set-input:focus { outline: none; border-color: var(--accent); }
+    .set-input.has-value { border-color: rgba(34,197,94,0.4); color: var(--green); }
+
+    /* ── Complete btn ── */
+    .complete-area {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 14px 16px 24px;
+      background: linear-gradient(to top, var(--bg) 65%, transparent);
+    }
+    .complete-btn {
+      width: 100%; padding: 16px;
+      background: var(--accent); border: none; border-radius: 14px;
+      color: white; font-size: 16px; font-weight: 800; letter-spacing: 0.02em;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .complete-btn:active { opacity: 0.82; transform: scale(0.98); }
+    .complete-btn:disabled { background: var(--text3); cursor: not-allowed; transform: none; }
+
+    /* ── Outro ── */
+    .outro-card {
+      margin: 14px 16px 30px;
+      padding: 18px;
+      background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 12px;
+    }
+    .outro-label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+    .outro-text { font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+
+    /* ── Loading ── */
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 16px; }
+    .spinner { width: 34px; height: 34px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--text2); }
+
+    /* ── Error / Rest ── */
+    .error-card { margin: 40px 16px; padding: 20px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; text-align: center; }
+    .error-card h3 { color: #ef4444; margin-bottom: 8px; }
+    .error-card p { font-size: 13px; color: var(--text2); }
+    .rest-day { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; text-align: center; gap: 12px; }
+    .rest-day h2 { font-size: 26px; font-weight: 800; }
+    .rest-day p { font-size: 14px; color: var(--text2); }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const CONFIG = {
+  url: 'https://script.google.com/macros/s/AKfycbwiIVkYdpYS2ve9wu8RBSgGfSBTxHTRW3swVogKiN-vxwxEwhYumlz6C2zASpgnLGLmnA/exec',
+  token: 'jty5375'
+};
+
+let missionData = null;
+
+/* ── API ── */
+async function apiGet(params) {
+  const url = new URL(CONFIG.url);
+  url.searchParams.set('token', CONFIG.token);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  return res.json();
+}
+
+async function apiPost(body) {
+  const res = await fetch(CONFIG.url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ token: CONFIG.token, ...body }),
+    redirect: 'follow',
+  });
+  return res.json();
+}
+
+/* ── 렌더 유틸 ── */
+function render(html) { document.getElementById('app').innerHTML = html; }
+
+function renderLoading(msg = '불러오는 중...') {
+  render(`<div class="loading"><div class="spinner"></div><p class="loading-text">${msg}</p></div>`);
+}
+
+function renderError(msg) {
+  render(`<div class="error-card"><h3>오류가 발생했어요</h3><p>${msg}</p></div>`);
+}
+
+function renderRestDay() {
+  render(`<div class="rest-day"><h2>💤 오늘은 쉬는 날</h2><p>회복도 훈련이에요. 잘 쉬어요.</p></div>`);
+}
+
+/* ── 메인 화면 렌더 ── */
+function renderMission(data, intro) {
+  const { date, day, routineName, exercises, lastWeekLog } = data;
+  const routineShort = routineName.includes(':') ? routineName.split(':').slice(1).join(':').trim() : routineName;
+  const d = new Date(date);
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+  const dots = exercises.map((_,i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
+
+  const introHtml = intro ? `
+    <div class="intro-card">
+      <div class="intro-label">코치 메시지</div>
+      <div class="intro-text">${intro}</div>
+    </div>` : '';
+
+  const cards = exercises.map((ex, i) => {
+    const norm = s => s.replace(/\s/g,'');
+    const lastEx = (lastWeekLog||[]).find(l => norm(l.name) === norm(ex.name));
+    const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
+    const targetStr = hasTarget ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트` : `${ex.sets}세트 (목표 미설정)`;
+    const lastStr = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : '기록 없음';
+
+    const setInputs = Array.from({length: ex.sets}, (_,s) => `
+      <div class="set-item">
+        <div class="set-label">S${s+1}</div>
+        <input class="set-input" type="number" inputmode="numeric" id="reps-${i}-${s}"
+          placeholder="${ex.targetReps||'-'}" onchange="onSetInput(${i})">
+      </div>`).join('');
+
+    return `
+      <div class="exercise-card" id="card-${i}">
+        <div class="card-header">
+          <div class="exercise-num">EXERCISE ${String(i+1).padStart(2,'0')}</div>
+          <div class="exercise-name">${ex.name}</div>
+          ${ex.tag ? `<span class="exercise-tag">${ex.tag}</span>` : ''}
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">
+            <div class="meta-label">목표</div>
+            <div class="meta-value ${hasTarget?'':'muted'}">${targetStr}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">지난 기록</div>
+            <div class="meta-value ${lastEx?'':'muted'}">${lastStr}</div>
+          </div>
+        </div>
+        ${ex.memo ? `<div class="memo-row">📝 ${ex.memo}</div>` : ''}
+        <div class="card-body">
+          <div class="weight-row">
+            <span class="weight-label">실제 중량</span>
+            <input class="weight-input" type="number" inputmode="decimal"
+              id="weight-${i}" value="${hasTarget ? ex.targetWeight : ''}" placeholder="${hasTarget ? ex.targetWeight : '?'}">
+            <span class="weight-unit">kg</span>
+          </div>
+          <div class="sets-grid">${setInputs}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  render(`
+    <div class="header">
+      <div class="header-top">
+        <div class="logo">GYM-COACH</div>
+        <div class="date-label">${dateStr} ${day}요일</div>
+      </div>
+      <div class="routine-name">${routineShort}</div>
+      <div class="progress-bar">${dots}</div>
+    </div>
+    ${introHtml}
+    ${cards}
+    <div class="complete-area">
+      <button class="complete-btn" onclick="onComplete()">💪 운동 완료</button>
+    </div>`);
+}
+
+/* ── 이벤트 ── */
+function onSetInput(idx) {
+  const ex = missionData.exercises[idx];
+  let allFilled = true;
+  for (let s = 0; s < ex.sets; s++) {
+    const el = document.getElementById(`reps-${idx}-${s}`);
+    if (el.value) el.classList.add('has-value');
+    else { el.classList.remove('has-value'); allFilled = false; }
+  }
+  document.getElementById(`card-${idx}`).classList.toggle('completed', allFilled);
+  document.getElementById(`dot-${idx}`).classList.toggle('done', allFilled);
+}
+
+async function onComplete() {
+  const results = missionData.exercises.map((ex, i) => ({
+    name: ex.name,
+    variation: ex.variation || '',
+    sets: ex.sets,
+    weight: parseFloat(document.getElementById(`weight-${i}`)?.value) || ex.targetWeight || 0,
+    reps: Array.from({length: ex.sets}, (_,s) => {
+      const v = document.getElementById(`reps-${i}-${s}`)?.value;
+      return v ? parseInt(v) : 0;
+    }),
+    memo: '',
+  }));
+
+  const btn = document.querySelector('.complete-btn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  try {
+    await apiPost({ action: 'saveResult', data: {
+      date: missionData.date, day: missionData.day,
+      routineName: missionData.routineName, results,
+    }});
+
+    btn.textContent = '피드백 받는 중...';
+    const outro = await apiPost({ action: 'getCoaching', type: 'outro',
+      missionData: { mission: missionData, results },
+    });
+
+    // complete-area 제거 후 아웃트로 추가
+    document.querySelector('.complete-area')?.remove();
+    const el = document.createElement('div');
+    el.className = 'outro-card';
+    el.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${outro.text || '오늘도 수고했어! 💪'}</div>`;
+    document.getElementById('app').appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '💪 운동 완료';
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ── 초기화 ── */
+async function init() {
+  renderLoading('오늘의 미션 불러오는 중...');
+  try {
+    const data = await apiGet({ action: 'getMission' });
+    if (data.error) throw new Error(data.error);
+    missionData = data;
+
+    if (!data.exercises || data.exercises.length === 0) { renderRestDay(); return; }
+
+    renderLoading('코치 메시지 받는 중...');
+    let intro = null;
+    try {
+      const r = await apiGet({ action: 'getCoaching', type: 'intro',
+        missionData: encodeURIComponent(JSON.stringify(data)) });
+      intro = r.text;
+    } catch(_) {}
+
+    renderMission(data, intro);
+  } catch(err) {
+    renderError(err.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
