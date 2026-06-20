@@ -110,28 +110,9 @@
     }
 
     /* Progress dots */
-    .progress-bar { display: flex; gap: 5px; margin-bottom: 16px; }
+    .progress-bar { display: flex; gap: 5px; }
     .progress-dot { flex: 1; height: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .progress-dot.done { background: var(--accent); }
-
-    /* Condition input */
-    .field-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-    .condition-input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1.5px solid var(--border2);
-      border-radius: 13px;
-      color: var(--text1);
-      font-size: 14px;
-      padding: 12px 14px;
-      outline: none;
-      resize: none;
-      min-height: 68px;
-      font-family: inherit;
-      line-height: 1.6;
-    }
-    .condition-input::placeholder { color: var(--text3); }
-    .condition-input:focus { border-color: var(--accent); }
 
     /* ── Intro Popup ── */
     .popup-overlay {
@@ -817,8 +798,6 @@ function renderMain() {
         </div>
       </div>
       <div class="progress-bar">${dots}</div>
-      <div class="field-label">컨디션 및 특이사항</div>
-      <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
     </div>
 
     <div id="cards"></div>
