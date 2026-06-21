@@ -121,6 +121,11 @@
     .memo-textarea::placeholder { color: #444; }
     .memo-textarea:focus { border-color: var(--accent); }
 
+    /* ── Superset Card ── */
+    .superset-section { background: #111; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
+    .superset-section-label { font-size: 13px; font-weight: 800; color: var(--text1); margin-bottom: 8px; }
+    .superset-divider { text-align: center; font-size: 13px; font-weight: 800; color: var(--accent); padding: 6px 0; letter-spacing: 3px; }
+
     /* ── Add Exercise ── */
     .add-ex-btn { width: 100%; background: #1a1a1a; border: 2px dashed #2a2a2a; color: #555; font-size: 14px; font-weight: 700; padding: 16px; border-radius: 20px; cursor: pointer; margin-bottom: 14px; font-family: inherit; transition: all .2s; }
     .add-ex-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -307,15 +312,20 @@ function getMockMission() {
     date: toIso(today), day: dayNames[today.getDay()],
     routineName: '테스트: 상체 A',
     exercises: [
-      { name: '벤치프레스',         sets: 4, tag: null, variation: '', targetWeight: 80, targetReps: 8,  memo: '' },
-      { name: '인클라인 덤벨프레스', sets: 3, tag: null, variation: '', targetWeight: 24, targetReps: 10, memo: '' },
-      { name: '케이블 크로스오버',   sets: 3, tag: null, variation: '', targetWeight: 15, targetReps: 12, memo: '' },
-      { name: '렛풀다운',            sets: 3, tag: null, variation: '', targetWeight: 60, targetReps: 10, memo: '' },
-      { name: '시티드 로우',         sets: 3, tag: null, variation: '', targetWeight: 55, targetReps: 12, memo: '' },
+      { name: '벤치프레스', sets: 4, tag: null, isSuperset: false, variation: '', targetWeight: 80, targetReps: 8, memo: '' },
+      {
+        name: '상체 슈퍼세트', sets: 3, tag: null, isSuperset: true,
+        subExercises: [
+          { name: '인클라인 벤치프레스', variation: '', targetWeight: 35, targetReps: 10, memo: '' },
+          { name: '티바 머신 로우',      variation: '', targetWeight: 35, targetReps: 10, memo: '' },
+        ],
+      },
+      { name: '케이블 크로스오버', sets: 3, tag: null, isSuperset: false, variation: '', targetWeight: 15, targetReps: 12, memo: '' },
     ],
     lastWeekLog: [
       { name: '벤치프레스',         variation: '', sets: 4, reps: ['8','8','7','7'], weight: 80 },
-      { name: '인클라인 덤벨프레스', variation: '', sets: 3, reps: ['10','9','9'],   weight: 24 },
+      { name: '인클라인 벤치프레스', variation: '', sets: 3, reps: ['10','9','9'],   weight: 35 },
+      { name: '티바 머신 로우',      variation: '', sets: 3, reps: ['10','10','9'],  weight: 35 },
     ],
   };
 }
@@ -646,9 +656,20 @@ async function startWorkout() {
   const lastLog = missionData.lastWeekLog || [];
   const norm    = str => str.replace(/\s/g,'');
   exercises = missionData.exercises.map((ex, i) => {
+    if (ex.isSuperset) {
+      const subExercises = (ex.subExercises || []).map(sub => {
+        const lastEx = lastLog.find(l => norm(l.name) === norm(sub.name));
+        return {
+          name: sub.name, variation: sub.variation || '',
+          targetWeight: sub.targetWeight || 0, targetReps: sub.targetReps || 0,
+          lastRecord: lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null,
+        };
+      });
+      return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, isSuperset: true, subExercises };
+    }
     const lastEx     = lastLog.find(l => norm(l.name) === norm(ex.name));
     const lastRecord = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
-    return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
+    return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, isSuperset: false, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
   });
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
@@ -729,6 +750,55 @@ function renderCards() {
       return;
     }
 
+    // ── 슈퍼세트 카드 ──────────────────────────────────────────
+    if (ex.isSuperset) {
+      const subLabels = ['🅐', '🅑', '🅒'];
+      let sectionsHTML = '';
+      (ex.subExercises || []).forEach((sub, subIdx) => {
+        const tgt = `${sub.targetWeight||0}kg × ${sub.targetReps||'-'}회`;
+        const lastBadge = sub.lastRecord
+          ? `<span class="meta-tag last" style="font-size:11px">지난: ${sub.lastRecord}</span>` : '';
+        let setsHTML = '';
+        for (let s = 1; s <= ex.sets; s++) {
+          const key = `${ex.id}_${subIdx}`;
+          const sv = repsData[key]?.[s] || '';
+          setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
+        }
+        if (subIdx > 0) sectionsHTML += `<div class="superset-divider">⚡ ⚡ ⚡</div>`;
+        sectionsHTML += `
+          <div class="superset-section">
+            <div class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}</div>
+            <div style="color:var(--accent);font-size:14px;font-weight:800;margin-bottom:8px;">🎯 ${tgt}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span class="sec-label" style="margin-bottom:0;">수행 결과</span>${lastBadge}
+            </div>
+            <div class="sets-row">${setsHTML}</div>
+          </div>`;
+      });
+      const sharedBody = !isSkipped ? `
+        <div class="sec-label" style="margin-top:14px;">휴식시간</div>
+        <div class="rest-row">
+          <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.min||''}" oninput="onRestInput(${ex.id},'min',this.value)"><span class="rest-unit-abs">분</span></div></div>
+          <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.sec||''}" oninput="onRestInput(${ex.id},'sec',this.value)"><span class="rest-unit-abs">초</span></div></div>
+        </div>
+        <div class="sec-label">메모</div>
+        <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
+      const ssRightBtns = `<div class="card-btns">
+        <button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button>
+        <div class="skip-arrow-row">
+          <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
+          <button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button>
+        </div>
+      </div>`;
+      const card = document.createElement('div');
+      card.id = `card-${idx}`;
+      card.className = `ex-card${isSkipped?' skipped':''}`;
+      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div>${ssRightBtns}</div></div>${sectionsHTML}${sharedBody}`;
+      container.appendChild(card);
+      return;
+    }
+
+    // ── 일반 카드 ───────────────────────────────────────────────
     const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
     const targetText = hasTarget 
       ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트` 
@@ -806,6 +876,24 @@ function onRestInput(id, field, val) {
   if (!restData[id]) restData[id] = {};
   restData[id][field] = val;
 }
+function onSupersetInput(idx, subIdx) {
+  const ex  = exercises[idx];
+  const key = `${ex.id}_${subIdx}`;
+  if (!repsData[key]) repsData[key] = {};
+  for (let s = 1; s <= ex.sets; s++) {
+    const el  = document.getElementById(`e${ex.id}_${subIdx}s${s}`);
+    const val = el?.value || '';
+    if (val) { el.classList.add('has-value'); repsData[key][s] = val; }
+    else     { el?.classList.remove('has-value'); repsData[key][s] = ''; }
+  }
+  // 모든 서브 종목의 모든 세트가 입력됐으면 자동 접기
+  const numSubs = ex.subExercises?.length || 0;
+  const allDone = Array.from({ length: numSubs }, (_, si) => {
+    const k = `${ex.id}_${si}`;
+    return Array.from({ length: ex.sets }, (_, s) => !!(repsData[k]?.[s+1])).every(Boolean);
+  }).every(Boolean);
+  if (allDone) { collapsedCards[ex.id] = true; renderCards(); }
+}
 function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
 function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
 function moveEx(idx, dir) {
@@ -838,14 +926,29 @@ function confirmAdd() {
 
 /* ── Complete ──────────────────────────────────────────────── */
 async function onComplete() {
-  const results = exercises.map(ex => ({
-    name: ex.name, variation: ex.variation||'', sets: ex.sets, weight: ex.targetWeight||0,
-    reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
-    memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
-    restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
-    restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
-    skipped: !!skipped[ex.id],
-  }));
+  const results = exercises.map(ex => {
+    if (ex.isSuperset) {
+      return {
+        name: ex.name, isSuperset: true, sets: ex.sets,
+        memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
+        restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
+        restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
+        skipped: !!skipped[ex.id],
+        subResults: (ex.subExercises || []).map((sub, si) => ({
+          name: sub.name, variation: sub.variation||'', weight: sub.targetWeight||0,
+          reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
+        })),
+      };
+    }
+    return {
+      name: ex.name, variation: ex.variation||'', sets: ex.sets, weight: ex.targetWeight||0,
+      reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
+      memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
+      restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
+      restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
+      skipped: !!skipped[ex.id],
+    };
+  });
   const btn = document.querySelector('.complete-btn');
   btn.disabled = true; btn.textContent = '저장 중...';
   try {
