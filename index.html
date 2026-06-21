@@ -61,6 +61,11 @@
     .popup-label { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
     .popup-close { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; }
     .popup-text { font-size: 16px; color: var(--text1); line-height: 1.9; white-space: pre-wrap; }
+    .intro-card-inner { background: rgba(255,140,66,0.05); border: 1.5px solid rgba(255,140,66,0.22); border-radius: 13px; padding: 12px 14px; }
+    .intro-card-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .intro-card-text { font-size: 15px; color: var(--text1); line-height: 1.9; word-break: keep-all; }
+    .ex-card.collapsed { cursor: pointer; }
+    .ex-card.collapsed:active { opacity: 0.75; }
     .popup-loading { font-size: 14px; color: var(--text2); text-align: center; padding: 24px 0; }
 
     /* ── Exercise Card ── */
@@ -102,7 +107,7 @@
     .rest-num::-webkit-outer-spin-button, .rest-num::-webkit-inner-spin-button { -webkit-appearance: none; }
     .rest-num:focus { border-color: var(--accent); }
     .rest-num::placeholder { color: #444; font-size: 16px; }
-    .rest-unit-abs { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: #666; pointer-events: none; }
+    .rest-unit-abs { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: #999; pointer-events: none; }
     .sets-row { display: flex; gap: 8px; margin-bottom: 14px; }
     .set-col { flex: 1; text-align: center; }
     .set-num { font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: 800; }
@@ -277,6 +282,7 @@ let programEditMode = false;
 let programName    = '';
 let showAddForm    = false;
 let introText      = null;
+let collapsedCards = {};
 
 /* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
@@ -646,7 +652,7 @@ async function startWorkout() {
     return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
   });
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
-  skipped      = {}; editingCards = {}; showAddForm = false; introText = null;
+  skipped      = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   renderMain();
 
   // 인트로 백그라운드 로딩
@@ -654,6 +660,8 @@ async function startWorkout() {
     const r = await apiGet({ action: 'getCoaching', type: 'intro', missionData: encodeURIComponent(JSON.stringify(missionData)) });
     introText = r.text || null;
   } catch (_) { introText = null; }
+  const introCard = document.getElementById('introCard');
+  if (introCard && introCard.style.display !== 'none') updateIntroCardContent();
 }
 
 /* ── Render utilities ──────────────────────────────────────── */
@@ -681,32 +689,22 @@ function renderProgramBadge() {
     : `<span class="program-badge">${programName}</span>`;
 }
 
-/* ── Intro popup ───────────────────────────────────────────── */
-function showIntroPopup() {
-  const container = document.getElementById('popup-container');
-  const body = introText ? `<div class="popup-text">${introText.replace(/\n/g, '<br>')}</div>` : `<div class="popup-loading">코치 메시지 불러오는 중...</div>`;
-  container.innerHTML = `
-    <div class="popup-overlay" onclick="closePopup(event)">
-      <div class="popup-sheet">
-        <div class="popup-header">
-          <span class="popup-label">💬 코치 메시지</span>
-          <button class="popup-close" onclick="closePopup()">닫기</button>
-        </div>
-        ${body}
-      </div>
-    </div>`;
+/* ── Intro card ────────────────────────────────────────────── */
+function toggleIntroCard() {
+  const card = document.getElementById('introCard');
+  const btn  = document.getElementById('introBtn');
+  if (!card) return;
+  const isOpen = card.style.display !== 'none';
+  card.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.classList.toggle('active', !isOpen);
+  if (!isOpen) updateIntroCardContent();
 }
-
-/* ── Progress dots ─────────────────────────────────────────── */
-function updateDots() {
-  exercises.forEach((ex, i) => {
-    const dot = document.getElementById(`dot-${i}`);
-    if (!dot) return;
-    if (skipped[ex.id]) { dot.classList.add('done'); return; }
-    let all = true;
-    for (let s = 1; s <= ex.sets; s++) { if (!document.getElementById(`e${ex.id}s${s}`)?.value) { all = false; break; } }
-    dot.classList.toggle('done', all);
-  });
+function updateIntroCardContent() {
+  const textEl = document.getElementById('introCardText');
+  if (!textEl) return;
+  textEl.innerHTML = introText
+    ? introText.replace(/\n/g, '<br>')
+    : '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
 }
 
 /* ── Render cards ──────────────────────────────────────────── */
@@ -715,7 +713,27 @@ function renderCards() {
   if (!container) return;
   container.innerHTML = '';
   exercises.forEach((ex, idx) => {
-    const isEditing = !!editingCards[ex.id], isSkipped = !!skipped[ex.id];
+    const isCollapsed = !!collapsedCards[ex.id];
+    const isEditing   = !!editingCards[ex.id];
+    const isSkipped   = !!skipped[ex.id];
+
+    if (isCollapsed) {
+      const card = document.createElement('div');
+      card.id = `card-${idx}`;
+      card.className = 'ex-card completed collapsed';
+      card.onclick = () => { collapsedCards[ex.id] = false; renderCards(); };
+      card.innerHTML = `
+        <div class="card-top-row" style="align-items:center">
+          <div class="card-info">
+            <div class="ex-num">EXERCISE ${String(idx+1).padStart(2,'0')}</div>
+            <div class="ex-name" style="margin-bottom:0">${ex.name}</div>
+          </div>
+          <span style="font-size:22px;color:var(--green);flex-shrink:0">✓</span>
+        </div>`;
+      container.appendChild(card);
+      return;
+    }
+
     const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
     let metaHTML = '';
     if (hasTarget) {
@@ -743,8 +761,8 @@ function renderCards() {
     const bodyHTML = !isEditing && !isSkipped ? `
       <div class="sec-label">휴식시간</div>
       <div class="rest-row">
-        <div class="rest-col"><label>분</label><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">분</span></div></div>
-        <div class="rest-col"><label>초</label><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">초</span></div></div>
+        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">분</span></div></div>
+        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">초</span></div></div>
       </div>
       <div class="sec-label">수행 결과</div>
       <div class="sets-row">${setsHTML}</div>
@@ -761,7 +779,6 @@ function renderCards() {
     card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-num">EXERCISE ${String(idx+1).padStart(2,'0')}</div><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}`;
     container.appendChild(card);
   });
-  updateDots();
 }
 
 /* ── Card interactions ─────────────────────────────────────── */
@@ -772,8 +789,7 @@ function onSetInput(idx) {
     if (el?.value) el.classList.add('has-value');
     else { el?.classList.remove('has-value'); all = false; }
   }
-  document.getElementById(`card-${idx}`)?.classList.toggle('completed', all);
-  updateDots();
+  if (all) { collapsedCards[ex.id] = true; renderCards(); }
 }
 function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
 function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
@@ -824,7 +840,7 @@ async function onComplete() {
     const completeArea = document.getElementById('completeArea');
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
-    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${(outro.text||'오늘도 수고했어! 💪').replace(/\n/g, '<br>')}</div>`;
+    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>`;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch(err) {
@@ -837,7 +853,6 @@ async function onComplete() {
 function renderMain() {
   const d = new Date(missionData.date);
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const dots = exercises.map((_,i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
   document.getElementById('app').innerHTML = `
     <div class="header">
       <div class="header-top">
@@ -845,10 +860,15 @@ function renderMain() {
         <button class="top-btn" id="programEditBtn" onclick="toggleProgramEdit()">✏️ 편집</button>
       </div>
       <div class="header-mid">
-        <div class="header-mid-left"><span id="programWrap"></span><button class="intro-btn" onclick="showIntroPopup()">💬 코치</button></div>
+        <div class="header-mid-left"><span id="programWrap"></span><button class="intro-btn" id="introBtn" onclick="toggleIntroCard()">💬 코치</button></div>
       </div>
-      <div class="progress-bar">${dots}</div>
-      <div class="field-label">컨디션 및 특이사항</div>
+      <div id="introCard" style="display:none;margin-top:12px">
+        <div class="intro-card-inner">
+          <div class="intro-card-label">💬 코치 메시지</div>
+          <div class="intro-card-text" id="introCardText"><div class="popup-loading">코치 메시지 불러오는 중...</div></div>
+        </div>
+      </div>
+      <div class="field-label" style="margin-top:14px">컨디션 및 특이사항</div>
       <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
     </div>
     <div id="cards"></div>
