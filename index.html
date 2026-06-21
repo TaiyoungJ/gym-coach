@@ -684,7 +684,7 @@ function renderProgramBadge() {
 /* ── Intro popup ───────────────────────────────────────────── */
 function showIntroPopup() {
   const container = document.getElementById('popup-container');
-  const body = introText ? `<div class="popup-text">${introText}</div>` : `<div class="popup-loading">코치 메시지 불러오는 중...</div>`;
+  const body = introText ? `<div class="popup-text">${introText.replace(/\n/g, '<br>')}</div>` : `<div class="popup-loading">코치 메시지 불러오는 중...</div>`;
   container.innerHTML = `
     <div class="popup-overlay" onclick="closePopup(event)">
       <div class="popup-sheet">
@@ -824,7 +824,7 @@ async function onComplete() {
     const completeArea = document.getElementById('completeArea');
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
-    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>`;
+    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${(outro.text||'오늘도 수고했어! 💪').replace(/\n/g, '<br>')}</div>`;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch(err) {
