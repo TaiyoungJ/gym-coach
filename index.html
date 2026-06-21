@@ -155,9 +155,7 @@
     .rest-day h2 { font-size: 26px; font-weight: 800; }
     .rest-day p { font-size: 14px; color: var(--text2); }
 
-    /* ════════════════════════════════
-       NEW: Landing Page
-    ════════════════════════════════ */
+    /* ── Landing Page ── */
     .landing-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
     .landing-logo-wrap { display: flex; flex-direction: column; gap: 3px; }
     .landing-logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
@@ -196,9 +194,7 @@
     .landing-ghost-btn { width: 100%; background: none; color: var(--text2); font-size: 14px; font-weight: 700; border: 1.5px solid var(--border2); border-radius: 16px; padding: 14px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: all .2s; }
     .landing-ghost-btn:active { border-color: #555; color: var(--text1); }
 
-    /* ════════════════════════════════
-       NEW: Settings Page
-    ════════════════════════════════ */
+    /* ── Settings Page ── */
     .page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
     .back-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
     .page-title { font-size: 16px; font-weight: 800; color: var(--text1); }
@@ -480,6 +476,14 @@ function renderSettings() {
         <div class="settings-row-sub">일정 충돌로 빠지는 날을 선택하세요</div>
         <div class="day-chips" id="rest-day-chips">${chipHTML}</div>
       </div>
+      <div class="settings-row">
+        <div class="settings-row-label">루틴 문서 보기</div>
+        <div class="settings-row-sub">Google Drive의 루틴 MD 파일 불러오기</div>
+        <button class="doc-view-btn" onclick="openRoutineDoc()">
+          <span>📄 문서 열기</span>
+          <span style="color:var(--text3)">→</span>
+        </button>
+      </div>
     </div>
 
     <div class="settings-group">
@@ -507,14 +511,6 @@ function renderSettings() {
           </label>
         </div>
       </div>
-      <div class="settings-row">
-        <div class="settings-row-label">루틴 문서 보기</div>
-        <div class="settings-row-sub">Google Drive의 루틴 MD 파일 불러오기</div>
-        <button class="doc-view-btn" onclick="openRoutineDoc()">
-          <span>📄 문서 열기</span>
-          <span style="color:var(--text3)">→</span>
-        </button>
-      </div>
     </div>
 
     <button class="save-settings-btn" onclick="onSaveSettings()">설정 저장</button>`;
@@ -522,7 +518,6 @@ function renderSettings() {
 
 function goBackFromSettings() {
   renderLanding();
-  // 기존 데이터로 UI만 업데이트 (재로딩 없음)
   updateLandingStatus();
   updateWeekAlert();
 }
@@ -537,7 +532,6 @@ function onSaveSettings() {
     testMode: document.getElementById('testModeToggle').checked,
     restDays: { weekRange: week.range, days: restDays },
   });
-  // 설정 바뀌었으니 데이터 재로딩
   missionCache = null; weekStatus = null; missionLoading = true;
   renderLanding();
   loadBackgroundData();
@@ -613,11 +607,9 @@ function closePopup(e) {
 /* ── Background data loading ───────────────────────────────── */
 async function loadBackgroundData() {
   const s = getSettings();
-  // 주차 등록 확인 (루틴 시작 요일에만)
   if (new Date().getDay() === s.startDay) {
     try { weekStatus = await apiGet({ action: 'checkWeekStatus' }); updateWeekAlert(); } catch (_) {}
   }
-  // 미션 데이터
   try {
     missionCache = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
   } catch(err) {
@@ -629,6 +621,7 @@ async function loadBackgroundData() {
 
 /* ── Start Workout ─────────────────────────────────────────── */
 async function startWorkout() {
+  const s = getSettings();
   if (missionLoading) {
     const btn = document.getElementById('start-btn');
     if (btn) { btn.disabled = true; btn.textContent = '불러오는 중...'; }
@@ -645,7 +638,7 @@ async function startWorkout() {
 
   missionData = missionCache;
   const lastLog = missionData.lastWeekLog || [];
-  const norm    = s => s.replace(/\s/g,'');
+  const norm    = str => str.replace(/\s/g,'');
   exercises = missionData.exercises.map((ex, i) => {
     const lastEx     = lastLog.find(l => norm(l.name) === norm(ex.name));
     const lastRecord = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
@@ -655,7 +648,6 @@ async function startWorkout() {
   skipped      = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   renderMain();
 
-  // 인트로 백그라운드 로딩
   try {
     const r = await apiGet({ action: 'getCoaching', type: 'intro', missionData: encodeURIComponent(JSON.stringify(missionData)) });
     introText = r.text || null;
