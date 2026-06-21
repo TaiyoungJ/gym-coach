@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>gym-coach</title>
+  <title>핸니의 체육관</title>
   <style>
     :root {
       --bg: #0d0d0d;
@@ -40,11 +40,12 @@
     .date-label { font-size: 12px; color: var(--text2); }
     .header-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .header-mid-left { display: flex; align-items: center; gap: 8px; }
-    .program-badge { background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; }
-    .program-input { background: var(--surface2); border: 1.5px solid var(--accent); border-radius: 20px; color: var(--accent); font-size: 11px; font-weight: 900; padding: 4px 11px; letter-spacing: 1.5px; outline: none; width: 110px; font-family: inherit; text-align: center; }
+    .program-badge { background: var(--accent); color: #000; font-size: 13px; font-weight: 900; padding: 7px 20px; border-radius: 20px; letter-spacing: 1.5px; cursor: pointer; }
+    .program-input { background: var(--surface2); border: 1.5px solid var(--accent); border-radius: 20px; color: var(--accent); font-size: 13px; font-weight: 900; padding: 7px 20px; letter-spacing: 1.5px; outline: none; width: 140px; font-family: inherit; text-align: center; }
     .top-btn { background: none; border: 1.5px solid #333; color: #666; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; }
     .top-btn.active { border-color: var(--accent); color: var(--accent); background: #1f1209; }
-    .intro-btn { background: var(--accent-dim); border: 1.5px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .intro-btn { background: var(--accent-dim); border: 1.5px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 14px; font-weight: 700; padding: 11px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; width: 100%; }
+    .intro-btn.active { background: rgba(255,140,66,0.15); border-color: var(--accent); }
     .progress-bar { display: flex; gap: 5px; margin-bottom: 16px; }
     .progress-dot { flex: 1; height: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .progress-dot.done { background: var(--accent); }
@@ -278,6 +279,9 @@ let programName    = '';
 let showAddForm    = false;
 let introText      = null;
 let collapsedCards = {};
+let repsData       = {};   // { [exId]: { [setNum]: value } }
+let memoData       = {};   // { [exId]: value }
+let restData       = {};   // { [exId]: { min, sec } }
 
 /* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
@@ -343,7 +347,7 @@ function renderLanding() {
   document.getElementById('app').innerHTML = `
     <div class="landing-nav">
       <div class="landing-logo-wrap">
-        <span class="landing-logo">GYM-COACH</span>
+        <span class="landing-logo" style="font-size:28px;letter-spacing:0.05em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
       </div>
       <button class="settings-icon-btn" onclick="renderSettings()" aria-label="설정">⚙️</button>
     </div>
@@ -459,7 +463,7 @@ function renderSettings() {
         <button class="back-btn" onclick="goBackFromSettings()">← 뒤로</button>
         <span class="page-title">환경설정</span>
       </div>
-      <span class="logo" style="font-size: 20px; font-weight: 900;">GYM-COACH</span>
+      <span class="logo" style="font-size:16px;font-weight:900;letter-spacing:0.03em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
     </div>
 
     <div class="settings-group">
@@ -647,7 +651,8 @@ async function startWorkout() {
     return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
   });
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
-  skipped      = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
+  skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
+  repsData = {}; memoData = {}; restData = {};
   renderMain();
 
   try {
@@ -669,9 +674,6 @@ function renderRestDay() {
 /* ── Program badge ─────────────────────────────────────────── */
 function toggleProgramEdit() {
   programEditMode = !programEditMode;
-  const btn = document.getElementById('programEditBtn');
-  btn.classList.toggle('active', programEditMode);
-  btn.textContent = programEditMode ? '✓ 완료' : '✏️ 편집';
   renderProgramBadge();
   if (programEditMode) setTimeout(() => document.getElementById('programInput')?.focus(), 50);
 }
@@ -679,8 +681,8 @@ function renderProgramBadge() {
   const wrap = document.getElementById('programWrap');
   if (!wrap) return;
   wrap.innerHTML = programEditMode
-    ? `<input class="program-input" id="programInput" value="${programName}" maxlength="14" oninput="programName=this.value">`
-    : `<span class="program-badge">${programName}</span>`;
+    ? `<input class="program-input" id="programInput" value="${programName}" maxlength="20" oninput="programName=this.value" onblur="programEditMode=false;renderProgramBadge()">`
+    : `<span class="program-badge" onclick="toggleProgramEdit()">${programName}</span>`;
 }
 
 /* ── Intro card ────────────────────────────────────────────── */
@@ -719,7 +721,6 @@ function renderCards() {
       card.innerHTML = `
         <div class="card-top-row" style="align-items:center">
           <div class="card-info">
-            <div class="ex-num">EXERCISE ${String(idx+1).padStart(2,'0')}</div>
             <div class="ex-name" style="margin-bottom:0">${ex.name}</div>
           </div>
           <span style="font-size:22px;color:var(--green);flex-shrink:0">✓</span>
@@ -733,14 +734,9 @@ function renderCards() {
       ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트` 
       : `${ex.targetWeight||0}kg × ${ex.targetReps||'-'}회 × ${ex.sets}세트`;
     
-    const lastRecordHTML = ex.lastRecord 
-      ? `<span style="color: var(--green); font-size: 13px; font-weight: 700;">지난 기록: ${ex.lastRecord}</span>` 
-      : '';
-
     let metaHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 6px;">
+      <div style="display: flex; align-items: center; width: 100%;">
         <span style="color: var(--accent); font-size: 16px; font-weight: 800;">🎯 ${targetText}</span>
-        ${lastRecordHTML}
       </div>
     `;
     if (ex.tag) {
@@ -757,18 +753,23 @@ function renderCards() {
 
     let setsHTML = '';
     for (let s = 1; s <= ex.sets; s++) {
-      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" onchange="onSetInput(${idx})"></div>`;
+      const sv = repsData[ex.id]?.[s] || '';
+      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
+    const lastRecordBadge = ex.lastRecord ? `<span class="meta-tag last" style="font-size:11px">지난: ${ex.lastRecord}</span>` : '';
     const bodyHTML = !isEditing && !isSkipped ? `
       <div class="sec-label" style="margin-top: 10px;">휴식시간</div>
       <div class="rest-row">
-        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">분</span></div></div>
-        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">초</span></div></div>
+        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.min||''}" oninput="onRestInput(${ex.id},'min',this.value)"><span class="rest-unit-abs">분</span></div></div>
+        <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.sec||''}" oninput="onRestInput(${ex.id},'sec',this.value)"><span class="rest-unit-abs">초</span></div></div>
       </div>
-      <div class="sec-label">수행 결과</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div class="sec-label" style="margin-bottom:0;">수행 결과</div>
+        ${lastRecordBadge}
+      </div>
       <div class="sets-row">${setsHTML}</div>
       <div class="sec-label">메모</div>
-      <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…"></textarea>` : '';
+      <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
 
     const rightBtns = isEditing
       ? `<div class="card-btns"><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button></div>`
@@ -784,7 +785,7 @@ function renderCards() {
     const card = document.createElement('div');
     card.id = `card-${idx}`;
     card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-num">EXERCISE ${String(idx+1).padStart(2,'0')}</div><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}`;
     container.appendChild(card);
   });
 }
@@ -792,12 +793,18 @@ function renderCards() {
 /* ── Card interactions ─────────────────────────────────────── */
 function onSetInput(idx) {
   const ex = exercises[idx]; let all = true;
+  if (!repsData[ex.id]) repsData[ex.id] = {};
   for (let s = 1; s <= ex.sets; s++) {
     const el = document.getElementById(`e${ex.id}s${s}`);
-    if (el?.value) el.classList.add('has-value');
-    else { el?.classList.remove('has-value'); all = false; }
+    const val = el?.value || '';
+    if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; }
+    else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; }
   }
   if (all) { collapsedCards[ex.id] = true; renderCards(); }
+}
+function onRestInput(id, field, val) {
+  if (!restData[id]) restData[id] = {};
+  restData[id][field] = val;
 }
 function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
 function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
@@ -833,10 +840,10 @@ function confirmAdd() {
 async function onComplete() {
   const results = exercises.map(ex => ({
     name: ex.name, variation: ex.variation||'', sets: ex.sets, weight: ex.targetWeight||0,
-    reps: Array.from({ length: ex.sets }, (_, s) => { const v = document.getElementById(`e${ex.id}s${s+1}`)?.value; return v ? parseInt(v) : 0; }),
-    memo:    skipped[ex.id] ? '(생략)' : (document.getElementById(`e${ex.id}memo`)?.value.trim()||''),
-    restMin: skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}min`)?.value)||null),
-    restSec: skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}sec`)?.value)||null),
+    reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
+    memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
+    restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
+    restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
     skipped: !!skipped[ex.id],
   }));
   const btn = document.querySelector('.complete-btn');
@@ -865,25 +872,24 @@ async function onComplete() {
 function renderMain() {
   document.getElementById('app').innerHTML = `
     <div class="header">
-      <div class="header-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();" style="padding: 5px 12px; font-size: 13px; margin: 0;">← 뒤로</button>
-          <span class="logo">GYM-COACH</span>
-          <span id="programWrap"></span>
-        </div>
-        <button class="top-btn" id="programEditBtn" onclick="toggleProgramEdit()">✏️ 편집</button>
+      <div style="margin-bottom: 10px;">
+        <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">← 뒤로</button>
       </div>
-      <div class="header-mid" style="margin-bottom: 0; justify-content: flex-start;">
-        <button class="intro-btn" id="introBtn" onclick="toggleIntroCard()">💬 코치</button>
+      <div style="margin-bottom: 10px;">
+        <span class="logo" style="font-size:22px;letter-spacing:0.05em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
       </div>
-      <div id="introCard" style="display:none;margin-top:12px">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <span id="programWrap"></span>
+      </div>
+      <div class="field-label">컨디션 및 특이사항</div>
+      <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
+      <button class="intro-btn" id="introBtn" onclick="toggleIntroCard()" style="margin-top:12px;">💬 코치 메시지 보기</button>
+      <div id="introCard" style="display:none;margin-top:10px">
         <div class="intro-card-inner">
           <div class="intro-card-label">💬 코치 메시지</div>
           <div class="intro-card-text" id="introCardText"><div class="popup-loading">코치 메시지 불러오는 중...</div></div>
         </div>
       </div>
-      <div class="field-label" style="margin-top:14px">컨디션 및 특이사항</div>
-      <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
     </div>
     <div id="cards"></div>
     <button class="add-ex-btn" onclick="toggleAddForm()">+ 운동 추가</button>
