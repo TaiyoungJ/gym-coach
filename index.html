@@ -36,7 +36,7 @@
     .header { background: var(--surface); border-radius: 20px; padding: 20px; margin-bottom: 14px; border: 1.5px solid var(--border); }
     .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    .logo { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+    .logo { font-size: 26px; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
     .date-label { font-size: 12px; color: var(--text2); }
     .header-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .header-mid-left { display: flex; align-items: center; gap: 8px; }
@@ -78,12 +78,12 @@
     .card-info { flex: 1; min-width: 0; }
     .ex-num { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; }
     .ex-name { font-size: 17px; font-weight: 800; color: #f5f5f5; line-height: 1.2; margin-bottom: 8px; word-break: keep-all; }
-    .ex-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ex-meta { width: 100%; margin-top: 6px; }
     .meta-tag { background: #222; border: 1px solid #333; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: #bbb; }
     .meta-tag span { color: var(--accent); }
     .meta-tag.last { border-color: rgba(34,197,94,0.25); }
     .meta-tag.last span { color: var(--green); }
-    .card-btns { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+    .card-btns { display: flex; flex-direction: row; gap: 6px; align-items: center; flex-shrink: 0; }
     .card-btn { background: var(--surface2); border: 1.5px solid var(--border2); color: #888; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; white-space: nowrap; }
     .card-btn.edit-on { border-color: var(--accent); color: var(--accent); }
     .card-btn.skip-on { background: #1f1209; border-color: var(--accent); color: var(--accent); }
@@ -158,8 +158,7 @@
     /* ── Landing Page ── */
     .landing-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
     .landing-logo-wrap { display: flex; flex-direction: column; gap: 3px; }
-    .landing-logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
-    .landing-logo-sub { font-size: 11px; color: var(--text3); }
+    .landing-logo { font-size: 34px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
     .settings-icon-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; flex-shrink: 0; transition: all .2s; }
     .settings-icon-btn:active { border-color: var(--accent); }
 
@@ -337,20 +336,20 @@ function isRestDayToday() {
 /* ── Landing Page ──────────────────────────────────────────── */
 function renderLanding() {
   const now = new Date();
-  const dayFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][now.getDay()];
+  const dayShorts = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const dayAbbr = dayShorts[now.getDay()];
   const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
 
   document.getElementById('app').innerHTML = `
     <div class="landing-nav">
       <div class="landing-logo-wrap">
         <span class="landing-logo">GYM-COACH</span>
-        <span class="landing-logo-sub">Personal Trainer</span>
       </div>
       <button class="settings-icon-btn" onclick="renderSettings()" aria-label="설정">⚙️</button>
     </div>
-    <div class="landing-date-block">
+    <div class="landing-date-block" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
-      <div class="landing-day-text">${dayFull}</div>
+      <div class="landing-day-text" style="color: var(--accent); font-weight: 900; font-size: 20px; text-align: right; margin: 0;">${dayAbbr}.</div>
     </div>
     <div class="week-alert" id="week-alert">
       <div class="week-alert-eyebrow">📋 주차 미등록</div>
@@ -455,9 +454,12 @@ function renderSettings() {
   }
 
   document.getElementById('app').innerHTML = `
-    <div class="page-header">
-      <button class="back-btn" onclick="goBackFromSettings()">← 뒤로</button>
-      <span class="page-title">환경설정</span>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button class="back-btn" onclick="goBackFromSettings()">← 뒤로</button>
+        <span class="page-title">환경설정</span>
+      </div>
+      <span class="logo" style="font-size: 20px; font-weight: 900;">GYM-COACH</span>
     </div>
 
     <div class="settings-group">
@@ -727,16 +729,23 @@ function renderCards() {
     }
 
     const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
-    let metaHTML = '';
-    if (hasTarget) {
-      metaHTML += `<div class="meta-tag">목표 <span>${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트</span></div>`;
-    } else {
-      metaHTML += `<div class="meta-tag"><span>${ex.targetWeight||0}kg</span></div>`;
-      metaHTML += `<div class="meta-tag"><span>${ex.sets}</span>세트</div>`;
-      metaHTML += `<div class="meta-tag">목표 <span>${ex.targetReps||'-'}회</span></div>`;
+    const targetText = hasTarget 
+      ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트` 
+      : `${ex.targetWeight||0}kg × ${ex.targetReps||'-'}회 × ${ex.sets}세트`;
+    
+    const lastRecordHTML = ex.lastRecord 
+      ? `<span style="color: var(--green); font-size: 13px; font-weight: 700;">지난 기록: ${ex.lastRecord}</span>` 
+      : '';
+
+    let metaHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 6px;">
+        <span style="color: var(--accent); font-size: 16px; font-weight: 800;">🎯 ${targetText}</span>
+        ${lastRecordHTML}
+      </div>
+    `;
+    if (ex.tag) {
+      metaHTML += `<div class="meta-tag" style="margin-top: 6px; display: inline-block;">${ex.tag}</div>`;
     }
-    if (ex.lastRecord) metaHTML += `<div class="meta-tag last">지난 <span>${ex.lastRecord}</span></div>`;
-    if (ex.tag)        metaHTML += `<div class="meta-tag">${ex.tag}</div>`;
 
     const editFieldsHTML = isEditing ? `
       <div class="edit-fields">
@@ -751,7 +760,7 @@ function renderCards() {
       setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" onchange="onSetInput(${idx})"></div>`;
     }
     const bodyHTML = !isEditing && !isSkipped ? `
-      <div class="sec-label">휴식시간</div>
+      <div class="sec-label" style="margin-top: 10px;">휴식시간</div>
       <div class="rest-row">
         <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">분</span></div></div>
         <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">초</span></div></div>
@@ -762,8 +771,15 @@ function renderCards() {
       <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…"></textarea>` : '';
 
     const rightBtns = isEditing
-      ? `<div class="card-btns"><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button></div>`
-      : `<div class="card-btns"><button class="card-btn" onclick="toggleCardEdit(${ex.id})">✏️ 편집</button><div class="skip-arrow-row"><button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button><button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button><button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button></div></div>`;
+      ? `<div class="card-btns"><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button></div>`
+      : `<div class="card-btns">
+          <button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button>
+          <div class="skip-arrow-row">
+            <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
+            <button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button>
+          </div>
+          <button class="card-btn" onclick="toggleCardEdit(${ex.id})">✏️ 편집</button>
+         </div>`;
 
     const card = document.createElement('div');
     card.id = `card-${idx}`;
@@ -832,7 +848,11 @@ async function onComplete() {
     const completeArea = document.getElementById('completeArea');
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
-    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>`;
+    outroEl.innerHTML = `
+      <div class="outro-label">🔥 오늘의 피드백</div>
+      <div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>
+      <button class="complete-btn" style="margin-top: 20px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">끝</button>
+    `;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch(err) {
@@ -843,16 +863,18 @@ async function onComplete() {
 
 /* ── Render Main (Dashboard) ───────────────────────────────── */
 function renderMain() {
-  const d = new Date(missionData.date);
-  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   document.getElementById('app').innerHTML = `
     <div class="header">
-      <div class="header-top">
-        <div class="header-left"><span class="logo">GYM-COACH</span><span class="date-label">${dateStr} ${missionData.day}요일</span></div>
+      <div class="header-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();" style="padding: 5px 12px; font-size: 13px; margin: 0;">← 뒤로</button>
+          <span class="logo">GYM-COACH</span>
+          <span id="programWrap"></span>
+        </div>
         <button class="top-btn" id="programEditBtn" onclick="toggleProgramEdit()">✏️ 편집</button>
       </div>
-      <div class="header-mid">
-        <div class="header-mid-left"><span id="programWrap"></span><button class="intro-btn" id="introBtn" onclick="toggleIntroCard()">💬 코치</button></div>
+      <div class="header-mid" style="margin-bottom: 0; justify-content: flex-start;">
+        <button class="intro-btn" id="introBtn" onclick="toggleIntroCard()">💬 코치</button>
       </div>
       <div id="introCard" style="display:none;margin-top:12px">
         <div class="intro-card-inner">
