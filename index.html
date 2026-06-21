@@ -32,443 +32,253 @@
       margin: 0 auto;
     }
 
-    /* ── Header ── */
-    .header {
-      background: var(--surface);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 14px;
-      border: 1.5px solid var(--border);
-    }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
+    /* ── Dashboard Header ── */
+    .header { background: var(--surface); border-radius: 20px; padding: 20px; margin-bottom: 14px; border: 1.5px solid var(--border); }
+    .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .logo { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
     .date-label { font-size: 12px; color: var(--text2); }
-    .header-mid {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
+    .header-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .header-mid-left { display: flex; align-items: center; gap: 8px; }
-
-    /* Program badge */
-    .program-badge {
-      background: var(--accent);
-      color: #000;
-      font-size: 11px;
-      font-weight: 900;
-      padding: 4px 11px;
-      border-radius: 20px;
-      letter-spacing: 1.5px;
-    }
-    .program-input {
-      background: var(--surface2);
-      border: 1.5px solid var(--accent);
-      border-radius: 20px;
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 900;
-      padding: 4px 11px;
-      letter-spacing: 1.5px;
-      outline: none;
-      width: 110px;
-      font-family: inherit;
-      text-align: center;
-    }
-
-    /* Top buttons */
-    .top-btn {
-      background: none;
-      border: 1.5px solid #333;
-      color: #666;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all .2s;
-      font-family: inherit;
-    }
+    .program-badge { background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; }
+    .program-input { background: var(--surface2); border: 1.5px solid var(--accent); border-radius: 20px; color: var(--accent); font-size: 11px; font-weight: 900; padding: 4px 11px; letter-spacing: 1.5px; outline: none; width: 110px; font-family: inherit; text-align: center; }
+    .top-btn { background: none; border: 1.5px solid #333; color: #666; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; }
     .top-btn.active { border-color: var(--accent); color: var(--accent); background: #1f1209; }
-    .intro-btn {
-      background: var(--accent-dim);
-      border: 1.5px solid rgba(255,140,66,0.3);
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 7px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all .2s;
-    }
-
-    /* Progress dots */
+    .intro-btn { background: var(--accent-dim); border: 1.5px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
     .progress-bar { display: flex; gap: 5px; margin-bottom: 16px; }
     .progress-dot { flex: 1; height: 3px; background: var(--border); border-radius: 2px; transition: background 0.3s; }
     .progress-dot.done { background: var(--accent); }
-
-    /* Condition input */
     .field-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-    .condition-input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1.5px solid var(--border2);
-      border-radius: 13px;
-      color: var(--text1);
-      font-size: 14px;
-      padding: 12px 14px;
-      outline: none;
-      resize: none;
-      min-height: 68px;
-      font-family: inherit;
-      line-height: 1.6;
-    }
+    .condition-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 13px; color: var(--text1); font-size: 14px; padding: 12px 14px; outline: none; resize: none; min-height: 68px; font-family: inherit; line-height: 1.6; }
     .condition-input::placeholder { color: var(--text3); }
     .condition-input:focus { border-color: var(--accent); }
 
-    /* ── Intro Popup ── */
-    .popup-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 200;
-      display: flex;
-      align-items: flex-end;
-    }
-    .popup-sheet {
-      width: 100%;
-      max-width: 480px;
-      margin: 0 auto;
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      padding: 24px 20px 40px;
-      border-top: 1.5px solid var(--border);
-      animation: slideUp .25s ease;
-    }
+    /* ── Popup ── */
+    .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: flex-end; }
+    .popup-sheet { width: 100%; max-width: 480px; margin: 0 auto; background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px 40px; border-top: 1.5px solid var(--border); animation: slideUp .25s ease; }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .popup-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
+    .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .popup-label { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
-    .popup-close {
-      background: var(--surface2);
-      border: 1.5px solid var(--border2);
-      color: var(--text2);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-family: inherit;
-    }
+    .popup-close { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; }
     .popup-text { font-size: 14px; color: var(--text1); line-height: 1.75; white-space: pre-wrap; }
     .popup-loading { font-size: 14px; color: var(--text2); text-align: center; padding: 24px 0; }
 
     /* ── Exercise Card ── */
-    .ex-card {
-      background: var(--surface);
-      border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 14px;
-      border: 1.5px solid var(--border);
-      transition: border-color .25s;
-    }
+    .ex-card { background: var(--surface); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1.5px solid var(--border); transition: border-color .25s; }
     .ex-card.editing { border-color: rgba(255,140,66,0.3); }
     .ex-card.completed { border-color: rgba(34,197,94,0.35); }
     .ex-card.skipped { opacity: 0.45; }
-
     .card-top { margin-bottom: 14px; }
     .card-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .card-info { flex: 1; min-width: 0; }
     .ex-num { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; }
     .ex-name { font-size: 17px; font-weight: 800; color: #f5f5f5; line-height: 1.2; margin-bottom: 8px; word-break: keep-all; }
     .ex-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-    .meta-tag {
-      background: #222;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #bbb;
-    }
+    .meta-tag { background: #222; border: 1px solid #333; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 700; color: #bbb; }
     .meta-tag span { color: var(--accent); }
     .meta-tag.last { border-color: rgba(34,197,94,0.25); }
     .meta-tag.last span { color: var(--green); }
-
-    /* Card right buttons */
     .card-btns { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
-    .card-btn {
-      background: var(--surface2);
-      border: 1.5px solid var(--border2);
-      color: #888;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all .2s;
-      font-family: inherit;
-      white-space: nowrap;
-    }
+    .card-btn { background: var(--surface2); border: 1.5px solid var(--border2); color: #888; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; white-space: nowrap; }
     .card-btn.edit-on { border-color: var(--accent); color: var(--accent); }
     .card-btn.skip-on { background: #1f1209; border-color: var(--accent); color: var(--accent); }
     .card-btn.delete { background: #1f0e0e; border-color: #3a1a1a; color: #e05555; }
     .skip-arrow-row { display: flex; gap: 5px; align-items: center; }
-    .arrow-btn {
-      background: var(--surface2);
-      border: 1.5px solid #2a2a2a;
-      color: #777;
-      font-size: 13px;
-      width: 34px; height: 34px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex; align-items: center; justify-content: center;
-      transition: all .2s;
-      flex-shrink: 0;
-    }
+    .arrow-btn { background: var(--surface2); border: 1.5px solid #2a2a2a; color: #777; font-size: 13px; width: 34px; height: 34px; border-radius: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
     .arrow-btn:active { background: #252525; color: var(--accent); border-color: var(--accent); }
-
-    /* Edit fields */
     .edit-fields { background: #111; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .edit-row:last-child { margin-bottom: 0; }
     .edit-label { font-size: 11px; color: #555; min-width: 40px; font-weight: 700; }
-    .edit-input {
-      flex: 1;
-      background: #1a1a1a;
-      border: 1.5px solid #2a2a2a;
-      border-radius: 10px;
-      color: #f0f0f0;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 9px 12px;
-      outline: none;
-      font-family: inherit;
-    }
+    .edit-input { flex: 1; background: #1a1a1a; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
     .edit-input:focus { border-color: var(--accent); }
     .edit-unit { font-size: 12px; color: #555; min-width: 24px; }
-
-    /* Card body sections */
     .sec-label { font-size: 12px; font-weight: 800; color: #aaa; margin-bottom: 8px; }
-
-    /* Rest time */
     .rest-row { display: flex; gap: 10px; margin-bottom: 14px; }
     .rest-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
     .rest-col label { font-size: 11px; font-weight: 800; color: #aaa; }
     .rest-wrap { position: relative; }
-    .rest-num {
-      width: 100%;
-      background: var(--surface2);
-      border: 2px solid #2a2a2a;
-      border-radius: 13px;
-      color: #f5f5f5;
-      font-size: 22px;
-      font-weight: 800;
-      text-align: center;
-      padding: 12px 28px 12px 8px;
-      outline: none;
-      -moz-appearance: textfield;
-      min-height: 54px;
-    }
-    .rest-num::-webkit-outer-spin-button,
-    .rest-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .rest-num { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 13px; color: #f5f5f5; font-size: 22px; font-weight: 800; text-align: center; padding: 12px 28px 12px 8px; outline: none; -moz-appearance: textfield; min-height: 54px; }
+    .rest-num::-webkit-outer-spin-button, .rest-num::-webkit-inner-spin-button { -webkit-appearance: none; }
     .rest-num:focus { border-color: var(--accent); }
     .rest-num::placeholder { color: #444; font-size: 16px; }
-    .rest-unit-abs {
-      position: absolute;
-      right: 10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 13px; font-weight: 700;
-      color: #666;
-      pointer-events: none;
-    }
-
-    /* Sets */
+    .rest-unit-abs { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: #666; pointer-events: none; }
     .sets-row { display: flex; gap: 8px; margin-bottom: 14px; }
     .set-col { flex: 1; text-align: center; }
     .set-num { font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: 800; }
-    .set-input {
-      width: 100%;
-      background: var(--surface2);
-      border: 2px solid #2a2a2a;
-      border-radius: 13px;
-      color: #f5f5f5;
-      font-size: 26px;
-      font-weight: 800;
-      text-align: center;
-      padding: 14px 4px;
-      outline: none;
-      -moz-appearance: textfield;
-      min-height: 62px;
-    }
-    .set-input::-webkit-outer-spin-button,
-    .set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .set-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 13px; color: #f5f5f5; font-size: 26px; font-weight: 800; text-align: center; padding: 14px 4px; outline: none; -moz-appearance: textfield; min-height: 62px; }
+    .set-input::-webkit-outer-spin-button, .set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
     .set-input:focus { border-color: var(--accent); background: #1a1a1a; }
     .set-input::placeholder { color: #444; font-size: 18px; }
     .set-input.has-value { border-color: rgba(34,197,94,0.4); color: var(--green); }
-
-    /* Memo */
-    .memo-textarea {
-      width: 100%;
-      background: var(--surface2);
-      border: 1.5px solid #2a2a2a;
-      border-radius: 12px;
-      color: var(--text1);
-      font-size: 14px;
-      padding: 12px;
-      outline: none;
-      resize: none;
-      min-height: 90px;
-      font-family: inherit;
-      line-height: 1.6;
-    }
+    .memo-textarea { width: 100%; background: var(--surface2); border: 1.5px solid #2a2a2a; border-radius: 12px; color: var(--text1); font-size: 14px; padding: 12px; outline: none; resize: none; min-height: 90px; font-family: inherit; line-height: 1.6; }
     .memo-textarea::placeholder { color: #444; }
     .memo-textarea:focus { border-color: var(--accent); }
 
     /* ── Add Exercise ── */
-    .add-ex-btn {
-      width: 100%;
-      background: #1a1a1a;
-      border: 2px dashed #2a2a2a;
-      color: #555;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      margin-bottom: 14px;
-      font-family: inherit;
-      transition: all .2s;
-    }
+    .add-ex-btn { width: 100%; background: #1a1a1a; border: 2px dashed #2a2a2a; color: #555; font-size: 14px; font-weight: 700; padding: 16px; border-radius: 20px; cursor: pointer; margin-bottom: 14px; font-family: inherit; transition: all .2s; }
     .add-ex-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .add-form {
-      background: var(--surface);
-      border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 14px;
-      border: 1.5px dashed var(--accent);
-      display: none;
-    }
+    .add-form { background: var(--surface); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1.5px dashed var(--accent); display: none; }
     .add-form.show { display: block; }
     .add-form-title { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 12px; }
     .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .add-field label { font-size: 11px; color: #666; display: block; margin-bottom: 5px; }
-    .add-field input {
-      width: 100%;
-      background: #111;
-      border: 1.5px solid #2a2a2a;
-      border-radius: 10px;
-      color: #f0f0f0;
-      font-size: 15px;
-      font-weight: 700;
-      padding: 10px 12px;
-      outline: none;
-      font-family: inherit;
-    }
+    .add-field input { width: 100%; background: #111; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
     .add-field input:focus { border-color: var(--accent); }
     .add-field.full { grid-column: 1 / -1; }
     .add-btns { display: flex; gap: 8px; }
-    .add-confirm {
-      flex: 1;
-      background: var(--accent);
-      color: #000;
-      font-size: 14px;
-      font-weight: 800;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .add-cancel {
-      flex: 1;
-      background: var(--surface2);
-      color: #888;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 12px;
-      border: 1.5px solid #2a2a2a;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: inherit;
-    }
+    .add-confirm { flex: 1; background: var(--accent); color: #000; font-size: 14px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
+    .add-cancel { flex: 1; background: var(--surface2); color: #888; font-size: 14px; font-weight: 700; padding: 12px; border: 1.5px solid #2a2a2a; border-radius: 12px; cursor: pointer; font-family: inherit; }
 
-    /* ── Complete ── */
-    .complete-btn {
-      width: 100%;
-      background: linear-gradient(135deg, #FF8C42, #FF5C00);
-      color: #000;
-      font-size: 17px;
-      font-weight: 900;
-      border: none;
-      border-radius: 16px;
-      padding: 20px;
-      cursor: pointer;
-      transition: transform .15s;
-      font-family: inherit;
-      margin-top: 6px;
-    }
+    /* ── Complete / Outro ── */
+    .complete-btn { width: 100%; background: linear-gradient(135deg, #FF8C42, #FF5C00); color: #000; font-size: 17px; font-weight: 900; border: none; border-radius: 16px; padding: 20px; cursor: pointer; transition: transform .15s; font-family: inherit; margin-top: 6px; }
     .complete-btn:active { transform: scale(0.97); }
     .complete-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
-
-    /* ── Outro ── */
-    .outro-card {
-      margin-top: 6px;
-      padding: 20px;
-      background: rgba(34,197,94,0.07);
-      border: 1.5px solid rgba(34,197,94,0.2);
-      border-radius: 16px;
-    }
+    .outro-card { margin-top: 6px; padding: 20px; background: rgba(34,197,94,0.07); border: 1.5px solid rgba(34,197,94,0.2); border-radius: 16px; }
     .outro-label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
     .outro-text { font-size: 15px; line-height: 1.75; white-space: pre-wrap; }
 
-    /* ── Loading ── */
+    /* ── Loading / Error / Rest ── */
     .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 16px; }
     .spinner { width: 34px; height: 34px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-size: 13px; color: var(--text2); }
-
-    /* ── Error / Rest ── */
     .error-card { margin: 40px 0; padding: 20px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 20px; text-align: center; }
     .error-card h3 { color: #ef4444; margin-bottom: 8px; }
     .error-card p { font-size: 13px; color: var(--text2); }
     .rest-day { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 75vh; text-align: center; gap: 12px; }
     .rest-day h2 { font-size: 26px; font-weight: 800; }
     .rest-day p { font-size: 14px; color: var(--text2); }
+
+    /* ════════════════════════════════
+       NEW: Landing Page
+    ════════════════════════════════ */
+    .landing-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .landing-logo-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .landing-logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+    .landing-logo-sub { font-size: 11px; color: var(--text3); }
+    .settings-icon-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; flex-shrink: 0; transition: all .2s; }
+    .settings-icon-btn:active { border-color: var(--accent); }
+
+    .landing-date-block { margin-bottom: 24px; }
+    .landing-date-big { font-size: 28px; font-weight: 800; color: var(--text1); line-height: 1.15; margin-bottom: 4px; }
+    .landing-day-text { font-size: 14px; color: var(--text2); }
+
+    .week-alert { background: rgba(255,140,66,0.07); border: 1.5px solid rgba(255,140,66,0.25); border-radius: 18px; padding: 16px; margin-bottom: 14px; display: none; }
+    .week-alert.show { display: block; }
+    .week-alert-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .week-alert-body { font-size: 14px; font-weight: 700; color: var(--text1); margin-bottom: 4px; }
+    .week-alert-range { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+    .week-alert-btn { width: 100%; background: var(--accent); color: #000; font-size: 13px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+    .week-alert-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .today-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; }
+    .today-card-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+    .skel-wrap { display: flex; flex-direction: column; gap: 9px; }
+    .skel { height: 13px; border-radius: 6px; background: linear-gradient(90deg, var(--surface2) 25%, #252525 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .status-rest-emoji { font-size: 30px; margin-bottom: 10px; }
+    .status-rest-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .status-rest-sub { font-size: 13px; color: var(--text2); }
+    .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .status-count { font-size: 28px; font-weight: 800; color: var(--text1); }
+    .status-count span { font-size: 14px; font-weight: 600; color: var(--text2); margin-left: 5px; }
+
+    .landing-start-btn { width: 100%; background: linear-gradient(135deg, #FF8C42, #FF5C00); color: #000; font-size: 17px; font-weight: 900; border: none; border-radius: 16px; padding: 20px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: transform .15s; letter-spacing: 0.3px; }
+    .landing-start-btn:active { transform: scale(0.97); }
+    .landing-start-btn:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; transform: none; }
+    .landing-ghost-btn { width: 100%; background: none; color: var(--text2); font-size: 14px; font-weight: 700; border: 1.5px solid var(--border2); border-radius: 16px; padding: 14px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: all .2s; }
+    .landing-ghost-btn:active { border-color: #555; color: var(--text1); }
+
+    /* ════════════════════════════════
+       NEW: Settings Page
+    ════════════════════════════════ */
+    .page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .back-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+    .page-title { font-size: 16px; font-weight: 800; color: var(--text1); }
+
+    .settings-group { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 18px; margin-bottom: 14px; }
+    .settings-group-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .settings-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .settings-row:first-of-type { padding-top: 0; }
+    .settings-row-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .settings-row-label { font-size: 14px; font-weight: 600; color: var(--text1); }
+    .settings-row-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+    .day-select { background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 10px; color: var(--text1); font-size: 14px; font-weight: 700; padding: 8px 12px; outline: none; font-family: inherit; flex-shrink: 0; }
+
+    .day-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+    .day-chip { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2); font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .day-chip.on { background: rgba(255,140,66,0.1); border-color: var(--accent); color: var(--accent); }
+
+    .toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: #2a2a2a; border-radius: 24px; cursor: pointer; transition: .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #555; border-radius: 50%; transition: .2s; }
+    .toggle-wrap input:checked + .toggle-slider { background: rgba(255,140,66,0.25); }
+    .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent); }
+
+    .url-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 10px; color: var(--text1); font-size: 13px; padding: 10px 12px; outline: none; font-family: inherit; margin-top: 10px; }
+    .url-input:focus { border-color: var(--accent); }
+
+    .doc-view-btn { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text1); font-size: 14px; font-weight: 700; padding: 13px 16px; border-radius: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: space-between; transition: border-color .2s; margin-top: 12px; }
+    .doc-view-btn:active { border-color: var(--accent); }
+
+    .save-settings-btn { width: 100%; background: var(--accent); color: #000; font-size: 15px; font-weight: 800; padding: 17px; border: none; border-radius: 14px; cursor: pointer; font-family: inherit; margin-top: 6px; }
+    .save-settings-btn:active { opacity: 0.85; }
+
+    /* ── MD viewer ── */
+    .md-scroll { max-height: 62vh; overflow-y: auto; }
+    .md-content { font-size: 14px; line-height: 1.8; color: var(--text1); }
+    .md-content h1 { font-size: 18px; font-weight: 800; color: var(--accent); margin: 18px 0 8px; }
+    .md-content h2 { font-size: 16px; font-weight: 800; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 16px 0 8px; }
+    .md-content h3 { font-size: 14px; font-weight: 800; color: var(--accent); margin: 12px 0 6px; }
+    .md-content strong { font-weight: 700; }
+    .md-content ul { padding-left: 18px; margin: 6px 0; }
+    .md-content li { margin-bottom: 3px; }
+    .md-content p { margin-bottom: 8px; }
+    .md-content hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
+    .md-content code { background: #1a1a1a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
   </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="popup-container"></div>
-
 <script>
 const CONFIG = {
-  url: 'https://script.google.com/macros/s/AKfycbwiIVkYdpYS2ve9wu8RBSgGfSBTxHTRW3swVogKiN-vxwxEwhYumlz6C2zASpgnLGLmnA/exec',
+  url:   'https://script.google.com/macros/s/AKfycbwiIVkYdpYS2ve9wu8RBSgGfSBTxHTRW3swVogKiN-vxwxEwhYumlz6C2zASpgnLGLmnA/exec',
   token: 'jty5375'
 };
 
-// ── State ──
-let missionData   = null;
-let exercises     = [];   // 통합 종목 배열
-let skipped       = {};
-let editingCards  = {};
-let programEditMode = false;
-let programName   = '';
-let showAddForm   = false;
-let introText     = null; // null = 로딩 중 or 실패
+/* ── Settings ──────────────────────────────────────────────── */
+const SETTINGS_KEY = 'gc_settings';
 
-/* ── API ── */
+function defaultSettings() {
+  return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] } };
+}
+function getSettings() {
+  try { const r = localStorage.getItem(SETTINGS_KEY); return r ? { ...defaultSettings(), ...JSON.parse(r) } : defaultSettings(); }
+  catch { return defaultSettings(); }
+}
+function saveSettingsData(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+
+/* ── App State ─────────────────────────────────────────────── */
+let missionCache   = null;
+let weekStatus     = null;
+let missionLoading = true;
+// Dashboard state
+let missionData    = null;
+let exercises      = [];
+let skipped        = {};
+let editingCards   = {};
+let programEditMode = false;
+let programName    = '';
+let showAddForm    = false;
+let introText      = null;
+
+/* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
   const url = new URL(CONFIG.url);
   url.searchParams.set('token', CONFIG.token);
@@ -476,41 +286,385 @@ async function apiGet(params) {
   const res = await fetch(url.toString(), { redirect: 'follow' });
   return res.json();
 }
-
 async function apiPost(body) {
   const res = await fetch(CONFIG.url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ token: CONFIG.token, ...body }),
-    redirect: 'follow',
+    method: 'POST', headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ token: CONFIG.token, ...body }), redirect: 'follow',
   });
   return res.json();
 }
 
-/* ── Render utilities ── */
-function renderLoading(msg = '불러오는 중...') {
-  document.getElementById('app').innerHTML = `
-    <div class="loading">
-      <div class="spinner"></div>
-      <p class="loading-text">${msg}</p>
-    </div>`;
+/* ── Mock data (테스트 모드) ────────────────────────────────── */
+function getMockMission() {
+  const today = new Date();
+  const dayNames = ['일','월','화','수','목','금','토'];
+  return {
+    date: toIso(today), day: dayNames[today.getDay()],
+    routineName: '테스트: 상체 A',
+    exercises: [
+      { name: '벤치프레스',         sets: 4, tag: null, variation: '', targetWeight: 80, targetReps: 8,  memo: '' },
+      { name: '인클라인 덤벨프레스', sets: 3, tag: null, variation: '', targetWeight: 24, targetReps: 10, memo: '' },
+      { name: '케이블 크로스오버',   sets: 3, tag: null, variation: '', targetWeight: 15, targetReps: 12, memo: '' },
+      { name: '렛풀다운',            sets: 3, tag: null, variation: '', targetWeight: 60, targetReps: 10, memo: '' },
+      { name: '시티드 로우',         sets: 3, tag: null, variation: '', targetWeight: 55, targetReps: 12, memo: '' },
+    ],
+    lastWeekLog: [
+      { name: '벤치프레스',         variation: '', sets: 4, reps: ['8','8','7','7'], weight: 80 },
+      { name: '인클라인 덤벨프레스', variation: '', sets: 3, reps: ['10','9','9'],   weight: 24 },
+    ],
+  };
 }
-function renderError(msg) {
-  document.getElementById('app').innerHTML = `
-    <div class="error-card">
-      <h3>오류가 발생했어요</h3>
-      <p>${msg}</p>
-    </div>`;
+
+/* ── Date helpers ──────────────────────────────────────────── */
+function toIso(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
-function renderRestDay() {
+function getThisWeekRange() {
+  const today = new Date(), day = today.getDay();
+  const mon   = new Date(today); mon.setDate(today.getDate() + ((day === 0) ? -6 : 1 - day));
+  const sun   = new Date(mon);   sun.setDate(mon.getDate() + 6);
+  return { start: toIso(mon), end: toIso(sun), range: `${toIso(mon)} ~ ${toIso(sun)}` };
+}
+function isRestDayToday() {
+  const s = getSettings(), w = getThisWeekRange(), today = toIso(new Date());
+  const customRest = s.restDays.weekRange === w.range && s.restDays.days.includes(today);
+  const apiRest    = missionCache && (!missionCache.exercises || missionCache.exercises.length === 0);
+  return customRest || apiRest;
+}
+
+/* ── Landing Page ──────────────────────────────────────────── */
+function renderLanding() {
+  const now = new Date();
+  const dayFull = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][now.getDay()];
+  const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+
   document.getElementById('app').innerHTML = `
-    <div class="rest-day">
-      <h2>💤 오늘은 쉬는 날</h2>
-      <p>회복도 훈련이에요. 잘 쉬어요.</p>
+    <div class="landing-nav">
+      <div class="landing-logo-wrap">
+        <span class="landing-logo">GYM-COACH</span>
+        <span class="landing-logo-sub">Personal Trainer</span>
+      </div>
+      <button class="settings-icon-btn" onclick="renderSettings()" aria-label="설정">⚙️</button>
+    </div>
+    <div class="landing-date-block">
+      <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
+      <div class="landing-day-text">${dayFull}</div>
+    </div>
+    <div class="week-alert" id="week-alert">
+      <div class="week-alert-eyebrow">📋 주차 미등록</div>
+      <div class="week-alert-body">이번 주차 중량 계획이 등록되지 않았어요</div>
+      <div class="week-alert-range" id="week-alert-range">-</div>
+      <button class="week-alert-btn" id="week-alert-btn" onclick="onRegisterWeek()">스프레드시트에서 등록하기 →</button>
+    </div>
+    <div class="today-card">
+      <div class="today-card-eyebrow">오늘의 운동</div>
+      <div id="today-status-body">
+        <div class="skel-wrap">
+          <div class="skel" style="width:32%;height:22px"></div>
+          <div class="skel" style="width:54%;height:14px;margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+    <div id="start-btn-area">
+      <button class="landing-start-btn" id="start-btn" onclick="startWorkout()">운동 시작하기 →</button>
     </div>`;
 }
 
-/* ── Program badge ── */
+function updateLandingStatus() {
+  const bodyEl    = document.getElementById('today-status-body');
+  const startArea = document.getElementById('start-btn-area');
+  if (!bodyEl) return;
+
+  if (isRestDayToday()) {
+    const s = getSettings(), w = getThisWeekRange();
+    const isCustom = s.restDays.weekRange === w.range && s.restDays.days.includes(toIso(new Date()));
+    bodyEl.innerHTML = `
+      <div class="status-rest-emoji">💤</div>
+      <div class="status-rest-title">오늘은 쉬는 날</div>
+      <div class="status-rest-sub">${isCustom ? '일정으로 지정한 휴식일이에요' : '회복도 훈련이에요'}</div>`;
+    if (startArea) startArea.innerHTML =
+      `<button class="landing-ghost-btn" onclick="startWorkout()">그래도 시작하기</button>`;
+    return;
+  }
+
+  if (!missionCache || missionCache.error) return;
+
+  const count  = missionCache.exercises?.length || 0;
+  const rName  = missionCache.routineName || '';
+  const display = rName.includes(':') ? rName.split(':').slice(1).join(':').trim() : rName;
+  bodyEl.innerHTML = `
+    <span class="status-badge">${display}</span>
+    <div class="status-count">${count}가지<span>운동 준비됨</span></div>`;
+}
+
+function updateWeekAlert() {
+  const alertEl = document.getElementById('week-alert');
+  if (!alertEl || !weekStatus) return;
+  if (!weekStatus.registered) {
+    alertEl.classList.add('show');
+    const rangeEl = document.getElementById('week-alert-range');
+    if (rangeEl) rangeEl.textContent = weekStatus.weekRange;
+  }
+}
+
+async function onRegisterWeek() {
+  const btn = document.getElementById('week-alert-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
+  try {
+    const result = await apiPost({ action: 'registerWeek' });
+    if (result.success) {
+      if (btn) btn.textContent = '✓ 등록됐어요!';
+      const { sheetUrl } = getSettings();
+      if (sheetUrl) setTimeout(() => window.open(sheetUrl, '_blank'), 400);
+      setTimeout(() => {
+        const el = document.getElementById('week-alert');
+        if (el) el.classList.remove('show');
+      }, 1800);
+    }
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.textContent = '스프레드시트에서 등록하기 →'; }
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ── Settings Page ─────────────────────────────────────────── */
+function renderSettings() {
+  const s    = getSettings();
+  const week = getThisWeekRange();
+  const dayFull  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const dayShort = ['일','월','화','수','목','금','토'];
+
+  // 이번 주 요일 칩 생성
+  const today = new Date(), diff = (today.getDay() === 0) ? -6 : 1 - today.getDay();
+  const mon   = new Date(today); mon.setDate(today.getDate() + diff);
+  const thisWeekRest = s.restDays.weekRange === week.range ? s.restDays.days : [];
+  let chipHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon); d.setDate(mon.getDate() + i);
+    const iso = toIso(d), label = dayShort[d.getDay()] + ' ' + d.getDate();
+    chipHTML += `<button class="day-chip${thisWeekRest.includes(iso) ? ' on' : ''}" data-date="${iso}" onclick="this.classList.toggle('on')">${label}</button>`;
+  }
+
+  // 시작 요일 옵션 (월~일 순서)
+  let dayOptions = '';
+  for (let i = 1; i <= 7; i++) {
+    const idx = i % 7;
+    dayOptions += `<option value="${idx}"${s.startDay === idx ? ' selected' : ''}>${dayFull[idx]}</option>`;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="page-header">
+      <button class="back-btn" onclick="goBackFromSettings()">← 뒤로</button>
+      <span class="page-title">환경설정</span>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">⏱ 루틴 설정</div>
+      <div class="settings-row">
+        <div class="settings-row-head">
+          <div>
+            <div class="settings-row-label">루틴 시작 요일</div>
+            <div class="settings-row-sub">주차 등록 알림 기준일</div>
+          </div>
+          <select class="day-select" id="startDaySelect">${dayOptions}</select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">이번 주 쉬는 날</div>
+        <div class="settings-row-sub">일정 충돌로 빠지는 날을 선택하세요</div>
+        <div class="day-chips" id="rest-day-chips">${chipHTML}</div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">🔗 연동</div>
+      <div class="settings-row">
+        <div class="settings-row-label">스프레드시트 URL</div>
+        <div class="settings-row-sub">주차 등록 버튼 클릭 시 이동할 링크</div>
+        <input class="url-input" id="sheetUrlInput" type="url"
+          placeholder="https://docs.google.com/spreadsheets/..."
+          value="${s.sheetUrl || ''}">
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">🧪 개발</div>
+      <div class="settings-row">
+        <div class="settings-row-head">
+          <div>
+            <div class="settings-row-label">테스트 모드</div>
+            <div class="settings-row-sub">목업 데이터로 앱 동작 확인</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="testModeToggle"${s.testMode ? ' checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">루틴 문서 보기</div>
+        <div class="settings-row-sub">Google Drive의 루틴 MD 파일 불러오기</div>
+        <button class="doc-view-btn" onclick="openRoutineDoc()">
+          <span>📄 문서 열기</span>
+          <span style="color:var(--text3)">→</span>
+        </button>
+      </div>
+    </div>
+
+    <button class="save-settings-btn" onclick="onSaveSettings()">설정 저장</button>`;
+}
+
+function goBackFromSettings() {
+  renderLanding();
+  // 기존 데이터로 UI만 업데이트 (재로딩 없음)
+  updateLandingStatus();
+  updateWeekAlert();
+}
+
+function onSaveSettings() {
+  const week     = getThisWeekRange();
+  const chips    = document.querySelectorAll('#rest-day-chips .day-chip');
+  const restDays = [...chips].filter(c => c.classList.contains('on')).map(c => c.dataset.date);
+  saveSettingsData({
+    startDay: parseInt(document.getElementById('startDaySelect').value),
+    sheetUrl: document.getElementById('sheetUrlInput').value.trim(),
+    testMode: document.getElementById('testModeToggle').checked,
+    restDays: { weekRange: week.range, days: restDays },
+  });
+  // 설정 바뀌었으니 데이터 재로딩
+  missionCache = null; weekStatus = null; missionLoading = true;
+  renderLanding();
+  loadBackgroundData();
+}
+
+async function openRoutineDoc() {
+  const container = document.getElementById('popup-container');
+  container.innerHTML = `
+    <div class="popup-overlay" onclick="closePopup(event)">
+      <div class="popup-sheet">
+        <div class="popup-header">
+          <span class="popup-label">📄 루틴 문서</span>
+          <button class="popup-close" onclick="closePopup()">닫기</button>
+        </div>
+        <div class="popup-loading">불러오는 중...</div>
+      </div>
+    </div>`;
+  try {
+    const res  = await apiGet({ action: 'getRoutineDoc' });
+    const html = renderMarkdown(res.content || '내용 없음');
+    const sheet = container.querySelector('.popup-sheet');
+    if (sheet) sheet.innerHTML = `
+      <div class="popup-header">
+        <span class="popup-label">📄 루틴 문서</span>
+        <button class="popup-close" onclick="closePopup()">닫기</button>
+      </div>
+      <div class="md-scroll"><div class="md-content">${html}</div></div>`;
+  } catch(err) {
+    const sheet = container.querySelector('.popup-sheet');
+    if (sheet) sheet.innerHTML = `
+      <div class="popup-header">
+        <span class="popup-label">📄 루틴 문서</span>
+        <button class="popup-close" onclick="closePopup()">닫기</button>
+      </div>
+      <p style="color:#ef4444;font-size:14px;padding-top:8px">오류: ${err.message}</p>`;
+  }
+}
+
+function applyInline(text) {
+  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+}
+function renderMarkdown(md) {
+  const lines = md.split('\n');
+  let html = '', inList = false;
+  for (const line of lines) {
+    if (/^---+$/.test(line.trim())) {
+      if (inList) { html += '</ul>'; inList = false; } html += '<hr>';
+    } else if (/^### (.+)/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false; } html += `<h3>${applyInline(line.replace(/^### /,''))}</h3>`;
+    } else if (/^## (.+)/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false; } html += `<h2>${applyInline(line.replace(/^## /,''))}</h2>`;
+    } else if (/^# (.+)/.test(line)) {
+      if (inList) { html += '</ul>'; inList = false; } html += `<h1>${applyInline(line.replace(/^# /,''))}</h1>`;
+    } else if (/^[-*] (.+)/.test(line) || /^\d+\. (.+)/.test(line)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += `<li>${applyInline(line.replace(/^[-*] /,'').replace(/^\d+\. /,''))}</li>`;
+    } else if (line.trim() === '') {
+      if (inList) { html += '</ul>'; inList = false; } html += '<br>';
+    } else {
+      if (inList) { html += '</ul>'; inList = false; } html += `<p>${applyInline(line)}</p>`;
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+/* ── Popup helper ──────────────────────────────────────────── */
+function closePopup(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('popup-container').innerHTML = '';
+}
+
+/* ── Background data loading ───────────────────────────────── */
+async function loadBackgroundData() {
+  const s = getSettings();
+  // 주차 등록 확인 (루틴 시작 요일에만)
+  if (new Date().getDay() === s.startDay) {
+    try { weekStatus = await apiGet({ action: 'checkWeekStatus' }); updateWeekAlert(); } catch (_) {}
+  }
+  // 미션 데이터
+  try {
+    missionCache = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
+  } catch(err) {
+    missionCache = { error: err.message, exercises: [] };
+  }
+  missionLoading = false;
+  updateLandingStatus();
+}
+
+/* ── Start Workout ─────────────────────────────────────────── */
+async function startWorkout() {
+  if (missionLoading) {
+    const btn = document.getElementById('start-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '불러오는 중...'; }
+    await new Promise(resolve => {
+      const t = setInterval(() => { if (!missionLoading) { clearInterval(t); resolve(); } }, 100);
+    });
+  }
+  if (!missionCache || missionCache.error) {
+    renderError(missionCache?.error || '미션 데이터를 불러올 수 없어요'); return;
+  }
+  if (!missionCache.exercises || missionCache.exercises.length === 0) {
+    renderRestDay(); return;
+  }
+
+  missionData = missionCache;
+  const lastLog = missionData.lastWeekLog || [];
+  const norm    = s => s.replace(/\s/g,'');
+  exercises = missionData.exercises.map((ex, i) => {
+    const lastEx     = lastLog.find(l => norm(l.name) === norm(ex.name));
+    const lastRecord = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
+    return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
+  });
+  programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
+  skipped      = {}; editingCards = {}; showAddForm = false; introText = null;
+  renderMain();
+
+  // 인트로 백그라운드 로딩
+  try {
+    const r = await apiGet({ action: 'getCoaching', type: 'intro', missionData: encodeURIComponent(JSON.stringify(missionData)) });
+    introText = r.text || null;
+  } catch (_) { introText = null; }
+}
+
+/* ── Render utilities ──────────────────────────────────────── */
+function renderError(msg) {
+  document.getElementById('app').innerHTML = `<div class="error-card"><h3>오류가 발생했어요</h3><p>${msg}</p></div>`;
+}
+function renderRestDay() {
+  document.getElementById('app').innerHTML = `<div class="rest-day"><h2>💤 오늘은 쉬는 날</h2><p>회복도 훈련이에요. 잘 쉬어요.</p></div>`;
+}
+
+/* ── Program badge ─────────────────────────────────────────── */
 function toggleProgramEdit() {
   programEditMode = !programEditMode;
   const btn = document.getElementById('programEditBtn');
@@ -527,173 +681,92 @@ function renderProgramBadge() {
     : `<span class="program-badge">${programName}</span>`;
 }
 
-/* ── Intro popup ── */
+/* ── Intro popup ───────────────────────────────────────────── */
 function showIntroPopup() {
   const container = document.getElementById('popup-container');
-  const body = introText
-    ? `<div class="popup-text">${introText}</div>`
-    : `<div class="popup-loading">코치 메시지 불러오는 중...</div>`;
+  const body = introText ? `<div class="popup-text">${introText}</div>` : `<div class="popup-loading">코치 메시지 불러오는 중...</div>`;
   container.innerHTML = `
-    <div class="popup-overlay" onclick="closeIntroPopup(event)">
+    <div class="popup-overlay" onclick="closePopup(event)">
       <div class="popup-sheet">
         <div class="popup-header">
           <span class="popup-label">💬 코치 메시지</span>
-          <button class="popup-close" onclick="closeIntroPopup()">닫기</button>
+          <button class="popup-close" onclick="closePopup()">닫기</button>
         </div>
         ${body}
       </div>
     </div>`;
 }
-function closeIntroPopup(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('popup-container').innerHTML = '';
-}
 
-/* ── Progress dots ── */
+/* ── Progress dots ─────────────────────────────────────────── */
 function updateDots() {
   exercises.forEach((ex, i) => {
     const dot = document.getElementById(`dot-${i}`);
     if (!dot) return;
     if (skipped[ex.id]) { dot.classList.add('done'); return; }
     let all = true;
-    for (let s = 1; s <= ex.sets; s++) {
-      if (!document.getElementById(`e${ex.id}s${s}`)?.value) { all = false; break; }
-    }
+    for (let s = 1; s <= ex.sets; s++) { if (!document.getElementById(`e${ex.id}s${s}`)?.value) { all = false; break; } }
     dot.classList.toggle('done', all);
   });
 }
 
-/* ── Render cards ── */
+/* ── Render cards ──────────────────────────────────────────── */
 function renderCards() {
   const container = document.getElementById('cards');
   if (!container) return;
   container.innerHTML = '';
-
   exercises.forEach((ex, idx) => {
-    const isEditing = !!editingCards[ex.id];
-    const isSkipped = !!skipped[ex.id];
-
-    // Meta tags
+    const isEditing = !!editingCards[ex.id], isSkipped = !!skipped[ex.id];
     const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
     let metaHTML = '';
     if (hasTarget) {
       metaHTML += `<div class="meta-tag">목표 <span>${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트</span></div>`;
     } else {
-      metaHTML += `<div class="meta-tag"><span>${ex.targetWeight || 0}kg</span></div>`;
+      metaHTML += `<div class="meta-tag"><span>${ex.targetWeight||0}kg</span></div>`;
       metaHTML += `<div class="meta-tag"><span>${ex.sets}</span>세트</div>`;
-      metaHTML += `<div class="meta-tag">목표 <span>${ex.targetReps || '-'}회</span></div>`;
+      metaHTML += `<div class="meta-tag">목표 <span>${ex.targetReps||'-'}회</span></div>`;
     }
-    if (ex.lastRecord) {
-      metaHTML += `<div class="meta-tag last">지난 <span>${ex.lastRecord}</span></div>`;
-    }
-    if (ex.tag) {
-      metaHTML += `<div class="meta-tag">${ex.tag}</div>`;
-    }
+    if (ex.lastRecord) metaHTML += `<div class="meta-tag last">지난 <span>${ex.lastRecord}</span></div>`;
+    if (ex.tag)        metaHTML += `<div class="meta-tag">${ex.tag}</div>`;
 
-    // Edit fields
     const editFieldsHTML = isEditing ? `
       <div class="edit-fields">
-        <div class="edit-row">
-          <span class="edit-label">이름</span>
-          <input class="edit-input" style="font-size:15px" value="${ex.name}"
-            oninput="exercises[${idx}].name=this.value;document.getElementById('exname-${idx}').textContent=this.value">
-        </div>
-        <div class="edit-row">
-          <span class="edit-label">중량</span>
-          <input class="edit-input" type="number" value="${ex.targetWeight || 0}" style="max-width:80px"
-            oninput="exercises[${idx}].targetWeight=Number(this.value)" inputmode="numeric">
-          <span class="edit-unit">kg</span>
-        </div>
-        <div class="edit-row">
-          <span class="edit-label">세트</span>
-          <input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px"
-            oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric">
-          <span class="edit-unit">세트</span>
-        </div>
-        <div class="edit-row">
-          <span class="edit-label">목표</span>
-          <input class="edit-input" type="number" value="${ex.targetReps || 0}" style="max-width:60px"
-            oninput="exercises[${idx}].targetReps=Number(this.value)" inputmode="numeric">
-          <span class="edit-unit">회</span>
-        </div>
+        <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.name}" oninput="exercises[${idx}].name=this.value;document.getElementById('exname-${idx}').textContent=this.value"></div>
+        <div class="edit-row"><span class="edit-label">중량</span><input class="edit-input" type="number" value="${ex.targetWeight||0}" style="max-width:80px" oninput="exercises[${idx}].targetWeight=Number(this.value)" inputmode="numeric"><span class="edit-unit">kg</span></div>
+        <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
+        <div class="edit-row"><span class="edit-label">목표</span><input class="edit-input" type="number" value="${ex.targetReps||0}" style="max-width:60px" oninput="exercises[${idx}].targetReps=Number(this.value)" inputmode="numeric"><span class="edit-unit">회</span></div>
       </div>` : '';
 
-    // Sets inputs
     let setsHTML = '';
     for (let s = 1; s <= ex.sets; s++) {
-      setsHTML += `
-        <div class="set-col">
-          <div class="set-num">${s}세트</div>
-          <input class="set-input" id="e${ex.id}s${s}" type="number" min="0" max="999"
-            placeholder="${ex.targetReps || '-'}" inputmode="numeric"
-            onchange="onSetInput(${idx})">
-        </div>`;
+      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" onchange="onSetInput(${idx})"></div>`;
     }
-
     const bodyHTML = !isEditing && !isSkipped ? `
       <div class="sec-label">휴식시간</div>
       <div class="rest-row">
-        <div class="rest-col">
-          <label>분</label>
-          <div class="rest-wrap">
-            <input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric">
-            <span class="rest-unit-abs">분</span>
-          </div>
-        </div>
-        <div class="rest-col">
-          <label>초</label>
-          <div class="rest-wrap">
-            <input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric">
-            <span class="rest-unit-abs">초</span>
-          </div>
-        </div>
+        <div class="rest-col"><label>분</label><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">분</span></div></div>
+        <div class="rest-col"><label>초</label><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric"><span class="rest-unit-abs">초</span></div></div>
       </div>
       <div class="sec-label">수행 결과</div>
       <div class="sets-row">${setsHTML}</div>
       <div class="sec-label">메모</div>
       <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…"></textarea>` : '';
 
-    // Right buttons
     const rightBtns = isEditing
-      ? `<div class="card-btns">
-          <button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button>
-          <button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button>
-        </div>`
-      : `<div class="card-btns">
-          <button class="card-btn" onclick="toggleCardEdit(${ex.id})">✏️ 편집</button>
-          <div class="skip-arrow-row">
-            <button class="card-btn ${isSkipped ? 'skip-on' : ''}" onclick="toggleSkip(${ex.id})">${isSkipped ? '생략됨' : '생략'}</button>
-            <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
-            <button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button>
-          </div>
-        </div>`;
+      ? `<div class="card-btns"><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button></div>`
+      : `<div class="card-btns"><button class="card-btn" onclick="toggleCardEdit(${ex.id})">✏️ 편집</button><div class="skip-arrow-row"><button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button><button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button><button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button></div></div>`;
 
     const card = document.createElement('div');
     card.id = `card-${idx}`;
-    card.className = `ex-card${isEditing ? ' editing' : ''}${isSkipped ? ' skipped' : ''}`;
-    card.innerHTML = `
-      <div class="card-top">
-        <div class="card-top-row">
-          <div class="card-info">
-            <div class="ex-num">EXERCISE ${String(idx + 1).padStart(2, '0')}</div>
-            <div class="ex-name" id="exname-${idx}">${ex.name}</div>
-            <div class="ex-meta">${metaHTML}</div>
-          </div>
-          ${rightBtns}
-        </div>
-      </div>
-      ${editFieldsHTML}
-      ${bodyHTML}`;
+    card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-num">EXERCISE ${String(idx+1).padStart(2,'0')}</div><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}`;
     container.appendChild(card);
   });
-
   updateDots();
 }
 
-/* ── Card interactions ── */
+/* ── Card interactions ─────────────────────────────────────── */
 function onSetInput(idx) {
-  const ex = exercises[idx];
-  let all = true;
+  const ex = exercises[idx]; let all = true;
   for (let s = 1; s <= ex.sets; s++) {
     const el = document.getElementById(`e${ex.id}s${s}`);
     if (el?.value) el.classList.add('has-value');
@@ -702,15 +775,8 @@ function onSetInput(idx) {
   document.getElementById(`card-${idx}`)?.classList.toggle('completed', all);
   updateDots();
 }
-
-function toggleCardEdit(id) {
-  editingCards[id] = !editingCards[id];
-  renderCards();
-}
-function toggleSkip(id) {
-  skipped[id] = !skipped[id];
-  renderCards();
-}
+function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
+function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
 function moveEx(idx, dir) {
   const next = idx + dir;
   if (next < 0 || next >= exercises.length) return;
@@ -724,7 +790,7 @@ function deleteEx(idx) {
   renderCards();
 }
 
-/* ── Add exercise ── */
+/* ── Add exercise ──────────────────────────────────────────── */
 function toggleAddForm() {
   showAddForm = !showAddForm;
   document.getElementById('addForm').classList.toggle('show', showAddForm);
@@ -732,185 +798,79 @@ function toggleAddForm() {
 function confirmAdd() {
   const name = document.getElementById('newName').value.trim();
   if (!name) { alert('운동명을 입력해주세요'); return; }
-  exercises.push({
-    id: Date.now(),
-    name,
-    sets:         Number(document.getElementById('newSets').value) || 3,
-    targetWeight: Number(document.getElementById('newKg').value) || 0,
-    targetReps:   Number(document.getElementById('newTarget').value) || 10,
-    tag:          null,
-    lastRecord:   null,
-    variation:    '',
-  });
+  exercises.push({ id: Date.now(), name, sets: Number(document.getElementById('newSets').value)||3, targetWeight: Number(document.getElementById('newKg').value)||0, targetReps: Number(document.getElementById('newTarget').value)||10, tag: null, lastRecord: null, variation: '' });
   ['newName','newKg','newSets','newTarget'].forEach(id => document.getElementById(id).value = '');
   showAddForm = false;
   document.getElementById('addForm').classList.remove('show');
   renderCards();
 }
 
-/* ── Complete ── */
+/* ── Complete ──────────────────────────────────────────────── */
 async function onComplete() {
   const results = exercises.map(ex => ({
-    name:       ex.name,
-    variation:  ex.variation || '',
-    sets:       ex.sets,
-    weight:     ex.targetWeight || 0,
-    reps:       Array.from({ length: ex.sets }, (_, s) => {
-      const v = document.getElementById(`e${ex.id}s${s + 1}`)?.value;
-      return v ? parseInt(v) : 0;
-    }),
-    memo:       skipped[ex.id] ? '(생략)' : (document.getElementById(`e${ex.id}memo`)?.value.trim() || ''),
-    restMin:    skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}min`)?.value) || null),
-    restSec:    skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}sec`)?.value) || null),
-    skipped:    !!skipped[ex.id],
+    name: ex.name, variation: ex.variation||'', sets: ex.sets, weight: ex.targetWeight||0,
+    reps: Array.from({ length: ex.sets }, (_, s) => { const v = document.getElementById(`e${ex.id}s${s+1}`)?.value; return v ? parseInt(v) : 0; }),
+    memo:    skipped[ex.id] ? '(생략)' : (document.getElementById(`e${ex.id}memo`)?.value.trim()||''),
+    restMin: skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}min`)?.value)||null),
+    restSec: skipped[ex.id] ? null : (parseInt(document.getElementById(`e${ex.id}sec`)?.value)||null),
+    skipped: !!skipped[ex.id],
   }));
-
   const btn = document.querySelector('.complete-btn');
-  btn.disabled = true;
-  btn.textContent = '저장 중...';
-
+  btn.disabled = true; btn.textContent = '저장 중...';
   try {
-    await apiPost({ action: 'saveResult', data: {
-      date: missionData.date, day: missionData.day,
-      routineName: programName, results,
-    }});
-
+    await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     btn.textContent = '피드백 받는 중...';
-    const outro = await apiPost({ action: 'getCoaching', type: 'outro',
-      missionData: { mission: missionData, results },
-    });
-
+    const outro = await apiPost({ action: 'getCoaching', type: 'outro', missionData: { mission: missionData, results } });
     const completeArea = document.getElementById('completeArea');
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
-    outroEl.innerHTML = `
-      <div class="outro-label">🔥 오늘의 피드백</div>
-      <div class="outro-text">${outro.text || '오늘도 수고했어! 💪'}</div>`;
+    outroEl.innerHTML = `<div class="outro-label">🔥 오늘의 피드백</div><div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>`;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch(err) {
-    btn.disabled = false;
-    btn.textContent = '✓ 운동 완료';
+    btn.disabled = false; btn.textContent = '✓ 운동 완료';
     alert('오류: ' + err.message);
   }
 }
 
-/* ── Main render ── */
+/* ── Render Main (Dashboard) ───────────────────────────────── */
 function renderMain() {
   const d = new Date(missionData.date);
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const dots = exercises.map((_, i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
-
+  const dots = exercises.map((_,i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
   document.getElementById('app').innerHTML = `
     <div class="header">
       <div class="header-top">
-        <div class="header-left">
-          <span class="logo">GYM-COACH</span>
-          <span class="date-label">${dateStr} ${missionData.day}요일</span>
-        </div>
+        <div class="header-left"><span class="logo">GYM-COACH</span><span class="date-label">${dateStr} ${missionData.day}요일</span></div>
         <button class="top-btn" id="programEditBtn" onclick="toggleProgramEdit()">✏️ 편집</button>
       </div>
       <div class="header-mid">
-        <div class="header-mid-left">
-          <span id="programWrap"></span>
-          <button class="intro-btn" onclick="showIntroPopup()">💬 코치</button>
-        </div>
+        <div class="header-mid-left"><span id="programWrap"></span><button class="intro-btn" onclick="showIntroPopup()">💬 코치</button></div>
       </div>
       <div class="progress-bar">${dots}</div>
       <div class="field-label">컨디션 및 특이사항</div>
       <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
     </div>
-
     <div id="cards"></div>
-
     <button class="add-ex-btn" onclick="toggleAddForm()">+ 운동 추가</button>
     <div class="add-form" id="addForm">
       <div class="add-form-title">새 운동 추가</div>
       <div class="add-grid">
-        <div class="add-field full">
-          <label>운동명</label>
-          <input id="newName" type="text" placeholder="예: 레그 컬">
-        </div>
-        <div class="add-field">
-          <label>중량 (kg)</label>
-          <input id="newKg" type="number" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="add-field">
-          <label>세트 수</label>
-          <input id="newSets" type="number" placeholder="3" inputmode="numeric">
-        </div>
-        <div class="add-field">
-          <label>목표 횟수</label>
-          <input id="newTarget" type="number" placeholder="10" inputmode="numeric">
-        </div>
+        <div class="add-field full"><label>운동명</label><input id="newName" type="text" placeholder="예: 레그 컬"></div>
+        <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="add-field"><label>세트 수</label><input id="newSets" type="number" placeholder="3" inputmode="numeric"></div>
+        <div class="add-field"><label>목표 횟수</label><input id="newTarget" type="number" placeholder="10" inputmode="numeric"></div>
       </div>
-      <div class="add-btns">
-        <button class="add-cancel" onclick="toggleAddForm()">취소</button>
-        <button class="add-confirm" onclick="confirmAdd()">추가하기</button>
-      </div>
+      <div class="add-btns"><button class="add-cancel" onclick="toggleAddForm()">취소</button><button class="add-confirm" onclick="confirmAdd()">추가하기</button></div>
     </div>
-
-    <div id="completeArea">
-      <button class="complete-btn" onclick="onComplete()">✓ 운동 완료</button>
-    </div>`;
-
+    <div id="completeArea"><button class="complete-btn" onclick="onComplete()">✓ 운동 완료</button></div>`;
   renderProgramBadge();
   renderCards();
 }
 
-/* ── Init ── */
-async function init() {
-  renderLoading('오늘의 미션 불러오는 중...');
-  try {
-    const data = await apiGet({ action: 'getMission' });
-    if (data.error) throw new Error(data.error);
-    missionData = data;
-
-    if (!data.exercises || data.exercises.length === 0) { renderRestDay(); return; }
-
-    // 지난 기록 매칭
-    const lastLog = data.lastWeekLog || [];
-    const norm = s => s.replace(/\s/g, '');
-    exercises = data.exercises.map((ex, i) => {
-      const lastEx = lastLog.find(l => norm(l.name) === norm(ex.name));
-      const lastRecord = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
-      return {
-        id:           i + 1,
-        name:         ex.name,
-        sets:         ex.sets,
-        tag:          ex.tag || null,
-        variation:    ex.variation || '',
-        targetWeight: ex.targetWeight || 0,
-        targetReps:   ex.targetReps || 0,
-        lastRecord,
-      };
-    });
-
-    // 루틴명에서 프로그램 이름 추출
-    programName = data.routineName.includes(':')
-      ? data.routineName.split(':').slice(1).join(':').trim()
-      : data.routineName;
-
-    // 메인 화면 먼저 렌더
-    renderMain();
-
-    // 인트로 백그라운드 로딩 (화면 전환 없음)
-    try {
-      const r = await apiGet({
-        action: 'getCoaching',
-        type: 'intro',
-        missionData: encodeURIComponent(JSON.stringify(data)),
-      });
-      introText = r.text || null;
-    } catch (_) {
-      introText = null;
-    }
-  } catch(err) {
-    renderError(err.message);
-  }
-}
-
-init();
+/* ── Init ──────────────────────────────────────────────────── */
+renderLanding();
+loadBackgroundData();
 </script>
 </body>
 </html>
