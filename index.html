@@ -145,8 +145,6 @@
     .complete-btn { width: 100%; background: linear-gradient(135deg, #FF8C42, #FF5C00); color: #000; font-size: 17px; font-weight: 900; border: none; border-radius: 16px; padding: 20px; cursor: pointer; transition: transform .15s; font-family: inherit; margin-top: 6px; }
     .complete-btn:active { transform: scale(0.97); }
     .complete-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
-    .done-btn { width: 100%; background: rgba(34,197,94,0.12); border: 1.5px solid rgba(34,197,94,0.35); color: var(--green); font-size: 14px; font-weight: 800; padding: 13px; border-radius: 13px; cursor: pointer; font-family: inherit; margin-top: 14px; transition: all .2s; letter-spacing: 0.3px; }
-    .done-btn:active { background: rgba(34,197,94,0.22); }
     .outro-card { margin-top: 6px; padding: 20px; background: rgba(34,197,94,0.07); border: 1.5px solid rgba(34,197,94,0.2); border-radius: 16px; }
     .outro-label { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
     .outro-text { font-size: 15px; line-height: 1.75; white-space: pre-wrap; }
@@ -250,6 +248,25 @@
     .md-content hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
     .md-content code { background: #1a1a1a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
 
+    /* ── Routine Doc Page ── */
+    .routine-nav-btn { background: none; border: 1.5px solid var(--border2); color: var(--text2); font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .routine-nav-btn:active { border-color: var(--accent); color: var(--accent); }
+    .routine-section { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; margin-bottom: 10px; overflow: hidden; }
+    .routine-section-header { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; cursor: pointer; font-family: inherit; color: var(--text1); gap: 8px; }
+    .routine-section-header:active { background: var(--surface2); }
+    .routine-section-title { font-size: 15px; font-weight: 800; text-align: left; flex: 1; }
+    .routine-section-icon { font-size: 20px; color: var(--text3); flex-shrink: 0; transition: transform .25s; display: inline-block; }
+    .routine-section-icon.open { transform: rotate(90deg); }
+    .routine-section-body { padding: 0 18px 18px; border-top: 1px solid var(--border); }
+    .rs-meta-block { padding: 10px 0 6px; }
+    .rs-meta-list { list-style: none; padding: 0; margin: 0; }
+    .rs-meta-list li { font-size: 12px; color: var(--text2); padding: 2px 0; line-height: 1.7; }
+    .rs-h3 { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: 0.04em; margin: 18px 0 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .rs-h3:first-child, .rs-h3.first { border-top: none; margin-top: 6px; padding-top: 0; }
+    .rs-ex-list { padding-left: 20px; margin: 0 0 4px 0; }
+    .rs-ex-list li { font-size: 14px; color: var(--text1); line-height: 1.85; margin-bottom: 2px; }
+    .routine-section-body > p { font-size: 13px; color: var(--text2); margin: 4px 0; }
+
     /* ── Per-set Weight Input ── */
     .set-weight-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 10px; color: #777; font-size: 14px; font-weight: 700; text-align: center; padding: 8px 4px; outline: none; -moz-appearance: textfield; margin-bottom: 5px; }
     .set-weight-input::-webkit-outer-spin-button, .set-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
@@ -299,14 +316,12 @@ let programEditMode = false;
 let programName    = '';
 let showAddForm    = false;
 let introText      = null;
-let collapsedCards  = {};
-let doneCards       = {};   // { [exId]: boolean } — 모든 세트 입력 완료
-let completedCards  = {};   // { [exId]: boolean } — 완료 버튼 누른 적 있음
-let repsData        = {};   // { [exId]: { [setNum]: value } }
-let memoData        = {};   // { [exId]: value }
-let restData        = {};   // { [exId]: { min, sec } }
-let weightData      = {};   // { [exId]: { [setNum]: value } }
-let isFreeWorkout   = false;
+let collapsedCards = {};
+let repsData       = {};   // { [exId]: { [setNum]: value } }
+let memoData       = {};   // { [exId]: value }
+let restData       = {};   // { [exId]: { min, sec } }
+let weightData     = {};   // { [exId]: { [setNum]: value } }
+let isFreeWorkout  = false;
 
 /* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
@@ -384,6 +399,9 @@ function renderLanding() {
     <div class="landing-date-block" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
       <div class="landing-day-text" style="color: var(--accent); font-weight: 900; font-size: 20px; text-align: right; margin: 0;">${dayAbbr}.</div>
+    </div>
+    <div style="margin-bottom: 10px;">
+      <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄운동루틴</button>
     </div>
     <div class="week-alert" id="week-alert">
       <div class="week-alert-eyebrow">📋 주차 미등록</div>
@@ -574,38 +592,7 @@ function onSaveSettings() {
   loadBackgroundData();
 }
 
-async function openRoutineDoc() {
-  const container = document.getElementById('popup-container');
-  container.innerHTML = `
-    <div class="popup-overlay" onclick="closePopup(event)">
-      <div class="popup-sheet">
-        <div class="popup-header">
-          <span class="popup-label">📄 루틴 문서</span>
-          <button class="popup-close" onclick="closePopup()">닫기</button>
-        </div>
-        <div class="popup-loading">불러오는 중...</div>
-      </div>
-    </div>`;
-  try {
-    const res  = await apiGet({ action: 'getRoutineDoc' });
-    const html = renderMarkdown(res.content || '내용 없음');
-    const sheet = container.querySelector('.popup-sheet');
-    if (sheet) sheet.innerHTML = `
-      <div class="popup-header">
-        <span class="popup-label">📄 루틴 문서</span>
-        <button class="popup-close" onclick="closePopup()">닫기</button>
-      </div>
-      <div class="md-scroll"><div class="md-content">${html}</div></div>`;
-  } catch(err) {
-    const sheet = container.querySelector('.popup-sheet');
-    if (sheet) sheet.innerHTML = `
-      <div class="popup-header">
-        <span class="popup-label">📄 루틴 문서</span>
-        <button class="popup-close" onclick="closePopup()">닫기</button>
-      </div>
-      <p style="color:#ef4444;font-size:14px;padding-top:8px">오류: ${err.message}</p>`;
-  }
-}
+function openRoutineDoc() { renderRoutineDoc(); }
 
 function applyInline(text) {
   return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
@@ -632,6 +619,126 @@ function renderMarkdown(md) {
     }
   }
   if (inList) html += '</ul>';
+  return html;
+}
+
+/* ── Routine Doc Page ─────────────────────────────────────────── */
+async function renderRoutineDoc() {
+  document.getElementById('app').innerHTML = `
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">← 뒤로</button>
+        <span class="page-title">운동 루틴</span>
+      </div>
+      <span class="logo" style="font-size:16px;font-weight:900;letter-spacing:0.03em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
+    </div>
+    <div id="routine-doc-body">
+      <div class="loading"><div class="spinner"></div><div class="loading-text">루틴 불러오는 중...</div></div>
+    </div>`;
+  try {
+    const res = await apiGet({ action: 'getRoutineDoc' });
+    const html = renderCollapsibleMarkdown(res.content || '');
+    const body = document.getElementById('routine-doc-body');
+    if (body) body.innerHTML = html || '<p style="color:var(--text2);text-align:center;padding:40px 0">루틴 내용이 없어요</p>';
+  } catch(err) {
+    const body = document.getElementById('routine-doc-body');
+    if (body) body.innerHTML = `<div class="error-card"><h3>불러오기 실패</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function toggleRoutineSection(idx) {
+  const body = document.getElementById('rs-body-' + idx);
+  const icon = document.getElementById('rs-icon-' + idx);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.classList.toggle('open', !isOpen);
+}
+
+function renderCollapsibleMarkdown(md) {
+  const lines = md.split('\n');
+  let sections = [], currentSection = null;
+
+  for (const line of lines) {
+    if (/^## (.+)/.test(line)) {
+      if (currentSection) sections.push(currentSection);
+      currentSection = { title: line.replace(/^## /, ''), lines: [] };
+    } else if (currentSection) {
+      currentSection.lines.push(line);
+    }
+    // # 제목과 --- 구분선 앞 내용은 무시 (섹션 카드만 표시)
+  }
+  if (currentSection) sections.push(currentSection);
+
+  // 최신 루틴이 위로 (역순 정렬)
+  sections = sections.slice().reverse();
+
+  let html = '';
+  sections.forEach((sec, idx) => {
+    const bodyHtml = renderRoutineBody(sec.lines.join('\n'));
+    html += `<div class="routine-section">
+        <button class="routine-section-header" onclick="toggleRoutineSection(${idx})">
+          <span class="routine-section-title">${applyInline(sec.title)}</span>
+          <span class="routine-section-icon" id="rs-icon-${idx}">›</span>
+        </button>
+        <div class="routine-section-body" id="rs-body-${idx}" style="display:none">${bodyHtml}</div>
+      </div>`;
+  });
+  return html;
+}
+
+function renderRoutineBody(md) {
+  const lines = md.split('\n');
+  let html = '';
+  let inMeta = true, metaItems = [];
+  let inOL = false, inUL = false;
+  let firstH3 = true;
+
+  const flushLists = () => {
+    if (inOL) { html += '</ol>'; inOL = false; }
+    if (inUL) { html += '</ul>'; inUL = false; }
+  };
+  const flushMeta = () => {
+    if (metaItems.length) {
+      html += '<div class="rs-meta-block"><ul class="rs-meta-list">' +
+        metaItems.map(m => '<li>' + m + '</li>').join('') +
+        '</ul></div>';
+      metaItems = [];
+    }
+    inMeta = false;
+  };
+
+  for (const line of lines) {
+    if (/^---+$/.test(line.trim())) continue;
+
+    if (/^### (.+)/.test(line)) {
+      if (inMeta) flushMeta();
+      flushLists();
+      const cls = firstH3 ? 'rs-h3' : 'rs-h3';
+      html += '<div class="rs-h3' + (firstH3 ? ' first' : '') + '">' + applyInline(line.replace(/^### /, '')) + '</div>';
+      firstH3 = false;
+    } else if (inMeta) {
+      if (/^[-*] (.+)/.test(line)) {
+        metaItems.push(applyInline(line.replace(/^[-*] /, '')));
+      } else if (line.trim() && !/^#/.test(line)) {
+        metaItems.push(applyInline(line));
+      }
+    } else if (/^\d+\. (.+)/.test(line)) {
+      if (inUL) { html += '</ul>'; inUL = false; }
+      if (!inOL) { html += '<ol class="rs-ex-list">'; inOL = true; }
+      html += '<li>' + applyInline(line.replace(/^\d+\. /, '')) + '</li>';
+    } else if (/^[-*] (.+)/.test(line)) {
+      if (inOL) { html += '</ol>'; inOL = false; }
+      if (!inUL) { html += '<ul class="rs-ex-list">'; inUL = true; }
+      html += '<li>' + applyInline(line.replace(/^[-*] /, '')) + '</li>';
+    } else if (line.trim() === '') {
+      flushLists();
+    } else if (line.trim()) {
+      flushLists();
+      html += '<p>' + applyInline(line) + '</p>';
+    }
+  }
+  flushLists();
   return html;
 }
 
@@ -694,7 +801,6 @@ async function startWorkout() {
   });
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
-  doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {}; isFreeWorkout = false;
   renderMain();
 
@@ -718,7 +824,6 @@ function startFreeWorkout() {
   programName = '자유운동';
   isFreeWorkout = true;
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
-  doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {};
   renderMain();
 }
@@ -771,8 +876,6 @@ function updateIntroCardContent() {
   }
 }
 
-function onCardDone(id) { completedCards[id] = true; collapsedCards[id] = true; renderCards(); }
-
 async function sendFreeChat() {
   const input = document.getElementById('freeChatInput');
   const msg = input?.value?.trim();
@@ -782,7 +885,7 @@ async function sendFreeChat() {
   const textEl = document.getElementById('introCardText');
   if (textEl) textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
   try {
-    const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', missionData: { userMessage: msg } });
+    const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', userMessage: msg });
     introText = r.text || '(응답 없음)';
     updateIntroCardContent();
   } catch(err) {
@@ -864,10 +967,7 @@ function renderCards() {
       const card = document.createElement('div');
       card.id = `card-${idx}`;
       card.className = `ex-card${isSkipped?' skipped':''}`;
-      const showDoneBtn = !isSkipped && (doneCards[ex.id] || completedCards[ex.id]);
-      const doneBtnLabel = completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료';
-      const doneBtnHTML = showDoneBtn ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${doneBtnLabel}</button>` : '';
-      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div>${ssRightBtns}</div></div>${sectionsHTML}${sharedBody}${doneBtnHTML}`;
+      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div>${ssRightBtns}</div></div>${sectionsHTML}${sharedBody}`;
       container.appendChild(card);
       return;
     }
@@ -932,10 +1032,7 @@ function renderCards() {
     const card = document.createElement('div');
     card.id = `card-${idx}`;
     card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
-    const showDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id]);
-    const doneBtnLabel = completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료';
-    const doneBtnHTML = showDoneBtn ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${doneBtnLabel}</button>` : '';
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}${doneBtnHTML}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div><div class="ex-meta">${metaHTML}</div></div>${rightBtns}</div></div>${editFieldsHTML}${bodyHTML}`;
     container.appendChild(card);
   });
 }
@@ -950,7 +1047,7 @@ function onSetInput(idx) {
     if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; }
     else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; }
   }
-  if (all) { doneCards[ex.id] = true; renderCards(); }
+  if (all) { collapsedCards[ex.id] = true; renderCards(); }
 }
 function onRestInput(id, field, val) {
   if (!restData[id]) restData[id] = {};
@@ -972,7 +1069,7 @@ function onSupersetInput(idx, subIdx) {
     const k = `${ex.id}_${si}`;
     return Array.from({ length: ex.sets }, (_, s) => !!(repsData[k]?.[s+1])).every(Boolean);
   }).every(Boolean);
-  if (allDone) { doneCards[ex.id] = true; renderCards(); }
+  if (allDone) { collapsedCards[ex.id] = true; renderCards(); }
 }
 function onWeightInput(idx, setNum) {
   const ex = exercises[idx];
