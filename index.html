@@ -289,10 +289,23 @@
 <div id="popup-container"></div>
 <script>
 /* ================================================================
+   index.html — 핸니의 체육관 프론트엔드
+   ─────────────────────────────────────────────────────────────────
+   v1.6 변경사항:
+   - GAS 배포 URL 업데이트 (v1.6)
+   - 인트로 코칭: 페이지 로드 시 prefetch 제거 →
+       버튼 클릭 시점에 condition 포함해서 fetch (apiGet → apiPost)
+   - 아웃트로 코칭: condition 값 포함해서 전송
+   - 자유운동 인트로: condition + freeChatInput 합산 전송 + 버그 픽스
+       (userMessage가 missionData 안에 없던 구조 오류 수정)
+   - 자유운동 아웃트로: type 'freeOutro'로 분리, condition 포함
+   ================================================================ */
+
+/* ================================================================
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycbyOrwbk83YWDG3eMGgMTjZX3zFF1mj7hRrG9Tz1r1Lyngh8ynXvco6AL9CIKzl79eMiEQ/exec',
+  url:   'https://script.google.com/macros/s/AKfycby4c6PU6-I-1Lr3XKY84WQrTaNdAvsF--wvfM2xYwlOW9YMqm2iK_2ahw7y8UqZ2R-XGg/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -812,13 +825,7 @@ async function startWorkout() {
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {}; isFreeWorkout = false;
   renderMain();
-
-  try {
-    const r = await apiGet({ action: 'getCoaching', type: 'intro', missionData: encodeURIComponent(JSON.stringify(missionData)) });
-    introText = r.text || null;
-  } catch (_) { introText = null; }
-  const introCard = document.getElementById('introCard');
-  if (introCard && introCard.style.display !== 'none') updateIntroCardContent();
+  // 인트로 코칭은 버튼 클릭 시점에 condition 포함해서 fetch (prefetch 제거)
 }
 
 /* ── Start Free Workout ───────────────────────────────── */
@@ -868,7 +875,25 @@ function toggleIntroCard() {
   const isOpen = card.style.display !== 'none';
   card.style.display = isOpen ? 'none' : 'block';
   if (btn) btn.classList.toggle('active', !isOpen);
-  if (!isOpen) updateIntroCardContent();
+  if (!isOpen) {
+    if (!isFreeWorkout && !introText) {
+      // 루틴 인트로: 버튼 클릭 시점에 condition 포함해서 fetch
+      fetchRoutineIntro();
+    } else {
+      updateIntroCardContent();
+    }
+  }
+}
+async function fetchRoutineIntro() {
+  const textEl = document.getElementById('introCardText');
+  if (!textEl) return;
+  textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
+  const condition = document.getElementById('condition')?.value?.trim() || '';
+  try {
+    const r = await apiPost({ action: 'getCoaching', type: 'intro', missionData: { mission: missionData, condition } });
+    introText = r.text || null;
+  } catch (_) { introText = null; }
+  updateIntroCardContent();
 }
 function updateIntroCardContent() {
   const textEl = document.getElementById('introCardText');
@@ -878,7 +903,7 @@ function updateIntroCardContent() {
   } else if (isFreeWorkout) {
     textEl.innerHTML = `
       <div class="free-chat-area">
-        <textarea class="free-chat-textarea" id="freeChatInput" placeholder="오늘 담 할 일, 콘디션, 궁금한 것 등 자유롭게 말해줘!"></textarea>
+        <textarea class="free-chat-textarea" id="freeChatInput" placeholder="오늘 할 운동, 컨디션, 궁금한 것 등 자유롭게 말해줘!"></textarea>
         <button class="free-chat-send-btn" onclick="sendFreeChat()">코치에게 보내기 →</button>
       </div>`;
   } else {
@@ -892,12 +917,14 @@ async function sendFreeChat() {
   const input = document.getElementById('freeChatInput');
   const msg = input?.value?.trim();
   if (!msg) return;
+  const condition = document.getElementById('condition')?.value?.trim() || '';
   const btn = document.querySelector('.free-chat-send-btn');
   if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
   const textEl = document.getElementById('introCardText');
   if (textEl) textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
   try {
-    const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', userMessage: msg });
+    // missionData 구조로 전송 (버그 픽스: 기존엔 최상위 키로 보내 GAS에서 읽지 못했음)
+    const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', missionData: { userMessage: msg, condition } });
     introText = r.text || '(응답 없음)';
     updateIntroCardContent();
   } catch(err) {
@@ -1172,12 +1199,18 @@ async function onComplete() {
       skipped: !!skipped[ex.id],
     };
   });
+  const condition = document.getElementById('condition')?.value?.trim() || '';
   const btn = document.querySelector('.complete-btn');
   btn.disabled = true; btn.textContent = '저장 중...';
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     btn.textContent = '피드백 받는 중...';
-    const outro = await apiPost({ action: 'getCoaching', type: 'outro', missionData: { mission: missionData, results } });
+    // 자유운동은 freeOutro 타입으로 분리, 모든 타입에 condition 포함
+    const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
+    const outroPayload = isFreeWorkout
+      ? { results, condition }
+      : { mission: missionData, results, condition };
+    const outro = await apiPost({ action: 'getCoaching', type: outroType, missionData: outroPayload });
     const completeArea = document.getElementById('completeArea');
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
