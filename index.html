@@ -328,7 +328,7 @@ function getMockMission() {
     date: toIso(today), day: dayNames[today.getDay()],
     routineName: '테스트: 상체 A',
     exercises: [
-      { name: '벤치프레스', sets: 4, tag: null, isSuperset: false, variation: '', targetWeight: 80, targetReps: 8, memo: '' },
+      { name: '벤치프레스', sets: 4, tag: null, isSuperset: false, targetWeight: 80, targetReps: 8, memo: '' },
       {
         name: '상체 슈퍼세트', sets: 3, tag: null, isSuperset: true,
         subExercises: [
@@ -1010,6 +1010,14 @@ function confirmAdd() {
   renderCards();
 }
 
+function formatRest(data) {
+  if (!data) return '';
+  const min = data.min ? parseInt(data.min) : 0;
+  const sec = data.sec ? parseInt(data.sec) : 0;
+  if (!min && !sec) return '';
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+
 /* ── Complete ──────────────────────────────────────────────── */
 async function onComplete() {
   const results = exercises.map(ex => {
@@ -1017,8 +1025,7 @@ async function onComplete() {
       return {
         name: ex.name, isSuperset: true, sets: ex.sets,
         memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
-        restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
-        restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
+        rest:    skipped[ex.id] ? '' : formatRest(restData[ex.id]),
         skipped: !!skipped[ex.id],
         subResults: (ex.subExercises || []).map((sub, si) => ({
           name: sub.name, variation: sub.variation||'',
@@ -1034,8 +1041,7 @@ async function onComplete() {
       weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[ex.id]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (ex.targetWeight||0); }),
       reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
       memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
-      restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
-      restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
+      rest:    skipped[ex.id] ? '' : formatRest(restData[ex.id]),
       skipped: !!skipped[ex.id],
     };
   });
