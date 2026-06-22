@@ -314,7 +314,7 @@
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycby4c6PU6-I-1Lr3XKY84WQrTaNdAvsF--wvfM2xYwlOW9YMqm2iK_2ahw7y8UqZ2R-XGg/exec',
+  url:   'https://script.google.com/macros/s/AKfycbzq_1kid0Ez4wrww5PT_J5DTdmrNP_K0JTO-1gzPkPGjhkX0fVtZju2bHNY-_n3h4_j9w/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -497,13 +497,17 @@ async function onRegisterWeek() {
   try {
     const result = await apiPost({ action: 'registerWeek' });
     if (result.success) {
-      if (btn) btn.textContent = '✓ 등록됐어요!';
       const { sheetUrl } = getSettings();
-      if (sheetUrl) setTimeout(() => window.open(sheetUrl, '_blank'), 400);
-      setTimeout(() => {
-        const el = document.getElementById('week-alert');
-        if (el) el.classList.remove('show');
-      }, 1800);
+      if (sheetUrl && btn) {
+        btn.outerHTML = `<a href="${sheetUrl}" target="_blank" class="week-alert-btn" style="display:block;text-align:center;text-decoration:none;">✓ 등록됐어요! 스프레드시트 열기 →</a>`;
+      } else if (btn) {
+        btn.textContent = '✓ 등록됐어요!';
+        btn.disabled = true;
+        setTimeout(() => {
+          const el = document.getElementById('week-alert');
+          if (el) el.classList.remove('show');
+        }, 1800);
+      }
     }
   } catch(err) {
     if (btn) { btn.disabled = false; btn.textContent = '스프레드시트에서 등록하기 →'; }
@@ -774,9 +778,7 @@ function closePopup(e) {
 /* ── Background data loading ───────────────────────────────── */
 async function loadBackgroundData() {
   const s = getSettings();
-  if (new Date().getDay() === s.startDay) {
-    try { weekStatus = await apiGet({ action: 'checkWeekStatus' }); updateWeekAlert(); } catch (_) {}
-  }
+  try { weekStatus = await apiGet({ action: 'checkWeekStatus' }); updateWeekAlert(); } catch (_) {}
   try {
     missionCache = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
   } catch(err) {
