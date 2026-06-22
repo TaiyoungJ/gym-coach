@@ -9,7 +9,7 @@
   "background_color": "#1e1e28",
   "icons": [
     {
-      "src": "/Icon.png",
+      "src": "./Icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
