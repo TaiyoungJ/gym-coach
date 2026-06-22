@@ -247,6 +247,20 @@
     .md-content p { margin-bottom: 8px; }
     .md-content hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
     .md-content code { background: #1a1a1a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
+
+    /* ── Per-set Weight Input ── */
+    .set-weight-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 10px; color: #777; font-size: 14px; font-weight: 700; text-align: center; padding: 8px 4px; outline: none; -moz-appearance: textfield; margin-bottom: 5px; }
+    .set-weight-input::-webkit-outer-spin-button, .set-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .set-weight-input:focus { border-color: var(--accent); color: var(--text1); }
+    .set-weight-input.modified { border-color: rgba(255,140,66,0.4); color: var(--accent); }
+
+    /* ── Free Workout Chat ── */
+    .free-chat-area { display: flex; flex-direction: column; gap: 10px; }
+    .free-chat-textarea { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 12px; color: var(--text1); font-size: 14px; padding: 12px; outline: none; resize: none; min-height: 80px; font-family: inherit; line-height: 1.6; }
+    .free-chat-textarea::placeholder { color: var(--text3); }
+    .free-chat-textarea:focus { border-color: var(--accent); }
+    .free-chat-send-btn { width: 100%; background: var(--accent); color: #000; font-size: 14px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+    .free-chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -287,6 +301,8 @@ let collapsedCards = {};
 let repsData       = {};   // { [exId]: { [setNum]: value } }
 let memoData       = {};   // { [exId]: value }
 let restData       = {};   // { [exId]: { min, sec } }
+let weightData     = {};   // { [exId]: { [setNum]: value } }
+let isFreeWorkout  = false;
 
 /* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
@@ -382,6 +398,7 @@ function renderLanding() {
     </div>
     <div id="start-btn-area">
       <button class="landing-start-btn" id="start-btn" onclick="startWorkout()">운동 시작하기 →</button>
+      <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>
     </div>`;
 }
 
@@ -673,7 +690,7 @@ async function startWorkout() {
   });
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
-  repsData = {}; memoData = {}; restData = {};
+  repsData = {}; memoData = {}; restData = {}; weightData = {}; isFreeWorkout = false;
   renderMain();
 
   try {
@@ -682,6 +699,22 @@ async function startWorkout() {
   } catch (_) { introText = null; }
   const introCard = document.getElementById('introCard');
   if (introCard && introCard.style.display !== 'none') updateIntroCardContent();
+}
+
+/* ── Start Free Workout ───────────────────────────────── */
+function startFreeWorkout() {
+  const now = new Date();
+  const dayNames = ['일','월','화','수','목','금','토'];
+  missionData = {
+    date: toIso(now), day: dayNames[now.getDay()],
+    routineName: '자유운동', exercises: [], lastWeekLog: [],
+  };
+  exercises = [];
+  programName = '자유운동';
+  isFreeWorkout = true;
+  skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
+  repsData = {}; memoData = {}; restData = {}; weightData = {};
+  renderMain();
 }
 
 /* ── Render utilities ──────────────────────────────────────── */
@@ -719,9 +752,36 @@ function toggleIntroCard() {
 function updateIntroCardContent() {
   const textEl = document.getElementById('introCardText');
   if (!textEl) return;
-  textEl.innerHTML = introText
-    ? introText.replace(/\n/g, '<br>')
-    : '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
+  if (introText) {
+    textEl.innerHTML = introText.replace(/\n/g, '<br>');
+  } else if (isFreeWorkout) {
+    textEl.innerHTML = `
+      <div class="free-chat-area">
+        <textarea class="free-chat-textarea" id="freeChatInput" placeholder="오늘 담 할 일, 콘디션, 궁금한 것 등 자유롭게 말해줘!"></textarea>
+        <button class="free-chat-send-btn" onclick="sendFreeChat()">코치에게 보내기 →</button>
+      </div>`;
+  } else {
+    textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
+  }
+}
+
+async function sendFreeChat() {
+  const input = document.getElementById('freeChatInput');
+  const msg = input?.value?.trim();
+  if (!msg) return;
+  const btn = document.querySelector('.free-chat-send-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
+  const textEl = document.getElementById('introCardText');
+  if (textEl) textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
+  try {
+    const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', userMessage: msg });
+    introText = r.text || '(응답 없음)';
+    updateIntroCardContent();
+  } catch(err) {
+    introText = null;
+    if (textEl) textEl.innerHTML = `<div style="color:#ef4444;font-size:14px">오류: ${err.message}</div>`;
+    if (btn) { btn.disabled = false; btn.textContent = '코치에게 보내기 →'; }
+  }
 }
 
 /* ── Render cards ──────────────────────────────────────────── */
@@ -762,7 +822,10 @@ function renderCards() {
         for (let s = 1; s <= ex.sets; s++) {
           const key = `${ex.id}_${subIdx}`;
           const sv = repsData[key]?.[s] || '';
-          setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
+          const wStored = weightData[key]?.[s];
+          const wVal = (wStored !== undefined && wStored !== '') ? wStored : (sub.targetWeight || 0);
+          const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (sub.targetWeight || 0));
+          setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         if (subIdx > 0) sectionsHTML += `<div class="superset-divider">⚡ ⚡ ⚡</div>`;
         sectionsHTML += `
@@ -824,7 +887,10 @@ function renderCards() {
     let setsHTML = '';
     for (let s = 1; s <= ex.sets; s++) {
       const sv = repsData[ex.id]?.[s] || '';
-      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
+      const wStored = weightData[ex.id]?.[s];
+      const wVal = (wStored !== undefined && wStored !== '') ? wStored : (ex.targetWeight || 0);
+      const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (ex.targetWeight || 0));
+      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
     const lastRecordBadge = ex.lastRecord ? `<span class="meta-tag last" style="font-size:11px">지난: ${ex.lastRecord}</span>` : '';
     const bodyHTML = !isEditing && !isSkipped ? `
@@ -894,6 +960,26 @@ function onSupersetInput(idx, subIdx) {
   }).every(Boolean);
   if (allDone) { collapsedCards[ex.id] = true; renderCards(); }
 }
+function onWeightInput(idx, setNum) {
+  const ex = exercises[idx];
+  const el = document.getElementById(`ew${ex.id}s${setNum}`);
+  const val = el?.value ?? '';
+  if (!weightData[ex.id]) weightData[ex.id] = {};
+  weightData[ex.id][setNum] = val;
+  const isModified = val !== '' && parseFloat(val) !== (ex.targetWeight || 0);
+  el?.classList.toggle('modified', isModified);
+}
+function onSupersetWeightInput(idx, subIdx, setNum) {
+  const ex  = exercises[idx];
+  const key = `${ex.id}_${subIdx}`;
+  const el  = document.getElementById(`ew${ex.id}_${subIdx}s${setNum}`);
+  const val = el?.value ?? '';
+  if (!weightData[key]) weightData[key] = {};
+  weightData[key][setNum] = val;
+  const sub = ex.subExercises[subIdx];
+  const isModified = val !== '' && parseFloat(val) !== (sub.targetWeight || 0);
+  el?.classList.toggle('modified', isModified);
+}
 function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
 function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
 function moveEx(idx, dir) {
@@ -935,13 +1021,17 @@ async function onComplete() {
         restSec: skipped[ex.id] ? null : (restData[ex.id]?.sec ? parseInt(restData[ex.id].sec) : null),
         skipped: !!skipped[ex.id],
         subResults: (ex.subExercises || []).map((sub, si) => ({
-          name: sub.name, variation: sub.variation||'', weight: sub.targetWeight||0,
+          name: sub.name, variation: sub.variation||'',
+          weight: sub.targetWeight||0,
+          weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[`${ex.id}_${si}`]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (sub.targetWeight||0); }),
           reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
         })),
       };
     }
     return {
-      name: ex.name, variation: ex.variation||'', sets: ex.sets, weight: ex.targetWeight||0,
+      name: ex.name, variation: ex.variation||'', sets: ex.sets,
+      weight: ex.targetWeight||0,
+      weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[ex.id]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (ex.targetWeight||0); }),
       reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
       memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
       restMin: skipped[ex.id] ? null : (restData[ex.id]?.min ? parseInt(restData[ex.id].min) : null),
@@ -986,7 +1076,7 @@ function renderMain() {
       </div>
       <div class="field-label">컨디션 및 특이사항</div>
       <textarea class="condition-input" id="condition" placeholder="예: 왼쪽 승모근 뭉침&#10;늦게 시작해서 시간 봐가며 진행"></textarea>
-      <button class="intro-btn" id="introBtn" onclick="toggleIntroCard()" style="margin-top:12px;">💬 코치 메시지 보기</button>
+      <button class="intro-btn" id="introBtn" onclick="toggleIntroCard()" style="margin-top:12px;">${isFreeWorkout ? '💬 코치에게 말하기' : '💬 코치 메시지 보기'}</button>
       <div id="introCard" style="display:none;margin-top:10px">
         <div class="intro-card-inner">
           <div class="intro-card-label">💬 코치 메시지</div>
