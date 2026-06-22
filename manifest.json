@@ -2,14 +2,14 @@
   "name": "핸니의 체육관",
   "short_name": "핸니의 체육관",
   "description": "나만의 웨이트 트레이닝 앱",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#1e1e28",
   "background_color": "#1e1e28",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/Icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
