@@ -7,17 +7,17 @@
   <title>핸니의 체육관</title>
   <style>
     :root {
-      --bg: #0d0d0d;
-      --surface: #161616;
-      --surface2: #1e1e1e;
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --surface2: #2a2a2a;
       --accent: #FF8C42;
       --accent-dim: rgba(255,140,66,0.10);
       --text1: #e8e8e8;
       --text2: #888;
-      --text3: #444;
+      --text3: #555;
       --green: #22C55E;
-      --border: #242424;
-      --border2: #2e2e2e;
+      --border: #303030;
+      --border2: #383838;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -93,11 +93,11 @@
     .skip-arrow-row { display: flex; gap: 5px; align-items: center; }
     .arrow-btn { background: var(--surface2); border: 1.5px solid #2a2a2a; color: #777; font-size: 13px; width: 34px; height: 34px; border-radius: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
     .arrow-btn:active { background: #252525; color: var(--accent); border-color: var(--accent); }
-    .edit-fields { background: #111; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .edit-fields { background: #1e1e1e; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .edit-row:last-child { margin-bottom: 0; }
     .edit-label { font-size: 11px; color: #555; min-width: 40px; font-weight: 700; }
-    .edit-input { flex: 1; background: #1a1a1a; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
+    .edit-input { flex: 1; background: #222; border: 1.5px solid #333; border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
     .edit-input:focus { border-color: var(--accent); }
     .edit-unit { font-size: 12px; color: #555; min-width: 24px; }
     .sec-label { font-size: 12px; font-weight: 800; color: #aaa; margin-bottom: 8px; }
@@ -123,7 +123,7 @@
     .memo-textarea:focus { border-color: var(--accent); }
 
     /* ── Superset Card ── */
-    .superset-section { background: #111; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
+    .superset-section { background: #1e1e1e; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
     .superset-section-label { font-size: 13px; font-weight: 800; color: var(--text1); margin-bottom: 8px; }
     .superset-divider { text-align: center; font-size: 13px; font-weight: 800; color: var(--accent); padding: 6px 0; letter-spacing: 3px; }
 
@@ -135,7 +135,7 @@
     .add-form-title { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 12px; }
     .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .add-field label { font-size: 11px; color: #666; display: block; margin-bottom: 5px; }
-    .add-field input { width: 100%; background: #111; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
+    .add-field input { width: 100%; background: #1e1e1e; border: 1.5px solid #333; border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
     .add-field input:focus { border-color: var(--accent); }
     .add-field.full { grid-column: 1 / -1; }
     .add-btns { display: flex; gap: 8px; }
@@ -257,7 +257,7 @@
     .md-content li { margin-bottom: 3px; }
     .md-content p { margin-bottom: 8px; }
     .md-content hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
-    .md-content code { background: #1a1a1a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
+    .md-content code { background: #2a2a2a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
 
     /* ── Routine Doc Page ── */
     .routine-nav-btn { background: none; border: 1.5px solid var(--border2); color: var(--text2); font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
@@ -313,7 +313,7 @@
     .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }
     .add-ss-toggle-label { font-size: 13px; font-weight: 700; color: var(--text2); }
     .add-ss-body { margin-top: 12px; }
-    .add-ss-sub { background: #111; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .add-ss-sub { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
     .add-ss-sub-label { font-size: 11px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.08em; }
     .add-ss-add-btn { width: 100%; background: none; border: 1.5px dashed #2a2a2a; color: #555; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
     .add-ss-add-btn:active { border-color: var(--accent); color: var(--accent); }
@@ -459,6 +459,7 @@ function isRestDayToday() {
 
 /* ── Landing Page ──────────────────────────────────────────── */
 function renderLanding() {
+  history.replaceState({ page: 'landing' }, '');
   const now = new Date();
   const dayShorts = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const dayAbbr = dayShorts[now.getDay()];
@@ -504,6 +505,21 @@ function updateLandingStatus() {
   const bodyEl    = document.getElementById('today-status-body');
   const startArea = document.getElementById('start-btn-area');
   if (!bodyEl) return;
+
+  // 오늘 완료 플래그 확인
+  const todayIso = toIso(new Date());
+  if (localStorage.getItem('gc_done_' + todayIso)) {
+    const rName   = missionCache?.routineName || '';
+    const display = rName.includes(':') ? rName.split(':').slice(1).join(':').trim() : rName;
+    bodyEl.innerHTML = `
+      <div class="status-rest-emoji">✅</div>
+      <div class="status-rest-title" style="color:var(--green);">오늘 운동 완료!</div>
+      <div class="status-rest-sub">${display || '수고했어요'} · 오늘도 잘 해냈어요 💪</div>`;
+    if (startArea) startArea.innerHTML =
+      `<button class="landing-ghost-btn" onclick="startWorkout()">다시 시작하기</button>
+       <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>`;
+    return;
+  }
 
   if (isRestDayToday()) {
     const s = getSettings(), w = getThisWeekRange();
@@ -563,6 +579,7 @@ async function onRegisterWeek() {
 
 /* ── Settings Page ─────────────────────────────────────────── */
 function renderSettings() {
+  pushPage('settings');
   const s    = getSettings();
   const week = getThisWeekRange();
   const dayFull  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
@@ -694,6 +711,7 @@ function renderMarkdown(md) {
 
 /* ── Routine Doc Page ─────────────────────────────────────────── */
 async function renderRoutineDoc() {
+  pushPage('routine');
   document.getElementById('app').innerHTML = `
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 14px;">
@@ -866,6 +884,7 @@ async function startWorkout() {
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {}; isFreeWorkout = false;
+  pushPage('dashboard');
   renderMain();
 }
 
@@ -883,6 +902,7 @@ function startFreeWorkout() {
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {};
+  pushPage('dashboard');
   renderMain();
 }
 
@@ -1527,6 +1547,8 @@ async function onComplete() {
   if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">저장 중...</div>';
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
+    // 오늘 운동 완료 플래그 저장
+    localStorage.setItem('gc_done_' + missionData.date, '1');
     if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
     const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
     const outroPayload = isFreeWorkout
@@ -1639,6 +1661,7 @@ function renderMain() {
 
 /* ── Search History ────────────────────────────────────────── */
 async function renderSearchHistory() {
+  pushPage('search');
   searchDaySelected  = null;
   searchDates        = [];
   searchDateSelected = null;
@@ -1866,6 +1889,49 @@ function renderExerciseResult(el, res) {
   });
   el.innerHTML = html;
 }
+
+/* ── Android Back Button ───────────────────────────────────── */
+function pushPage(pageId) {
+  history.pushState({ page: pageId }, '');
+}
+
+function showExitDialog() {
+  openBottomSheet(`
+    <div class="popup-header">
+      <span class="popup-label">앱 종료</span>
+    </div>
+    <div style="text-align:center;padding:8px 0 20px;">
+      <div style="font-size:32px;margin-bottom:12px;">👋</div>
+      <div style="font-size:17px;font-weight:800;color:var(--text1);margin-bottom:8px;">오늘도 수고했어요!</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:24px;">앱을 종료할까요?</div>
+      <div style="display:flex;gap:10px;">
+        <button class="add-cancel" style="flex:1;" onclick="closeBottomSheet()">취소</button>
+        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="window.close();history.go(-(history.length))">종료</button>
+      </div>
+    </div>
+  `);
+}
+
+window.addEventListener('popstate', function(e) {
+  const page = e.state?.page;
+  if (!page || page === 'landing') {
+    // 랜딩에서 뒤로가기 → 종료 확인
+    history.pushState({ page: 'landing' }, ''); // 스택 유지
+    showExitDialog();
+  } else if (page === 'dashboard') {
+    renderLanding(); updateLandingStatus(); updateWeekAlert();
+    history.pushState({ page: 'landing' }, '');
+  } else if (page === 'settings') {
+    goBackFromSettings();
+    history.pushState({ page: 'landing' }, '');
+  } else if (page === 'routine') {
+    renderLanding(); updateLandingStatus(); updateWeekAlert();
+    history.pushState({ page: 'landing' }, '');
+  } else if (page === 'search') {
+    renderLanding(); updateLandingStatus(); updateWeekAlert();
+    history.pushState({ page: 'landing' }, '');
+  }
+});
 
 /* ── Init ──────────────────────────────────────────────────── */
 renderLanding();
