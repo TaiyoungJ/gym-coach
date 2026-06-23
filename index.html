@@ -308,6 +308,26 @@
     .search-result-set { font-size: 13px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
     .search-result-set:last-of-type { border-bottom: none; }
     .search-section-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
+    /* ── Superset Add Form ── */
+    .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }
+    .add-ss-toggle-label { font-size: 13px; font-weight: 700; color: var(--text2); }
+    .add-ss-body { margin-top: 12px; }
+    .add-ss-sub { background: #111; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .add-ss-sub-label { font-size: 11px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.08em; }
+    .add-ss-add-btn { width: 100%; background: none; border: 1.5px dashed #2a2a2a; color: #555; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
+    .add-ss-add-btn:active { border-color: var(--accent); color: var(--accent); }
+    .import-btn { background: none; border: 1.5px solid #2a2a2a; color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 6px; display: block; width: 100%; text-align: left; }
+    .import-btn:active { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Done Animation ── */
+    @keyframes cardGlow {
+      0%   { box-shadow: none; }
+      35%  { box-shadow: 0 0 0 8px rgba(34,197,94,0.4); border-color: rgba(34,197,94,0.9); }
+      100% { box-shadow: none; border-color: rgba(34,197,94,0.35); }
+    }
+    .card-glow { animation: cardGlow 0.8s ease forwards; }
+    .confetti-piece { position: fixed; border-radius: 2px; pointer-events: none; z-index: 9999; }
   </style>
 </head>
 <body>
@@ -367,6 +387,8 @@ let memoData       = {};
 let restData       = {};
 let weightData     = {};
 let isFreeWorkout  = false;
+let ssSubCount     = 2;
+let importTarget   = null;
 
 // Search state
 let searchTab          = 'day';
@@ -928,7 +950,17 @@ function updateIntroCardContent() {
   }
 }
 
-function onCardDone(id) { completedCards[id] = true; collapsedCards[id] = true; renderCards(); }
+function onCardDone(id) {
+  const idx = exercises.findIndex(ex => ex.id === id);
+  if (idx !== -1) {
+    const cardEl = document.getElementById('card-' + idx);
+    if (cardEl) {
+      triggerDoneAnimation(cardEl, () => { completedCards[id] = true; collapsedCards[id] = true; renderCards(); });
+      return;
+    }
+  }
+  completedCards[id] = true; collapsedCards[id] = true; renderCards();
+}
 
 async function sendFreeChat() {
   const input = document.getElementById('freeChatInput');
@@ -1167,15 +1199,208 @@ function deleteEx(idx) {
 function toggleAddForm() {
   showAddForm = !showAddForm;
   document.getElementById('addForm').classList.toggle('show', showAddForm);
+  if (!showAddForm) {
+    const t = document.getElementById('ssToggle');
+    if (t && t.checked) { t.checked = false; onSsToggle(); }
+  }
 }
+
+const SS_LABELS = ['\u{1F150}', '\u{1F151}', '\u{1F152}'];
+
+function onSsToggle() {
+  const isOn = document.getElementById('ssToggle').checked;
+  document.getElementById('normalFields').style.display = isOn ? 'none' : 'block';
+  document.getElementById('ssFields').style.display    = isOn ? 'block' : 'none';
+  if (isOn) initSsSubList();
+}
+
+function initSsSubList() {
+  ssSubCount = 2;
+  const list = document.getElementById('ssSubList');
+  if (!list) return;
+  list.innerHTML = '';
+  renderSsSub(0);
+  renderSsSub(1);
+  const btn = document.getElementById('ssAddSubBtn');
+  if (btn) btn.style.display = 'block';
+}
+
+function renderSsSub(idx) {
+  const list = document.getElementById('ssSubList');
+  if (!list) return;
+  const div = document.createElement('div');
+  div.className = 'add-ss-sub';
+  div.id = 'ss-sub-' + idx;
+  div.innerHTML =
+    '<div class="add-ss-sub-label">' + (SS_LABELS[idx] || '\u{1F152}') + ' 종목 ' + (idx + 1) + '</div>' +
+    '<div class="add-field full" style="margin-bottom:8px;">' +
+      '<label>종목명</label>' +
+      '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스">' +
+      '<button class="import-btn" onclick="openImportForSub(' + idx + ')">📂 기존 운동 가져오기</button>' +
+    '</div>' +
+    '<div class="add-grid" style="margin-bottom:0">' +
+      '<div class="add-field"><label>중량 (kg)</label><input id="ssSubKg' + idx + '" type="number" placeholder="0" inputmode="numeric"></div>' +
+      '<div class="add-field"><label>목표 횟수</label><input id="ssSubTarget' + idx + '" type="number" placeholder="10" inputmode="numeric"></div>' +
+    '</div>';
+  list.appendChild(div);
+}
+
+function addSsSub() {
+  if (ssSubCount >= 3) return;
+  renderSsSub(ssSubCount);
+  ssSubCount++;
+  if (ssSubCount >= 3) {
+    const btn = document.getElementById('ssAddSubBtn');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
 function confirmAdd() {
-  const name = document.getElementById('newName').value.trim();
-  if (!name) { alert('운동명을 입력해주세요'); return; }
-  exercises.push({ id: Date.now(), name, sets: Number(document.getElementById('newSets').value)||3, targetWeight: Number(document.getElementById('newKg').value)||0, targetReps: Number(document.getElementById('newTarget').value)||10, tag: null, lastRecord: null, variation: '' });
-  ['newName','newKg','newSets','newTarget'].forEach(id => document.getElementById(id).value = '');
+  const isSS = document.getElementById('ssToggle')?.checked;
+  if (isSS) {
+    const ssName = document.getElementById('ssName')?.value.trim() || '슈퍼세트';
+    const ssSets = Number(document.getElementById('ssSets')?.value) || 3;
+    const subExercises = [];
+    for (let i = 0; i < ssSubCount; i++) {
+      const name = document.getElementById('ssSubName' + i)?.value.trim();
+      if (!name) { alert((SS_LABELS[i] || '') + ' 종목명을 입력해주세요'); return; }
+      subExercises.push({
+        name, variation: '',
+        targetWeight: Number(document.getElementById('ssSubKg' + i)?.value) || 0,
+        targetReps:   Number(document.getElementById('ssSubTarget' + i)?.value) || 10,
+        lastRecord: null,
+      });
+    }
+    exercises.push({ id: Date.now(), name: ssName, sets: ssSets, tag: null, isSuperset: true, subExercises });
+  } else {
+    const name = document.getElementById('newName')?.value.trim();
+    if (!name) { alert('운동명을 입력해주세요'); return; }
+    exercises.push({ id: Date.now(), name, sets: Number(document.getElementById('newSets')?.value)||3, targetWeight: Number(document.getElementById('newKg')?.value)||0, targetReps: Number(document.getElementById('newTarget')?.value)||10, tag: null, lastRecord: null, variation: '' });
+    ['newName','newKg','newSets','newTarget'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  }
+  const t = document.getElementById('ssToggle');
+  if (t && t.checked) { t.checked = false; onSsToggle(); }
   showAddForm = false;
   document.getElementById('addForm').classList.remove('show');
   renderCards();
+}
+
+/* ── Bottom Sheet ──────────────────────────────────────────── */
+function openBottomSheet(html) {
+  const container = document.getElementById('popup-container');
+  container.innerHTML =
+    '<div class="popup-overlay" id="bsOverlay" onclick="if(event.target===this)closeBottomSheet()">' +
+      '<div class="popup-sheet" id="bsSheet">' + html + '</div>' +
+    '</div>';
+}
+function closeBottomSheet() {
+  document.getElementById('popup-container').innerHTML = '';
+}
+
+/* ── Import Sheet ──────────────────────────────────────────── */
+function openImportForNormal() { importTarget = 'normal'; _openImportSheet(); }
+function openImportForSub(idx)  { importTarget = { type: 'ss', subIdx: idx }; _openImportSheet(); }
+async function openImportSheet(type, subIdx) {
+  if (type === 'normal') { importTarget = 'normal'; } else { importTarget = { type: 'ss', subIdx }; }
+  await _openImportSheet();
+}
+async function _openImportSheet() {
+  openBottomSheet(
+    '<div class="popup-header">' +
+      '<span class="popup-label">📂 기존 운동 가져오기</span>' +
+      '<button class="popup-close" onclick="closeBottomSheet()">닫기</button>' +
+    '</div>' +
+    '<div id="importBody" style="max-height:58vh;overflow-y:auto;">' +
+      '<div class="loading" style="height:auto;padding:24px 0;">' +
+        '<div class="spinner"></div>' +
+        '<div class="loading-text" style="margin-top:12px;">종목 불러오는 중...</div>' +
+      '</div>' +
+    '</div>'
+  );
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
+    renderImportExList(res.exercises || []);
+  } catch(err) {
+    const body = document.getElementById('importBody');
+    if (body) body.innerHTML = '<div class="error-card"><h3>오류</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+function renderImportExList(exList) {
+  const body = document.getElementById('importBody');
+  if (!body) return;
+  if (exList.length === 0) {
+    body.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 운동 기록이 없어요</div>';
+    return;
+  }
+  let html = '<div class="search-section-label" style="margin-bottom:10px;">최근 4주 종목</div>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">';
+  exList.forEach(ex => {
+    html += '<button class="search-ex-btn" data-name="' + ex.replace(/"/g, '&quot;') + '" onclick="onImportSelectEx(this.dataset.name,this)">' + ex + '</button>';
+  });
+  html += '</div><div id="importExResult"></div>';
+  body.innerHTML = html;
+}
+
+async function onImportSelectEx(exerciseName, btn) {
+  document.querySelectorAll('#importBody .search-ex-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const resultEl = document.getElementById('importExResult');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div class="loading" style="height:auto;padding:20px 0;"><div class="spinner"></div></div>';
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName });
+    renderImportRecords(exerciseName, res.results || []);
+  } catch(err) {
+    resultEl.innerHTML = '<div class="error-card"><h3>오류</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+function renderImportRecords(exerciseName, results) {
+  const resultEl = document.getElementById('importExResult');
+  if (!resultEl) return;
+  if (results.length === 0) {
+    resultEl.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 기록이 없어요</div>';
+    return;
+  }
+  const fmtKor = iso => { const d = new Date(iso + 'T00:00:00'); return (d.getMonth()+1) + '월 ' + d.getDate() + '일'; };
+  let html = '<div class="search-section-label" style="margin:10px 0 8px;">날짜 선택</div>';
+  results.forEach(r => {
+    html +=
+      '<button class="search-date-item"' +
+        ' style="display:flex;justify-content:space-between;align-items:center;"' +
+        ' data-name="' + exerciseName.replace(/"/g,'&quot;') + '"' +
+        ' data-weight="' + (r.targetWeight||0) + '"' +
+        ' data-sets="'  + (r.targetSets||3)    + '"' +
+        ' data-reps="'  + (r.targetReps||10)   + '"' +
+        ' onclick="applyImport(this)">' +
+        '<span>' + fmtKor(r.date) + ' (' + r.day + ')</span>' +
+        '<span style="color:var(--accent);font-weight:800;font-size:13px;">' +
+          (r.targetWeight||0) + 'kg × ' + (r.targetReps||'-') + '회 × ' + (r.targetSets||'-') + '세트' +
+        '</span>' +
+      '</button>';
+  });
+  resultEl.innerHTML = html;
+}
+
+function applyImport(btn) {
+  const name   = btn.dataset.name;
+  const weight = Number(btn.dataset.weight);
+  const sets   = Number(btn.dataset.sets);
+  const reps   = Number(btn.dataset.reps);
+  if (importTarget === 'normal') {
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    set('newName', name); set('newKg', weight); set('newSets', sets); set('newTarget', reps);
+  } else {
+    const idx = importTarget.subIdx;
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    set('ssSubName' + idx, name);
+    set('ssSubKg'   + idx, weight);
+    set('ssSubTarget' + idx, reps);
+    const setsEl = document.getElementById('ssSets');
+    if (setsEl && !setsEl.value) setsEl.value = sets;
+  }
+  closeBottomSheet();
 }
 
 function formatRest(data) {
@@ -1184,6 +1409,38 @@ function formatRest(data) {
   const sec = data.sec ? parseInt(data.sec) : 0;
   if (!min && !sec) return '';
   return `${min}:${String(sec).padStart(2, '0')}`;
+}
+
+/* ── Done Animation ────────────────────────────────────────── */
+function triggerDoneAnimation(cardEl, callback) {
+  cardEl.classList.add('card-glow');
+  const rect   = cardEl.getBoundingClientRect();
+  const cx     = rect.left + rect.width  / 2;
+  const cy     = rect.top  + rect.height / 2;
+  const colors = ['#FF8C42','#22C55E','#60A5FA','#F59E0B','#EC4899','#A78BFA','#fff'];
+  for (let i = 0; i < 28; i++) {
+    const el    = document.createElement('div');
+    el.className = 'confetti-piece';
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 60 + Math.random() * 110;
+    const dx    = Math.cos(angle) * dist;
+    const dy    = Math.sin(angle) * dist - 80;
+    const size  = 5 + Math.random() * 7;
+    const dur   = 450 + Math.random() * 500;
+    el.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;width:' + size + 'px;height:' + size + 'px;background:' + colors[Math.floor(Math.random() * colors.length)] + ';';
+    document.body.appendChild(el);
+    el.animate(
+      [
+        { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) rotate(' + (Math.random()*720 - 360) + 'deg)', opacity: 0 }
+      ],
+      { duration: dur, easing: 'ease-out', fill: 'forwards' }
+    ).onfinish = () => el.remove();
+  }
+  setTimeout(() => {
+    cardEl.classList.remove('card-glow');
+    if (callback) callback();
+  }, 620);
 }
 
 /* ── Slide Complete Button ────────────────────────────────── */
@@ -1318,13 +1575,33 @@ function renderMain() {
     <button class="add-ex-btn" onclick="toggleAddForm()">+ 운동 추가</button>
     <div class="add-form" id="addForm">
       <div class="add-form-title">새 운동 추가</div>
-      <div class="add-grid">
-        <div class="add-field full"><label>운동명</label><input id="newName" type="text" placeholder="예: 레그 컬"></div>
-        <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
-        <div class="add-field"><label>세트 수</label><input id="newSets" type="number" placeholder="3" inputmode="numeric"></div>
-        <div class="add-field"><label>목표 횟수</label><input id="newTarget" type="number" placeholder="10" inputmode="numeric"></div>
+      <div id="normalFields">
+        <div class="add-grid">
+          <div class="add-field full">
+            <label>운동명</label>
+            <input id="newName" type="text" placeholder="예: 레그 컬">
+            <button class="import-btn" onclick="openImportForNormal()">📂 기존 운동 가져오기</button>
+          </div>
+          <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
+          <div class="add-field"><label>세트 수</label><input id="newSets" type="number" placeholder="3" inputmode="numeric"></div>
+          <div class="add-field"><label>목표 횟수</label><input id="newTarget" type="number" placeholder="10" inputmode="numeric"></div>
+        </div>
       </div>
-      <div class="add-btns"><button class="add-cancel" onclick="toggleAddForm()">취소</button><button class="add-confirm" onclick="confirmAdd()">추가하기</button></div>
+      <div class="add-ss-toggle-row">
+        <span class="add-ss-toggle-label">⚡ 슈퍼세트로 만들기</span>
+        <label class="toggle-wrap"><input type="checkbox" id="ssToggle" onchange="onSsToggle()"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="ssFields" style="display:none">
+        <div class="add-ss-body">
+          <div class="add-ss-name-row">
+            <div class="add-field full" style="margin-bottom:10px;"><label>슈퍼세트 이름</label><input id="ssName" type="text" placeholder="예: 상체 슈퍼세트"></div>
+          </div>
+          <div class="add-field" style="margin-bottom:12px;"><label>세트 수 (공유)</label><input id="ssSets" type="number" placeholder="3" inputmode="numeric"></div>
+          <div id="ssSubList"></div>
+          <button class="add-ss-add-btn" id="ssAddSubBtn" onclick="addSsSub()" style="display:none">+ 종목 추가</button>
+        </div>
+      </div>
+      <div class="add-btns" style="margin-top:12px;"><button class="add-cancel" onclick="toggleAddForm()">취소</button><button class="add-confirm" onclick="confirmAdd()">추가하기</button></div>
     </div>
     <div id="completeArea"><div class="slide-wrap" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">모든 운동을 완료해주세요</span></div></div>`;
   renderProgramBadge();
