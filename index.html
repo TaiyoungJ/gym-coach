@@ -460,7 +460,6 @@ function isRestDayToday() {
 /* ── Landing Page ──────────────────────────────────────────── */
 function renderLanding() {
   currentPage = 'landing';
-  history.replaceState({ page: 'landing' }, '');
   const now = new Date();
   const dayShorts = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const dayAbbr = dayShorts[now.getDay()];
@@ -660,9 +659,7 @@ function renderSettings() {
 }
 
 function goBackFromSettings() {
-  renderLanding();
-  updateLandingStatus();
-  updateWeekAlert();
+  history.back();
 }
 
 function onSaveSettings() {
@@ -676,8 +673,8 @@ function onSaveSettings() {
     restDays: { weekRange: week.range, days: restDays },
   });
   missionCache = null; weekStatus = null; missionLoading = true;
-  renderLanding();
-  loadBackgroundData();
+  _reloadAfterNav = true;
+  history.back();
 }
 
 function openRoutineDoc() { renderRoutineDoc(); }
@@ -716,7 +713,7 @@ async function renderRoutineDoc() {
   document.getElementById('app').innerHTML = `
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 14px;">
-        <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">← 뒤로</button>
+        <button class="back-btn" onclick="history.back()">← 뒤로</button>
         <span class="page-title">운동 루틴</span>
       </div>
       <span class="logo" style="font-size:16px;font-weight:900;letter-spacing:0.03em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
@@ -1569,7 +1566,7 @@ async function onComplete() {
       <div class="outro-label">🔥 오늘의 피드백</div>
       <div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>
       <button id="logSaveBtn" class="done-btn" style="margin-top:14px;" onclick="onSaveWorkoutLog()">📝 운동일지 저장</button>
-      <button class="complete-btn" style="margin-top: 14px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">끝</button>
+      <button class="complete-btn" style="margin-top: 14px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="history.back()">끝</button>
     `;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1603,7 +1600,7 @@ function renderMain() {
   document.getElementById('app').innerHTML = `
     <div class="header">
       <div style="margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
-        <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">← 뒤로</button>
+        <button class="back-btn" onclick="history.back()">← 뒤로</button>
         <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍</button>
       </div>
       <div style="margin-bottom: 10px;">
@@ -1671,7 +1668,7 @@ async function renderSearchHistory() {
   document.getElementById('app').innerHTML = `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;">
       <div style="display:flex;align-items:center;gap:14px;">
-        <button class="back-btn" onclick="renderLanding();updateLandingStatus();updateWeekAlert();">← 뒤로</button>
+        <button class="back-btn" onclick="history.back()">← 뒤로</button>
         <span class="page-title">기록 검색</span>
       </div>
       <span class="logo" style="font-size:16px;font-weight:900;letter-spacing:0.03em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
@@ -1893,10 +1890,18 @@ function renderExerciseResult(el, res) {
 
 /* ── Android Back Button ───────────────────────────────────── */
 let currentPage = 'landing';
+let _reloadAfterNav = false;
 
 function pushPage(pageId) {
   currentPage = pageId;
   history.pushState({ page: pageId }, '');
+}
+
+function closeApp() {
+  // window.close() works on Android Chrome standalone PWA
+  window.close();
+  // Fallback: go back as far as possible (exits standalone PWA)
+  history.go(-history.length);
 }
 
 function showExitDialog() {
@@ -1910,7 +1915,7 @@ function showExitDialog() {
       <div style="font-size:14px;color:var(--text2);margin-bottom:24px;">앱을 종료할까요?</div>
       <div style="display:flex;gap:10px;">
         <button class="add-cancel" style="flex:1;" onclick="closeBottomSheet()">취소</button>
-        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="history.go(-history.length)">종료</button>
+        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="closeApp()">종료</button>
       </div>
     </div>
   `);
@@ -1918,17 +1923,22 @@ function showExitDialog() {
 
 window.addEventListener('popstate', function() {
   if (currentPage === 'landing') {
+    // 랜딩에서 뒤로가기 → 종료 확인
     history.pushState({ page: 'landing' }, '');
     showExitDialog();
   } else {
+    // 다른 페이지에서 뒤로가기 → 랜딩으로
     currentPage = 'landing';
-    history.replaceState({ page: 'landing' }, '');
     renderLanding(); updateLandingStatus(); updateWeekAlert();
+    if (_reloadAfterNav) { _reloadAfterNav = false; loadBackgroundData(); }
   }
 });
 
 /* ── Init ──────────────────────────────────────────────────── */
 renderLanding();
+// 초기 guard 상태 push: popstate가 랜딩에서도 항상 발동하도록
+history.replaceState(null, '');          // base (pos=0) — 앱 진입 이전 슬롯
+history.pushState({ page: 'landing' }, ''); // guard (pos=1) — 여기서 뒤로가기 시 종료 확인
 loadBackgroundData();
 </script>
 </body>
