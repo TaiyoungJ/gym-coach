@@ -7,17 +7,17 @@
   <title>핸니의 체육관</title>
   <style>
     :root {
-      --bg: #1a1a1a;
-      --surface: #242424;
-      --surface2: #2a2a2a;
+      --bg: #1c1c1e;
+      --surface: #2c2c2e;
+      --surface2: #3a3a3c;
       --accent: #FF8C42;
       --accent-dim: rgba(255,140,66,0.10);
       --text1: #e8e8e8;
       --text2: #888;
       --text3: #555;
       --green: #22C55E;
-      --border: #303030;
-      --border2: #383838;
+      --border: #3a3a3c;
+      --border2: #48484a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -43,7 +43,7 @@
     .header-mid-left { display: flex; align-items: center; gap: 8px; }
     .program-badge { background: var(--accent); color: #000; font-size: 13px; font-weight: 900; padding: 7px 20px; border-radius: 20px; letter-spacing: 1.5px; cursor: pointer; }
     .program-input { background: var(--surface2); border: 1.5px solid var(--accent); border-radius: 20px; color: var(--accent); font-size: 13px; font-weight: 900; padding: 7px 20px; letter-spacing: 1.5px; outline: none; width: 140px; font-family: inherit; text-align: center; }
-    .top-btn { background: none; border: 1.5px solid #333; color: #666; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; }
+    .top-btn { background: none; border: 1.5px solid var(--border2); color: #666; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; }
     .top-btn.active { border-color: var(--accent); color: var(--accent); background: #1f1209; }
     .intro-btn { background: var(--accent-dim); border: 1.5px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 14px; font-weight: 700; padding: 11px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; width: 100%; }
     .intro-btn.active { background: rgba(255,140,66,0.15); border-color: var(--accent); }
@@ -93,11 +93,11 @@
     .skip-arrow-row { display: flex; gap: 5px; align-items: center; }
     .arrow-btn { background: var(--surface2); border: 1.5px solid #2a2a2a; color: #777; font-size: 13px; width: 34px; height: 34px; border-radius: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
     .arrow-btn:active { background: #252525; color: var(--accent); border-color: var(--accent); }
-    .edit-fields { background: #1e1e1e; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .edit-fields { background: #2c2c2e; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .edit-row:last-child { margin-bottom: 0; }
     .edit-label { font-size: 11px; color: #555; min-width: 40px; font-weight: 700; }
-    .edit-input { flex: 1; background: #222; border: 1.5px solid #333; border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
+    .edit-input { flex: 1; background: #222; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
     .edit-input:focus { border-color: var(--accent); }
     .edit-unit { font-size: 12px; color: #555; min-width: 24px; }
     .sec-label { font-size: 12px; font-weight: 800; color: #aaa; margin-bottom: 8px; }
@@ -115,7 +115,7 @@
     .set-num { font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: 800; }
     .set-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 13px; color: #f5f5f5; font-size: 26px; font-weight: 800; text-align: center; padding: 14px 4px; outline: none; -moz-appearance: textfield; min-height: 62px; }
     .set-input::-webkit-outer-spin-button, .set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-    .set-input:focus { border-color: var(--accent); background: #1a1a1a; }
+    .set-input:focus { border-color: var(--accent); background: var(--surface); }
     .set-input::placeholder { color: #444; font-size: 18px; }
     .set-input.has-value { border-color: rgba(34,197,94,0.4); color: var(--green); }
     .memo-textarea { width: 100%; background: var(--surface2); border: 1.5px solid #2a2a2a; border-radius: 12px; color: var(--text1); font-size: 14px; padding: 12px; outline: none; resize: none; min-height: 90px; font-family: inherit; line-height: 1.6; }
@@ -123,19 +123,19 @@
     .memo-textarea:focus { border-color: var(--accent); }
 
     /* ── Superset Card ── */
-    .superset-section { background: #1e1e1e; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
+    .superset-section { background: #2c2c2e; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
     .superset-section-label { font-size: 13px; font-weight: 800; color: var(--text1); margin-bottom: 8px; }
     .superset-divider { text-align: center; font-size: 13px; font-weight: 800; color: var(--accent); padding: 6px 0; letter-spacing: 3px; }
 
     /* ── Add Exercise ── */
-    .add-ex-btn { width: 100%; background: #1a1a1a; border: 2px dashed #2a2a2a; color: #555; font-size: 14px; font-weight: 700; padding: 16px; border-radius: 20px; cursor: pointer; margin-bottom: 14px; font-family: inherit; transition: all .2s; }
+    .add-ex-btn { width: 100%; background: var(--surface); border: 2px dashed var(--border2); color: #555; font-size: 14px; font-weight: 700; padding: 16px; border-radius: 20px; cursor: pointer; margin-bottom: 14px; font-family: inherit; transition: all .2s; }
     .add-ex-btn:hover { border-color: var(--accent); color: var(--accent); }
     .add-form { background: var(--surface); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1.5px dashed var(--accent); display: none; }
     .add-form.show { display: block; }
     .add-form-title { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 12px; }
     .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .add-field label { font-size: 11px; color: #666; display: block; margin-bottom: 5px; }
-    .add-field input { width: 100%; background: #1e1e1e; border: 1.5px solid #333; border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
+    .add-field input { width: 100%; background: #2c2c2e; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
     .add-field input:focus { border-color: var(--accent); }
     .add-field.full { grid-column: 1 / -1; }
     .add-btns { display: flex; gap: 8px; }
@@ -148,9 +148,9 @@
     .complete-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
 
     /* ── Slide Complete ── */
-    .slide-wrap { position: relative; width: 100%; height: 64px; border-radius: 16px; overflow: hidden; margin-top: 6px; background: #1a1a1a; border: 1.5px solid #252525; }
+    .slide-wrap { position: relative; width: 100%; height: 64px; border-radius: 16px; overflow: hidden; margin-top: 6px; background: var(--surface); border: 1.5px solid var(--border); }
     .slide-wrap.ready { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.3); }
-    .slide-handle { position: absolute; left: 4px; top: 4px; bottom: 4px; width: 56px; border-radius: 12px; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; cursor: not-allowed; touch-action: none; user-select: none; }
+    .slide-handle { position: absolute; left: 4px; top: 4px; bottom: 4px; width: 56px; border-radius: 12px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #444; cursor: not-allowed; touch-action: none; user-select: none; }
     .slide-wrap.ready .slide-handle { background: var(--accent); color: #000; cursor: grab; }
     .slide-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #3a3a3a; pointer-events: none; letter-spacing: 0.3px; }
     .slide-wrap.ready .slide-label { color: rgba(255,140,66,0.55); }
@@ -206,7 +206,7 @@
 
     .landing-start-btn { width: 100%; background: linear-gradient(135deg, #FF8C42, #FF5C00); color: #000; font-size: 17px; font-weight: 900; border: none; border-radius: 16px; padding: 20px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: transform .15s; letter-spacing: 0.3px; }
     .landing-start-btn:active { transform: scale(0.97); }
-    .landing-start-btn:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; transform: none; }
+    .landing-start-btn:disabled { background: var(--surface2); color: #555; cursor: not-allowed; transform: none; }
     .landing-ghost-btn { width: 100%; background: none; color: var(--text2); font-size: 14px; font-weight: 700; border: 1.5px solid var(--border2); border-radius: 16px; padding: 14px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: all .2s; }
     .landing-ghost-btn:active { border-color: #555; color: var(--text1); }
 
@@ -232,7 +232,7 @@
 
     .toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
     .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider { position: absolute; inset: 0; background: #2a2a2a; border-radius: 24px; cursor: pointer; transition: .2s; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 24px; cursor: pointer; transition: .2s; }
     .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #555; border-radius: 50%; transition: .2s; }
     .toggle-wrap input:checked + .toggle-slider { background: rgba(255,140,66,0.25); }
     .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent); }
@@ -257,7 +257,7 @@
     .md-content li { margin-bottom: 3px; }
     .md-content p { margin-bottom: 8px; }
     .md-content hr { border: none; border-top: 1px solid var(--border2); margin: 14px 0; }
-    .md-content code { background: #2a2a2a; border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
+    .md-content code { background: var(--surface2); border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--accent); }
 
     /* ── Routine Doc Page ── */
     .routine-nav-btn { background: none; border: 1.5px solid var(--border2); color: var(--text2); font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
@@ -313,9 +313,9 @@
     .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }
     .add-ss-toggle-label { font-size: 13px; font-weight: 700; color: var(--text2); }
     .add-ss-body { margin-top: 12px; }
-    .add-ss-sub { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .add-ss-sub { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
     .add-ss-sub-label { font-size: 11px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.08em; }
-    .add-ss-add-btn { width: 100%; background: none; border: 1.5px dashed #2a2a2a; color: #555; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
+    .add-ss-add-btn { width: 100%; background: none; border: 1.5px dashed var(--border2); color: #555; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
     .add-ss-add-btn:active { border-color: var(--accent); color: var(--accent); }
     .import-btn { background: none; border: 1.5px solid #2a2a2a; color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 6px; display: block; width: 100%; text-align: left; }
     .import-btn:active { border-color: var(--accent); color: var(--accent); }
@@ -1910,7 +1910,7 @@ function showExitDialog() {
       <div style="font-size:14px;color:var(--text2);margin-bottom:24px;">앱을 종료할까요?</div>
       <div style="display:flex;gap:10px;">
         <button class="add-cancel" style="flex:1;" onclick="closeBottomSheet()">취소</button>
-        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="history.go(-(history.length-1))">종료</button>
+        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="history.go(-history.length)">종료</button>
       </div>
     </div>
   `);
