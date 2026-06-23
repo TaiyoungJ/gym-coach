@@ -291,6 +291,23 @@
     .free-chat-textarea:focus { border-color: var(--accent); }
     .free-chat-send-btn { width: 100%; background: var(--accent); color: #000; font-size: 14px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: opacity .2s; }
     .free-chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Search History ── */
+    .search-tab-btn { flex: 1; background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2); font-size: 14px; font-weight: 700; padding: 11px; border-radius: 12px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .search-tab-btn.active { background: rgba(255,140,66,0.1); border-color: var(--accent); color: var(--accent); }
+    .search-day-btn { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text1); font-size: 14px; font-weight: 800; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .search-day-btn.active { background: rgba(255,140,66,0.1); border-color: var(--accent); color: var(--accent); }
+    .search-date-item { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text1); font-size: 14px; font-weight: 700; padding: 13px 16px; border-radius: 12px; cursor: pointer; font-family: inherit; text-align: left; display: block; margin-bottom: 8px; transition: all .2s; }
+    .search-date-item.active { border-color: var(--accent); color: var(--accent); }
+    .search-ex-btn { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text1); font-size: 13px; font-weight: 700; padding: 9px 14px; border-radius: 12px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .search-ex-btn.active { background: rgba(255,140,66,0.1); border-color: var(--accent); color: var(--accent); }
+    .search-result-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+    .search-result-date { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 6px; text-transform: uppercase; }
+    .search-result-name { font-size: 16px; font-weight: 800; color: var(--text1); margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .search-result-target { font-size: 14px; font-weight: 800; color: var(--text1); margin-bottom: 10px; }
+    .search-result-set { font-size: 13px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .search-result-set:last-of-type { border-bottom: none; }
+    .search-section-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -300,21 +317,19 @@
 /* ================================================================
    index.html — 핸니의 체육관 프론트엔드
    ─────────────────────────────────────────────────────────────────
-   v1.6 변경사항:
-   - GAS 배포 URL 업데이트 (v1.6)
-   - 인트로 코칭: 페이지 로드 시 prefetch 제거 →
-       버튼 클릭 시점에 condition 포함해서 fetch (apiGet → apiPost)
-   - 아웃트로 코칭: condition 값 포함해서 전송
-   - 자유운동 인트로: condition + freeChatInput 합산 전송 + 버그 픽스
-       (userMessage가 missionData 안에 없던 구조 오류 수정)
-   - 자유운동 아웃트로: type 'freeOutro'로 분리, condition 포함
+   v1.7 변경사항:
+   - GAS 배포 URL 업데이트 (v1.8)
+   - saveResult payload: targetReps 추가 (일반 + 슈퍼세트 서브종목)
+   - 지난운동 검색 기능 추가 (요일별 / 종목별)
+   - 랜딩 페이지: 🔍 기록 검색 버튼 추가
+   - 대시보드: 뒤로가기 행 우측 🔍 버튼 추가
    ================================================================ */
 
 /* ================================================================
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycbzq_1kid0Ez4wrww5PT_J5DTdmrNP_K0JTO-1gzPkPGjhkX0fVtZju2bHNY-_n3h4_j9w/exec',
+  url:   'https://script.google.com/macros/s/AKfycbyLbKWhQgv9di2eVIOpY2UestMUqlvb9swSuwe6mIpOToFiMB5T7p7wW80Tmzthnk1qLw/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -345,13 +360,20 @@ let programName    = '';
 let showAddForm    = false;
 let introText      = null;
 let collapsedCards = {};
-let doneCards       = {};   // { [exId]: boolean } — 모든 세트 입력 완료
-let completedCards  = {};   // { [exId]: boolean } — 완료 버튼 누른 적 있음
-let repsData       = {};   // { [exId]: { [setNum]: value } }
-let memoData       = {};   // { [exId]: value }
-let restData       = {};   // { [exId]: { min, sec } }
-let weightData     = {};   // { [exId]: { [setNum]: value } }
+let doneCards       = {};
+let completedCards  = {};
+let repsData       = {};
+let memoData       = {};
+let restData       = {};
+let weightData     = {};
 let isFreeWorkout  = false;
+
+// Search state
+let searchTab          = 'day';
+let searchDaySelected  = null;
+let searchDates        = [];
+let searchDateSelected = null;
+let searchExSelected   = null;
 
 /* ── API ───────────────────────────────────────────────────── */
 async function apiGet(params) {
@@ -430,8 +452,9 @@ function renderLanding() {
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
       <div class="landing-day-text" style="color: var(--accent); font-weight: 900; font-size: 20px; text-align: right; margin: 0;">${dayAbbr}.</div>
     </div>
-    <div style="margin-bottom: 10px;">
+    <div style="margin-bottom: 10px; display:flex; gap:8px;">
       <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄운동루틴</button>
+      <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍 기록 검색</button>
     </div>
     <div class="week-alert" id="week-alert">
       <div class="week-alert-eyebrow">📋 주차 미등록</div>
@@ -522,7 +545,6 @@ function renderSettings() {
   const dayFull  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const dayShort = ['일','월','화','수','목','금','토'];
 
-  // 이번 주 요일 칩 생성
   const today = new Date(), diff = (today.getDay() === 0) ? -6 : 1 - today.getDay();
   const mon   = new Date(today); mon.setDate(today.getDate() + diff);
   const thisWeekRest = s.restDays.weekRange === week.range ? s.restDays.days : [];
@@ -533,7 +555,6 @@ function renderSettings() {
     chipHTML += `<button class="day-chip${thisWeekRest.includes(iso) ? ' on' : ''}" data-date="${iso}" onclick="this.classList.toggle('on')">${label}</button>`;
   }
 
-  // 시작 요일 옵션 (월~일 순서)
   let dayOptions = '';
   for (let i = 1; i <= 7; i++) {
     const idx = i % 7;
@@ -565,7 +586,6 @@ function renderSettings() {
         <div class="settings-row-sub">일정 충돌로 빠지는 날을 선택하세요</div>
         <div class="day-chips" id="rest-day-chips">${chipHTML}</div>
       </div>
-
     </div>
 
     <div class="settings-group">
@@ -693,11 +713,8 @@ function renderCollapsibleMarkdown(md) {
     } else if (currentSection) {
       currentSection.lines.push(line);
     }
-    // # 제목과 --- 구분선 앞 내용은 무시 (섹션 카드만 표시)
   }
   if (currentSection) sections.push(currentSection);
-
-  // 최신 루틴이 위로 (역순 정렬)
   sections = sections.slice().reverse();
 
   let html = '';
@@ -737,11 +754,9 @@ function renderRoutineBody(md) {
 
   for (const line of lines) {
     if (/^---+$/.test(line.trim())) continue;
-
     if (/^### (.+)/.test(line)) {
       if (inMeta) flushMeta();
       flushLists();
-      const cls = firstH3 ? 'rs-h3' : 'rs-h3';
       html += '<div class="rs-h3' + (firstH3 ? ' first' : '') + '">' + applyInline(line.replace(/^### /, '')) + '</div>';
       firstH3 = false;
     } else if (inMeta) {
@@ -829,7 +844,6 @@ async function startWorkout() {
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {}; isFreeWorkout = false;
   renderMain();
-  // 인트로 코칭은 버튼 클릭 시점에 condition 포함해서 fetch (prefetch 제거)
 }
 
 /* ── Start Free Workout ───────────────────────────────── */
@@ -881,7 +895,6 @@ function toggleIntroCard() {
   if (btn) btn.classList.toggle('active', !isOpen);
   if (!isOpen) {
     if (!isFreeWorkout && !introText) {
-      // 루틴 인트로: 버튼 클릭 시점에 condition 포함해서 fetch
       fetchRoutineIntro();
     } else {
       updateIntroCardContent();
@@ -927,7 +940,6 @@ async function sendFreeChat() {
   const textEl = document.getElementById('introCardText');
   if (textEl) textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
   try {
-    // missionData 구조로 전송 (버그 픽스: 기존엔 최상위 키로 보내 GAS에서 읽지 못했음)
     const r = await apiPost({ action: 'getCoaching', type: 'freeIntro', missionData: { userMessage: msg, condition } });
     introText = r.text || '(응답 없음)';
     updateIntroCardContent();
@@ -964,7 +976,6 @@ function renderCards() {
       return;
     }
 
-    // ── 슈퍼세트 카드 ──────────────────────────────────────────
     if (ex.isSuperset) {
       const subLabels = ['🅐', '🅑', '🅒'];
       let sectionsHTML = '';
@@ -1017,12 +1028,11 @@ function renderCards() {
       return;
     }
 
-    // ── 일반 카드 ───────────────────────────────────────────────
     const hasTarget = ex.targetWeight > 0 && ex.targetReps > 0;
-    const targetText = hasTarget 
-      ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트` 
+    const targetText = hasTarget
+      ? `${ex.targetWeight}kg × ${ex.targetReps}회 × ${ex.sets}세트`
       : `${ex.targetWeight||0}kg × ${ex.targetReps||'-'}회 × ${ex.sets}세트`;
-    
+
     let metaHTML = `
       <div style="display: flex; align-items: center; width: 100%;">
         <span style="color: var(--accent); font-size: 16px; font-weight: 800;">🎯 ${targetText}</span>
@@ -1111,7 +1121,6 @@ function onSupersetInput(idx, subIdx) {
     if (val) { el.classList.add('has-value'); repsData[key][s] = val; }
     else     { el?.classList.remove('has-value'); repsData[key][s] = ''; }
   }
-  // 모든 서브 종목의 모든 세트가 입력됐으면 자동 접기
   const numSubs = ex.subExercises?.length || 0;
   const allDone = Array.from({ length: numSubs }, (_, si) => {
     const k = `${ex.id}_${si}`;
@@ -1238,6 +1247,7 @@ async function onComplete() {
         subResults: (ex.subExercises || []).map((sub, si) => ({
           name: sub.name, variation: sub.variation||'',
           weight: sub.targetWeight||0,
+          targetReps: sub.targetReps||0,
           weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[`${ex.id}_${si}`]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (sub.targetWeight||0); }),
           reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
         })),
@@ -1246,6 +1256,7 @@ async function onComplete() {
     return {
       name: ex.name, variation: ex.variation||'', sets: ex.sets,
       weight: ex.targetWeight||0,
+      targetReps: ex.targetReps||0,
       weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[ex.id]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (ex.targetWeight||0); }),
       reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
       memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
@@ -1259,7 +1270,6 @@ async function onComplete() {
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
-    // 자유운동은 freeOutro 타입으로 분리, 모든 타입에 condition 포함
     const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
     const outroPayload = isFreeWorkout
       ? { results, condition }
@@ -1284,8 +1294,9 @@ async function onComplete() {
 function renderMain() {
   document.getElementById('app').innerHTML = `
     <div class="header">
-      <div style="margin-bottom: 10px;">
+      <div style="margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
         <button class="back-btn" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">← 뒤로</button>
+        <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍</button>
       </div>
       <div style="margin-bottom: 10px;">
         <span class="logo" style="font-size:22px;letter-spacing:0.05em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
@@ -1319,6 +1330,236 @@ function renderMain() {
   renderProgramBadge();
   renderCards();
   initSlideBtn();
+}
+
+/* ── Search History ────────────────────────────────────────── */
+async function renderSearchHistory() {
+  searchDaySelected  = null;
+  searchDates        = [];
+  searchDateSelected = null;
+  searchExSelected   = null;
+
+  document.getElementById('app').innerHTML = `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="back-btn" onclick="renderLanding();updateLandingStatus();updateWeekAlert();">← 뒤로</button>
+        <span class="page-title">기록 검색</span>
+      </div>
+      <span class="logo" style="font-size:16px;font-weight:900;letter-spacing:0.03em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="search-tab-btn${searchTab==='day'?' active':''}" id="tab-day" onclick="switchSearchTab('day')">📅 요일별</button>
+      <button class="search-tab-btn${searchTab==='exercise'?' active':''}" id="tab-exercise" onclick="switchSearchTab('exercise')">🏋️ 종목별</button>
+    </div>
+    <div id="search-body"></div>`;
+
+  await renderSearchBody();
+}
+
+async function switchSearchTab(tab) {
+  searchTab          = tab;
+  searchDaySelected  = null;
+  searchDates        = [];
+  searchDateSelected = null;
+  searchExSelected   = null;
+  document.querySelectorAll('.search-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  await renderSearchBody();
+}
+
+async function renderSearchBody() {
+  const body = document.getElementById('search-body');
+  if (!body) return;
+  if (searchTab === 'day') {
+    renderSearchDayTab(body);
+  } else {
+    await loadSearchExerciseTab(body);
+  }
+}
+
+/* ── 요일별 탭 ─────────────────────────────────────────────── */
+function renderSearchDayTab(body) {
+  const days = ['월', '화', '수', '목', '금', '토', '일'];
+  let html = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  days.forEach(d => {
+    html += `<button class="search-day-btn${searchDaySelected===d?' active':''}" onclick="onSelectDay('${d}')">${d}요일</button>`;
+  });
+  html += `</div><div id="search-day-result"></div>`;
+  body.innerHTML = html;
+  if (searchDaySelected) renderSearchDayResult();
+}
+
+async function onSelectDay(day) {
+  searchDaySelected  = day;
+  searchDateSelected = null;
+  searchDates        = [];
+  document.querySelectorAll('.search-day-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === day + '요일');
+  });
+  const resultEl = document.getElementById('search-day-result');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div>';
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getDayList', day });
+    searchDates = res.dates || [];
+    renderSearchDayResult();
+  } catch(err) {
+    resultEl.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderSearchDayResult() {
+  const resultEl = document.getElementById('search-day-result');
+  if (!resultEl) return;
+
+  if (searchDates.length === 0) {
+    resultEl.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">${searchDaySelected}요일 운동 기록이 없어요</div>`;
+    return;
+  }
+
+  const fmtKor = iso => {
+    const d = new Date(iso + 'T00:00:00');
+    return `${d.getMonth()+1}월 ${d.getDate()}일`;
+  };
+
+  let html = `<div class="search-section-label">${searchDaySelected}요일 기록</div>`;
+  searchDates.forEach(date => {
+    html += `<button class="search-date-item${searchDateSelected===date?' active':''}" onclick="onSelectDate('${date}')">${fmtKor(date)} <span style="color:var(--text3);font-size:12px;margin-left:6px;">${date}</span></button>`;
+  });
+  html += `<div id="search-date-result" style="margin-top:4px;"></div>`;
+  resultEl.innerHTML = html;
+
+  if (searchDateSelected) loadAndRenderDateResult(searchDateSelected);
+}
+
+async function onSelectDate(date) {
+  searchDateSelected = date;
+  document.querySelectorAll('.search-date-item').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick')?.includes(`'${date}'`));
+  });
+  const resultEl = document.getElementById('search-date-result');
+  if (!resultEl) { renderSearchDayResult(); return; }
+  await loadAndRenderDateResult(date);
+}
+
+async function loadAndRenderDateResult(date) {
+  const resultEl = document.getElementById('search-date-result');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div class="loading" style="height:auto;padding:20px 0;"><div class="spinner"></div></div>';
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByDate', date });
+    renderDateResult(resultEl, res);
+  } catch(err) {
+    resultEl.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderDateResult(el, res) {
+  const exList = res.exercises || [];
+  if (exList.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">운동 기록이 없어요</div>`;
+    return;
+  }
+  let html = '';
+  exList.forEach(ex => {
+    const weights = ex.weights ? String(ex.weights).split(',') : [];
+    const reps    = ex.reps    ? String(ex.reps).split(',')    : [];
+    const sets    = Math.max(weights.length, reps.length);
+    let setsHTML  = '';
+    for (let i = 0; i < sets; i++) {
+      const w = weights[i]?.trim() || '-';
+      const r = reps[i]?.trim()    || '-';
+      setsHTML += `<div class="search-result-set">${i+1}세트 &nbsp;&nbsp; ${w}kg × ${r}회</div>`;
+    }
+    html += `
+      <div class="search-result-card">
+        <div class="search-result-name">${ex.name}${ex.variation ? ' <span style="color:var(--text2);font-size:13px;font-weight:600;">'+ex.variation+'</span>' : ''}</div>
+        <div class="search-result-target">🎯 ${ex.targetWeight||'-'}kg × ${ex.targetReps||'-'}회 × ${ex.targetSets||'-'}세트</div>
+        ${setsHTML}
+        ${ex.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);">📝 ${ex.memo}</div>` : ''}
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+/* ── 종목별 탭 ─────────────────────────────────────────────── */
+async function loadSearchExerciseTab(body) {
+  body.innerHTML = '<div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div><div class="loading-text" style="margin-top:12px;">최근 4주 종목 불러오는 중...</div></div>';
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
+    renderSearchExerciseTab(body, res.exercises || []);
+  } catch(err) {
+    body.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderSearchExerciseTab(body, exList) {
+  if (exList.length === 0) {
+    body.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 운동 기록이 없어요</div>`;
+    return;
+  }
+  let html = `<div class="search-section-label">최근 4주 종목</div>`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  exList.forEach(ex => {
+    const safeName = ex.replace(/'/g, '&#39;');
+    html += `<button class="search-ex-btn${searchExSelected===ex?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${ex}</button>`;
+  });
+  html += `</div><div id="search-ex-result"></div>`;
+  body.innerHTML = html;
+  if (searchExSelected) loadAndRenderExerciseResult(searchExSelected);
+}
+
+async function onSelectExercise(exerciseName, btn) {
+  searchExSelected = exerciseName;
+  document.querySelectorAll('.search-ex-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const resultEl = document.getElementById('search-ex-result');
+  if (!resultEl) return;
+  resultEl.innerHTML = '<div class="loading" style="height:auto;padding:20px 0;"><div class="spinner"></div></div>';
+  await loadAndRenderExerciseResult(exerciseName);
+}
+
+async function loadAndRenderExerciseResult(exerciseName) {
+  const resultEl = document.getElementById('search-ex-result');
+  if (!resultEl) return;
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName });
+    renderExerciseResult(resultEl, res);
+  } catch(err) {
+    resultEl.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderExerciseResult(el, res) {
+  const results = res.results || [];
+  if (results.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 기록이 없어요</div>`;
+    return;
+  }
+  const fmtKor = iso => {
+    const d = new Date(iso + 'T00:00:00');
+    return `${d.getMonth()+1}월 ${d.getDate()}일`;
+  };
+  let html = `<div class="search-section-label">최근 4주 기록</div>`;
+  results.forEach(r => {
+    const weights = r.weights ? String(r.weights).split(',') : [];
+    const reps    = r.reps    ? String(r.reps).split(',')    : [];
+    const sets    = Math.max(weights.length, reps.length);
+    let setsHTML  = '';
+    for (let i = 0; i < sets; i++) {
+      const w  = weights[i]?.trim() || '-';
+      const rp = reps[i]?.trim()    || '-';
+      setsHTML += `<div class="search-result-set">${i+1}세트 &nbsp;&nbsp; ${w}kg × ${rp}회</div>`;
+    }
+    html += `
+      <div class="search-result-card">
+        <div class="search-result-date">📅 ${fmtKor(r.date)} (${r.day})</div>
+        <div class="search-result-target">🎯 ${r.targetWeight||'-'}kg × ${r.targetReps||'-'}회 × ${r.targetSets||'-'}세트</div>
+        ${setsHTML}
+        ${r.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);">📝 ${r.memo}</div>` : ''}
+      </div>`;
+  });
+  el.innerHTML = html;
 }
 
 /* ── Init ──────────────────────────────────────────────────── */
