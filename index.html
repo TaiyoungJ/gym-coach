@@ -349,7 +349,7 @@
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycbxE-MSdocXWxos0PRAITQ94bwhlJVBX8iohARnKxuH3_h1-w-OXcupRH3kd6gi8Mzs--w/exec',
+  url:   'https://script.google.com/macros/s/AKfycbzpjVPWFN7ETMhotZGv-P0rt6zQ8qcyNpmSxDZWYOEZPeLMfV8WBQ7AMZTIq1Vw2Fr8bQ/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -386,9 +386,10 @@ let repsData       = {};
 let memoData       = {};
 let restData       = {};
 let weightData     = {};
-let isFreeWorkout  = false;
-let ssSubCount     = 2;
-let importTarget   = null;
+let isFreeWorkout    = false;
+let ssSubCount       = 2;
+let importTarget     = null;
+let outroWorkoutData = null; // 🆕 운동일지 저장용 (결과 + AI 요약)
 
 // Search state
 let searchTab          = 'day';
@@ -1532,17 +1533,43 @@ async function onComplete() {
       ? { results, condition }
       : { mission: missionData, results, condition };
     const outro = await apiPost({ action: 'getCoaching', type: outroType, missionData: outroPayload });
+    outroWorkoutData = {
+      date:         missionData.date,
+      day:          missionData.day,
+      routineName:  programName,
+      results,
+      outroSummary: outro.summary || ''
+    };
     const outroEl = document.createElement('div');
     outroEl.className = 'outro-card';
     outroEl.innerHTML = `
       <div class="outro-label">🔥 오늘의 피드백</div>
       <div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>
-      <button class="complete-btn" style="margin-top: 20px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">끝</button>
+      <button id="logSaveBtn" class="done-btn" style="margin-top:14px;" onclick="onSaveWorkoutLog()">📝 운동일지 저장</button>
+      <button class="complete-btn" style="margin-top: 14px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="renderLanding(); updateLandingStatus(); updateWeekAlert();">끝</button>
     `;
     completeArea.replaceWith(outroEl);
     outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch(err) {
     if (completeArea) { completeArea.innerHTML = '<div class="slide-wrap ready" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">밀어서 운동 완료 →</span></div>'; initSlideBtn(); }
+    alert('오류: ' + err.message);
+  }
+}
+
+/* ── Save Workout Log ──────────────────────────────────────── */
+async function onSaveWorkoutLog() {
+  const btn = document.getElementById('logSaveBtn');
+  if (!btn || !outroWorkoutData) return;
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+  try {
+    await apiPost({ action: 'saveWorkoutLog', data: outroWorkoutData });
+    btn.textContent = '✅ 저장 완료!';
+    btn.style.borderColor = 'rgba(34,197,94,0.5)';
+    btn.style.color = 'var(--green)';
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '📝 운동일지 저장';
     alert('오류: ' + err.message);
   }
 }
