@@ -1563,7 +1563,8 @@ async function onSaveWorkoutLog() {
   btn.disabled = true;
   btn.textContent = '저장 중...';
   try {
-    await apiPost({ action: 'saveWorkoutLog', data: outroWorkoutData });
+    const res = await apiPost({ action: 'saveWorkoutLog', data: outroWorkoutData });
+    if (res.error) throw new Error(res.error);
     btn.textContent = '✅ 저장 완료!';
     btn.style.borderColor = 'rgba(34,197,94,0.5)';
     btn.style.color = 'var(--green)';
