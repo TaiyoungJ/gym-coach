@@ -133,6 +133,12 @@
     .add-form { background: var(--surface); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1.5px dashed var(--accent); display: none; }
     .add-form.show { display: block; }
     .add-form-title { font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; margin-bottom: 12px; }
+    .ex-name-wrap { position: relative; }
+    .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 12px; z-index: 100; max-height: 180px; overflow-y: auto; display: none; margin-top: 4px; }
+    .autocomplete-dropdown.show { display: block; }
+    .autocomplete-item { padding: 10px 14px; font-size: 14px; color: var(--text1); cursor: pointer; border-bottom: 1px solid var(--border); }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:active { background: var(--accent-dim); }
     .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .add-field label { font-size: 11px; color: #666; display: block; margin-bottom: 5px; }
     .add-field input { width: 100%; background: #2c2c2e; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
@@ -387,6 +393,7 @@ let memoData       = {};
 let restData       = {};
 let weightData     = {};
 let isFreeWorkout    = false;
+let freeExerciseNames = []; // 자동완성용 종목 목록
 let ssSubCount       = 2;
 let importTarget     = null;
 let outroWorkoutData = null; // 🆕 운동일지 저장용 (결과 + AI 요약)
@@ -887,7 +894,7 @@ async function startWorkout() {
 }
 
 /* ── Start Free Workout ───────────────────────────────── */
-function startFreeWorkout() {
+async function startFreeWorkout() {
   const now = new Date();
   const dayNames = ['일','월','화','수','목','금','토'];
   missionData = {
@@ -900,6 +907,11 @@ function startFreeWorkout() {
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {};
+  // 자동완성용 종목 목록 미리 로드 (12주 기록 기반)
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
+    freeExerciseNames = res.exercises || [];
+  } catch { freeExerciseNames = []; }
   pushPage('dashboard');
   renderMain();
 }
@@ -1215,6 +1227,44 @@ function deleteEx(idx) {
 }
 
 /* ── Add exercise ──────────────────────────────────────────── */
+/* ── 운동명 자동완성 ─────────────────────────────────────── */
+function onExNameInput() {
+  const input    = document.getElementById('newName');
+  const dropdown = document.getElementById('exNameDropdown');
+  if (!input || !dropdown) return;
+
+  const query = input.value.trim();
+  if (!query || freeExerciseNames.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  const norm    = s => s.replace(/[\s\-_]/g, '').toLowerCase();
+  const matched = freeExerciseNames.filter(n => norm(n).includes(norm(query)));
+
+  if (matched.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  dropdown.innerHTML = matched.map(n =>
+    `<div class="autocomplete-item" ontouchstart="" onclick="selectExName('${n.replace(/'/g, "\\'")}')">${n}</div>`
+  ).join('');
+  dropdown.classList.add('show');
+}
+
+function selectExName(name) {
+  const input    = document.getElementById('newName');
+  const dropdown = document.getElementById('exNameDropdown');
+  if (input)    input.value = name;
+  if (dropdown) dropdown.classList.remove('show');
+}
+
+function hideExNameDropdown() {
+  const dropdown = document.getElementById('exNameDropdown');
+  if (dropdown) dropdown.classList.remove('show');
+}
+
 function toggleAddForm() {
   showAddForm = !showAddForm;
   document.getElementById('addForm').classList.toggle('show', showAddForm);
@@ -1627,7 +1677,10 @@ function renderMain() {
         <div class="add-grid">
           <div class="add-field full">
             <label>운동명</label>
-            <input id="newName" type="text" placeholder="예: 레그 컬">
+            <div class="ex-name-wrap">
+              <input id="newName" type="text" placeholder="예: 레그 컬" oninput="onExNameInput()" autocomplete="off">
+              <div id="exNameDropdown" class="autocomplete-dropdown"></div>
+            </div>
             <button class="import-btn" onclick="openImportForNormal()">📂 기존 운동 가져오기</button>
           </div>
           <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
