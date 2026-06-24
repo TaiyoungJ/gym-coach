@@ -111,8 +111,10 @@
     .rest-num::placeholder { color: #444; font-size: 16px; }
     .rest-unit-abs { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: #999; pointer-events: none; }
     .sets-row { display: flex; gap: 8px; margin-bottom: 14px; }
-    .set-col { flex: 1; text-align: center; }
-    .set-num { font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: 800; }
+    .set-col { flex: 1; background: #1c1c1e; border: 1.5px solid #48484a; border-radius: 12px; padding: 10px 8px; display: flex; flex-direction: column; gap: 6px; transition: border-color .2s, background .2s; }
+    .set-col.done { border-color: rgba(34,197,94,0.55); background: rgba(34,197,94,0.04); }
+    .set-num { font-size: 13px; color: var(--accent); font-weight: 800; text-align: center; }
+    .set-col.done .set-num { color: var(--green); }
     .set-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 13px; color: #f5f5f5; font-size: 26px; font-weight: 800; text-align: center; padding: 14px 4px; outline: none; -moz-appearance: textfield; min-height: 62px; }
     .set-input::-webkit-outer-spin-button, .set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
     .set-input:focus { border-color: var(--accent); background: var(--surface); }
@@ -123,9 +125,9 @@
     .memo-textarea:focus { border-color: var(--accent); }
 
     /* ── Superset Card ── */
-    .superset-section { background: #2c2c2e; border-radius: 13px; padding: 14px; margin-bottom: 6px; }
-    .superset-section-label { font-size: 13px; font-weight: 800; color: var(--text1); margin-bottom: 8px; }
-    .superset-divider { text-align: center; font-size: 13px; font-weight: 800; color: var(--accent); padding: 6px 0; letter-spacing: 3px; }
+    .superset-section { background: #1c1c1e; border: 1.5px solid #48484a; border-radius: 13px; padding: 14px; margin-bottom: 8px; }
+    .superset-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .superset-section-label { font-size: 13px; font-weight: 800; color: var(--text1); }
 
     /* ── Add Exercise ── */
     .add-ex-btn { width: 100%; background: var(--surface); border: 2px dashed var(--border2); color: #555; font-size: 14px; font-weight: 700; padding: 16px; border-radius: 20px; cursor: pointer; margin-bottom: 14px; font-family: inherit; transition: all .2s; }
@@ -198,7 +200,8 @@
     .week-alert-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .today-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; }
-    .today-card-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+    .today-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .today-card-title { font-size: 16px; font-weight: 800; color: var(--text1); }
     .skel-wrap { display: flex; flex-direction: column; gap: 9px; }
     .skel { height: 13px; border-radius: 6px; background: linear-gradient(90deg, var(--surface2) 25%, #252525 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
     @keyframes shimmer { to { background-position: -200% 0; } }
@@ -206,7 +209,7 @@
     .status-rest-emoji { font-size: 30px; margin-bottom: 10px; }
     .status-rest-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .status-rest-sub { font-size: 13px; color: var(--text2); }
-    .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; margin-bottom: 10px; }
+    .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; }
     .status-count { font-size: 28px; font-weight: 800; color: var(--text1); }
     .status-count span { font-size: 14px; font-weight: 600; color: var(--text2); margin-left: 5px; }
     .body-part-tag { display: inline-block; background: rgba(255,140,66,0.12); border: 1px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-top: 5px; }
@@ -290,7 +293,7 @@
     .routine-section-body > p { font-size: 13px; color: var(--text2); margin: 4px 0; }
 
     /* ── Per-set Weight Input ── */
-    .set-weight-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 10px; color: #777; font-size: 14px; font-weight: 700; text-align: center; padding: 8px 4px; outline: none; -moz-appearance: textfield; margin-bottom: 5px; }
+    .set-weight-input { width: 100%; background: var(--surface2); border: 2px solid #2a2a2a; border-radius: 10px; color: #777; font-size: 14px; font-weight: 700; text-align: center; padding: 8px 4px; outline: none; -moz-appearance: textfield; }
     .set-weight-input::-webkit-outer-spin-button, .set-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; }
     .set-weight-input:focus { border-color: var(--accent); color: var(--text1); }
     .set-weight-input.modified { border-color: rgba(255,140,66,0.4); color: var(--accent); }
@@ -324,7 +327,7 @@
     .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }
     .add-ss-toggle-label { font-size: 13px; font-weight: 700; color: var(--text2); }
     .add-ss-body { margin-top: 12px; }
-    .add-ss-sub { background: #2c2c2e; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+    .add-ss-sub { background: #1c1c1e; border: 1.5px solid #48484a; border-radius: 12px; padding: 12px; margin-bottom: 8px; }
     .add-ss-sub-label { font-size: 11px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.08em; }
     .add-ss-add-btn { width: 100%; background: none; border: 1.5px dashed var(--border2); color: #555; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 10px; cursor: pointer; font-family: inherit; margin-top: 4px; transition: all .2s; }
     .add-ss-add-btn:active { border-color: var(--accent); color: var(--accent); }
@@ -360,7 +363,7 @@
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycby_u0ElBKaHlEIZe0kNUomL7WOi-nLpCxilayGAgl4Mty1DXD-jurwDgrOxHDHO34VIwg/exec',
+  url:   'https://script.google.com/macros/s/AKfycbzJlpr5fcOREjbqGicqpAks4W4CWg8VEFHx2Lov6gu-GXaBR_v6JlIguCWJL8gGX-SM0g/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -499,7 +502,7 @@ function renderLanding() {
       <button class="week-alert-btn" id="week-alert-btn" onclick="onRegisterWeek()">스프레드시트에서 등록하기 →</button>
     </div>
     <div class="today-card">
-      <div class="today-card-eyebrow">오늘의 운동</div>
+      <div class="today-card-header"><span class="today-card-title">오늘의 운동</span><span id="program-badge-slot"></span></div>
       <div id="today-status-body">
         <div class="skel-wrap">
           <div class="skel" style="width:32%;height:22px"></div>
@@ -550,9 +553,9 @@ function updateLandingStatus() {
   const count  = missionCache.exercises?.length || 0;
   const rName  = missionCache.routineName || '';
   const display = rName.includes(':') ? rName.split(':').slice(1).join(':').trim() : rName;
-  bodyEl.innerHTML = `
-    <span class="status-badge">${display}</span>
-    ${buildBodyPartSummary(missionCache.exercises)}`;
+  const slot = document.getElementById('program-badge-slot');
+  if (slot) slot.innerHTML = `<span class="status-badge">${display}</span>`;
+  bodyEl.innerHTML = buildBodyPartSummary(missionCache.exercises);
 }
 
 function buildBodyPartSummary(exercises) {
@@ -957,7 +960,7 @@ async function startFreeWorkout() {
   // 자동완성용 종목 목록 미리 로드 (12주 기록 기반)
   try {
     const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
-    freeExerciseNames = res.exercises || [];
+    freeExerciseNames = (res.exercises || []).map(ex => (typeof ex === 'string') ? ex : ex.name);
   } catch { freeExerciseNames = []; }
   pushPage('dashboard');
   renderMain();
@@ -1100,14 +1103,15 @@ function renderCards() {
           const wStored = weightData[key]?.[s];
           const wVal = (wStored !== undefined && wStored !== '') ? wStored : (sub.targetWeight || 0);
           const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (sub.targetWeight || 0));
-          setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
+          setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
-        if (subIdx > 0) sectionsHTML += `<div class="superset-divider">⚡ ⚡ ⚡</div>`;
         const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-left:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
         sectionsHTML += `
           <div class="superset-section">
-            <div class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}${subPartTag}</div>
-            <div style="color:var(--accent);font-size:14px;font-weight:800;margin-bottom:8px;">🎯 ${tgt}</div>
+            <div class="superset-section-header">
+              <span class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}${subPartTag}</span>
+              <span style="color:var(--accent);font-size:12px;font-weight:800;">🎯 ${tgt}</span>
+            </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
               <span class="sec-label" style="margin-bottom:0;">수행 결과</span>${lastBadge}
             </div>
@@ -1167,7 +1171,7 @@ function renderCards() {
       const wStored = weightData[ex.id]?.[s];
       const wVal = (wStored !== undefined && wStored !== '') ? wStored : (ex.targetWeight || 0);
       const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (ex.targetWeight || 0));
-      setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
+      setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
     const lastRecordBadge = ex.lastRecord ? `<span class="meta-tag last" style="font-size:11px">지난: ${ex.lastRecord}</span>` : '';
     const bodyHTML = !isEditing && !isSkipped ? `
@@ -1212,10 +1216,11 @@ function onSetInput(idx) {
   const ex = exercises[idx]; let all = true;
   if (!repsData[ex.id]) repsData[ex.id] = {};
   for (let s = 1; s <= ex.sets; s++) {
-    const el = document.getElementById(`e${ex.id}s${s}`);
+    const el    = document.getElementById(`e${ex.id}s${s}`);
+    const colEl = document.getElementById(`sc${ex.id}s${s}`);
     const val = el?.value || '';
-    if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; }
-    else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; }
+    if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; colEl?.classList.add('done'); }
+    else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; colEl?.classList.remove('done'); }
   }
   if (all) { doneCards[ex.id] = true; renderCards(); }
 }
@@ -1228,10 +1233,11 @@ function onSupersetInput(idx, subIdx) {
   const key = `${ex.id}_${subIdx}`;
   if (!repsData[key]) repsData[key] = {};
   for (let s = 1; s <= ex.sets; s++) {
-    const el  = document.getElementById(`e${ex.id}_${subIdx}s${s}`);
+    const el    = document.getElementById(`e${ex.id}_${subIdx}s${s}`);
+    const colEl = document.getElementById(`sc${ex.id}_${subIdx}s${s}`);
     const val = el?.value || '';
-    if (val) { el.classList.add('has-value'); repsData[key][s] = val; }
-    else     { el?.classList.remove('has-value'); repsData[key][s] = ''; }
+    if (val) { el.classList.add('has-value'); repsData[key][s] = val; colEl?.classList.add('done'); }
+    else     { el?.classList.remove('has-value'); repsData[key][s] = ''; colEl?.classList.remove('done'); }
   }
   const numSubs = ex.subExercises?.length || 0;
   const allDone = Array.from({ length: numSubs }, (_, si) => {
@@ -1454,7 +1460,8 @@ function renderImportExList(exList) {
   let html = '<div class="search-section-label" style="margin-bottom:10px;">최근 4주 종목</div>';
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">';
   exList.forEach(ex => {
-    html += '<button class="search-ex-btn" data-name="' + ex.replace(/"/g, '&quot;') + '" onclick="onImportSelectEx(this.dataset.name,this)">' + ex + '</button>';
+    const exName = (typeof ex === 'string') ? ex : ex.name;
+    html += '<button class="search-ex-btn" data-name="' + exName.replace(/"/g, '&quot;') + '" onclick="onImportSelectEx(this.dataset.name,this)">' + exName + '</button>';
   });
   html += '</div><div id="importExResult"></div>';
   body.innerHTML = html;
@@ -1904,7 +1911,7 @@ function renderDateResult(el, res) {
         <div class="search-result-name">${ex.name}${ex.variation ? ' <span style="color:var(--text2);font-size:13px;font-weight:600;">'+ex.variation+'</span>' : ''}</div>
         <div class="search-result-target">🎯 ${ex.targetWeight||'-'}kg × ${ex.targetReps||'-'}회 × ${ex.targetSets||'-'}세트</div>
         ${setsHTML}
-        ${ex.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);">📝 ${ex.memo}</div>` : ''}
+        ${ex.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;">📝 ${ex.memo}</div>` : ''}
       </div>`;
   });
   el.innerHTML = html;
@@ -1926,13 +1933,25 @@ function renderSearchExerciseTab(body, exList) {
     body.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 운동 기록이 없어요</div>`;
     return;
   }
-  let html = `<div class="search-section-label">최근 4주 종목</div>`;
-  html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  const groups = {}, order = [];
   exList.forEach(ex => {
-    const safeName = ex.replace(/'/g, '&#39;');
-    html += `<button class="search-ex-btn${searchExSelected===ex?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${ex}</button>`;
+    const part = (typeof ex === 'string') ? '기타' : (ex.bodyPart || '기타');
+    const name = (typeof ex === 'string') ? ex : ex.name;
+    if (!groups[part]) { groups[part] = []; order.push(part); }
+    groups[part].push(name);
   });
-  html += `</div><div id="search-ex-result"></div>`;
+  let html = `<div class="search-section-label">최근 4주 종목</div>`;
+  order.forEach(part => {
+    html += `<div style="margin-bottom:14px;">`;
+    html += `<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${part}</div>`;
+    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+    groups[part].forEach(name => {
+      const safeName = name.replace(/'/g, '&#39;');
+      html += `<button class="search-ex-btn${searchExSelected===name?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${name}</button>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `<div id="search-ex-result"></div>`;
   body.innerHTML = html;
   if (searchExSelected) loadAndRenderExerciseResult(searchExSelected);
 }
@@ -1984,7 +2003,7 @@ function renderExerciseResult(el, res) {
         <div class="search-result-date">📅 ${fmtKor(r.date)} (${r.day})</div>
         <div class="search-result-target">🎯 ${r.targetWeight||'-'}kg × ${r.targetReps||'-'}회 × ${r.targetSets||'-'}세트</div>
         ${setsHTML}
-        ${r.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);">📝 ${r.memo}</div>` : ''}
+        ${r.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;">📝 ${r.memo}</div>` : ''}
       </div>`;
   });
   el.innerHTML = html;
