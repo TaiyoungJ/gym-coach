@@ -209,6 +209,11 @@
     .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; margin-bottom: 10px; }
     .status-count { font-size: 28px; font-weight: 800; color: var(--text1); }
     .status-count span { font-size: 14px; font-weight: 600; color: var(--text2); margin-left: 5px; }
+    .body-part-tag { display: inline-block; background: rgba(255,140,66,0.12); border: 1px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-top: 5px; }
+    .summary-wrap { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .summary-part-title { font-size: 13px; font-weight: 800; color: var(--text1); margin-bottom: 4px; }
+    .summary-item { font-size: 12px; color: var(--text2); line-height: 1.8; padding-left: 2px; }
+    .summary-item-part { color: var(--accent); font-weight: 800; }
 
     .landing-start-btn { width: 100%; background: linear-gradient(135deg, #FF8C42, #FF5C00); color: #000; font-size: 17px; font-weight: 900; border: none; border-radius: 16px; padding: 20px; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: transform .15s; letter-spacing: 0.3px; }
     .landing-start-btn:active { transform: scale(0.97); }
@@ -355,7 +360,7 @@
    🔧 GAS 설정 — URL 변경 시 여기만 수정
    ================================================================ */
 const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycbxM5RNEw75fjfLw1AD-7MWC6YsFanF0MT6U9xUHn7kmcmE_tlCqUjlWTODVmJM0EzmIEw/exec',
+  url:   'https://script.google.com/macros/s/AKfycby_u0ElBKaHlEIZe0kNUomL7WOi-nLpCxilayGAgl4Mty1DXD-jurwDgrOxHDHO34VIwg/exec',
   token: 'jty5375'
 };
 /* ================================================================ */
@@ -547,7 +552,49 @@ function updateLandingStatus() {
   const display = rName.includes(':') ? rName.split(':').slice(1).join(':').trim() : rName;
   bodyEl.innerHTML = `
     <span class="status-badge">${display}</span>
-    <div class="status-count">${count}가지<span>운동 준비됨</span></div>`;
+    ${buildBodyPartSummary(missionCache.exercises)}`;
+}
+
+function buildBodyPartSummary(exercises) {
+  if (!exercises || exercises.length === 0) return '';
+
+  const partEmoji = {
+    '가슴': '🫁', '등': '🔙', '등/전신': '🔙', '하체': '🦵',
+    '어깨': '🏋️', '팔': '💪', '이두': '💪', '삼두': '💪',
+    '전신': '🔥', '슈퍼세트': '⚡'
+  };
+
+  const groups = {};
+  const order = [];
+
+  exercises.forEach(ex => {
+    const key = ex.isSuperset ? '슈퍼세트' : (ex.bodyPart || '기타');
+    if (!groups[key]) { groups[key] = []; order.push(key); }
+    groups[key].push(ex);
+  });
+
+  let html = '<div class="summary-wrap">';
+  order.forEach(part => {
+    const emoji = partEmoji[part] || '🏋️';
+    html += `<div class="summary-group"><div class="summary-part-title">${emoji} ${part}</div>`;
+    groups[part].forEach(ex => {
+      if (ex.isSuperset) {
+        (ex.subExercises || []).forEach(sub => {
+          const partTag = sub.bodyPart ? `<span class="summary-item-part">[${sub.bodyPart}]</span> ` : '';
+          const info = (sub.targetWeight > 0 && sub.targetReps > 0)
+            ? `${ex.sets}세트 × ${sub.targetWeight}kg × ${sub.targetReps}회` : `${ex.sets}세트`;
+          html += `<div class="summary-item">• ${partTag}${sub.name}: ${info}</div>`;
+        });
+      } else {
+        const info = (ex.targetWeight > 0 && ex.targetReps > 0)
+          ? `${ex.sets}세트 × ${ex.targetWeight}kg × ${ex.targetReps}회` : `${ex.sets}세트`;
+        html += `<div class="summary-item">• ${ex.name}: ${info}</div>`;
+      }
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 function updateWeekAlert() {
@@ -1056,9 +1103,10 @@ function renderCards() {
           setsHTML += `<div class="set-col"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         if (subIdx > 0) sectionsHTML += `<div class="superset-divider">⚡ ⚡ ⚡</div>`;
+        const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-left:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
         sectionsHTML += `
           <div class="superset-section">
-            <div class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}</div>
+            <div class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}${subPartTag}</div>
             <div style="color:var(--accent);font-size:14px;font-weight:800;margin-bottom:8px;">🎯 ${tgt}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
               <span class="sec-label" style="margin-bottom:0;">수행 결과</span>${lastBadge}
@@ -1152,7 +1200,8 @@ function renderCards() {
     card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div></div>${rightBtns}</div><div style="margin-top:8px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    const bpBadge = ex.bodyPart ? `<span class="body-part-tag">${ex.bodyPart}</span>` : '';
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div>${bpBadge}</div>${rightBtns}</div><div style="margin-top:8px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
