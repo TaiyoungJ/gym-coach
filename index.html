@@ -346,140 +346,127 @@
   </style>
 </head>
 <body>
-<div id="app"></div>
-<div id="popup-container"></div>
+  <div id="app"></div>
+  <div id="popup-container"></div>
+
 <script>
-/* ================================================================
-   index.html — 핸니의 체육관 프론트엔드
-   ─────────────────────────────────────────────────────────────────
-   v1.7 변경사항:
-   - GAS 배포 URL 업데이트 (v1.8)
-   - saveResult payload: targetReps 추가 (일반 + 슈퍼세트 서브종목)
-   - 지난운동 검색 기능 추가 (요일별 / 종목별)
-   - 랜딩 페이지: 🔍 기록 검색 버튼 추가
-   - 대시보드: 뒤로가기 행 우측 🔍 버튼 추가
-   ================================================================ */
+/* ── Constants & State ─────────────────────────────────────── */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcSGTxzGAw6pnoiS0A1wmciE4jXuSo1k4niDkVs9YVAsgTUt_EAao_ZZz272QUND0RvA/exec'; // ← 새로 배포한 URL 여기에 입력
+const TOKEN   = 'jty5375';   // ← 토큰 여기에 입력
 
-/* ================================================================
-   🔧 GAS 설정 — URL 변경 시 여기만 수정
-   ================================================================ */
-const CONFIG = {
-  url:   'https://script.google.com/macros/s/AKfycbzJlpr5fcOREjbqGicqpAks4W4CWg8VEFHx2Lov6gu-GXaBR_v6JlIguCWJL8gGX-SM0g/exec',
-  token: 'jty5375'
-};
-/* ================================================================ */
-
-/* ── Settings ──────────────────────────────────────────────── */
-const SETTINGS_KEY = 'gc_settings';
-
-function defaultSettings() {
-  return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] } };
-}
-function getSettings() {
-  try { const r = localStorage.getItem(SETTINGS_KEY); return r ? { ...defaultSettings(), ...JSON.parse(r) } : defaultSettings(); }
-  catch { return defaultSettings(); }
-}
-function saveSettingsData(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
-
-/* ── App State ─────────────────────────────────────────────── */
-let missionCache   = null;
-let weekStatus     = null;
-let missionLoading = true;
-// Dashboard state
 let missionData    = null;
+let missionCache   = null;
+let missionLoading = true;
 let exercises      = [];
-let skipped        = {};
-let editingCards   = {};
-let programEditMode = false;
 let programName    = '';
-let showAddForm    = false;
+let isFreeWorkout  = false;
+let weekStatus     = null;
 let introText      = null;
-let collapsedCards = {};
-let doneCards       = {};
-let completedCards  = {};
-let repsData       = {};
-let memoData       = {};
-let restData       = {};
-let weightData     = {};
-let isFreeWorkout    = false;
-let freeExerciseNames = []; // 자동완성용 종목 목록
-let ssSubCount       = 2;
-let importTarget     = null;
-let outroWorkoutData = null; // 🆕 운동일지 저장용 (결과 + AI 요약)
-
-// Search state
-let searchTab          = 'day';
+let outroWorkoutData = null;
+let freeExerciseNames = [];
+let programEditMode = false;
+let importTarget   = null;
+let ssSubCount     = 0;
+let searchTab      = 'day';
 let searchDaySelected  = null;
 let searchDates        = [];
 let searchDateSelected = null;
 let searchExSelected   = null;
 
-/* ── API ───────────────────────────────────────────────────── */
-async function apiGet(params) {
-  const url = new URL(CONFIG.url);
-  url.searchParams.set('token', CONFIG.token);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), { redirect: 'follow' });
-  return res.json();
+let skipped        = {};
+let editingCards   = {};
+let collapsedCards = {};
+let doneCards      = {};
+let completedCards = {};
+let repsData       = {};
+let memoData       = {};
+let restData       = {};
+let weightData     = {};
+let showAddForm    = false;
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function toIso(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-async function apiPost(body) {
-  const res = await fetch(CONFIG.url, {
-    method: 'POST', headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ token: CONFIG.token, ...body }), redirect: 'follow',
-  });
-  return res.json();
+function getThisWeekRange() {
+  const today = new Date();
+  const day   = today.getDay();
+  const diff  = day === 0 ? -6 : 1 - day;
+  const mon   = new Date(today); mon.setDate(today.getDate() + diff);
+  const sun   = new Date(mon);   sun.setDate(mon.getDate() + 6);
+  return { range: `${toIso(mon)} ~ ${toIso(sun)}` };
+}
+function isRestDayToday() {
+  const s = getSettings(), w = getThisWeekRange();
+  if (s.restDays.weekRange === w.range && s.restDays.days.includes(toIso(new Date()))) return true;
+  return false;
 }
 
-/* ── Mock data (테스트 모드) ────────────────────────────────── */
+/* ── Settings ──────────────────────────────────────────────── */
+function getSettings() {
+  try {
+    const raw = localStorage.getItem('gc_settings');
+    const s   = raw ? JSON.parse(raw) : {};
+    return {
+      startDay: s.startDay ?? 1,
+      sheetUrl: s.sheetUrl || '',
+      testMode: s.testMode || false,
+      restDays: s.restDays || { weekRange: '', days: [] },
+    };
+  } catch { return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] } }; }
+}
+function saveSettingsData(data) {
+  localStorage.setItem('gc_settings', JSON.stringify(data));
+}
+
+/* ── API ───────────────────────────────────────────────────── */
+async function apiGet(params) {
+  const url = new URL(GAS_URL);
+  url.searchParams.set('token', TOKEN);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, typeof v === 'object' ? encodeURIComponent(JSON.stringify(v)) : v);
+  });
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('Network error: ' + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+async function apiPost(body) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, token: TOKEN }),
+  });
+  if (!res.ok) throw new Error('Network error: ' + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+/* ── Mock ──────────────────────────────────────────────────── */
 function getMockMission() {
-  const today = new Date();
-  const dayNames = ['일','월','화','수','목','금','토'];
   return {
-    date: toIso(today), day: dayNames[today.getDay()],
-    routineName: '테스트: 상체 A',
+    date: toIso(new Date()), day: '월', routineName: '월요일: 가슴/어깨 스트렝스 (PUSH A)',
     exercises: [
-      { name: '벤치프레스', sets: 4, tag: null, isSuperset: false, targetWeight: 80, targetReps: 8, memo: '' },
-      {
-        name: '상체 슈퍼세트', sets: 3, tag: null, isSuperset: true,
-        subExercises: [
-          { name: '인클라인 벤치프레스', variation: '', targetWeight: 35, targetReps: 10, memo: '' },
-          { name: '티바 머신 로우',      variation: '', targetWeight: 35, targetReps: 10, memo: '' },
-        ],
-      },
-      { name: '케이블 크로스오버', sets: 3, tag: null, isSuperset: false, variation: '', targetWeight: 15, targetReps: 12, memo: '' },
+      { id:1, name:'벤치 프레스', variation:'플랫 바벨', sets:4, tag:null, isSuperset:false, bodyPart:'가슴', targetWeight:40, targetReps:7, memo:'' },
+      { id:2, name:'O.H.P', variation:'바벨', sets:4, tag:null, isSuperset:false, bodyPart:'어깨', targetWeight:20, targetReps:7, memo:'' },
     ],
-    lastWeekLog: [
-      { name: '벤치프레스',         variation: '', sets: 4, reps: ['8','8','7','7'], weight: 80 },
-      { name: '인클라인 벤치프레스', variation: '', sets: 3, reps: ['10','9','9'],   weight: 35 },
-      { name: '티바 머신 로우',      variation: '', sets: 3, reps: ['10','10','9'],  weight: 35 },
-    ],
+    lastWeekLog: [],
   };
 }
 
-/* ── Date helpers ──────────────────────────────────────────── */
-function toIso(date) {
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-}
-function getThisWeekRange() {
-  const today = new Date(), day = today.getDay();
-  const mon   = new Date(today); mon.setDate(today.getDate() + ((day === 0) ? -6 : 1 - day));
-  const sun   = new Date(mon);   sun.setDate(mon.getDate() + 6);
-  return { start: toIso(mon), end: toIso(sun), range: `${toIso(mon)} ~ ${toIso(sun)}` };
-}
-function isRestDayToday() {
-  const s = getSettings(), w = getThisWeekRange(), today = toIso(new Date());
-  const customRest = s.restDays.weekRange === w.range && s.restDays.days.includes(today);
-  const apiRest    = missionCache && (!missionCache.exercises || missionCache.exercises.length === 0);
-  return customRest || apiRest;
+/* ── 🆕 세부종목 + 운동명 조합 헬퍼 ───────────────────────── */
+function buildDisplayName(name, variation) {
+  return variation ? `${variation} ${name}` : name;
 }
 
 /* ── Landing Page ──────────────────────────────────────────── */
 function renderLanding() {
-  currentPage = 'landing';
-  const now = new Date();
-  const dayShorts = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  const dayAbbr = dayShorts[now.getDay()];
-  const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+  const now  = new Date();
+  const y    = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dayAbbr = days[now.getDay()];
 
   document.getElementById('app').innerHTML = `
     <div class="landing-nav">
@@ -522,7 +509,6 @@ function updateLandingStatus() {
   const startArea = document.getElementById('start-btn-area');
   if (!bodyEl) return;
 
-  // 오늘 완료 플래그 확인
   const todayIso = toIso(new Date());
   if (localStorage.getItem('gc_done_' + todayIso)) {
     const rName   = missionCache?.routineName || '';
@@ -568,9 +554,7 @@ function buildBodyPartSummary(exercises) {
     '전신': '🔥', '슈퍼세트': '⚡'
   };
 
-  const groups = {};
-  const order = [];
-
+  const groups = {}, order = [];
   exercises.forEach(ex => {
     const key = ex.isSuperset ? '슈퍼세트' : (ex.bodyPart || '기타');
     if (!groups[key]) { groups[key] = []; order.push(key); }
@@ -585,14 +569,18 @@ function buildBodyPartSummary(exercises) {
       if (ex.isSuperset) {
         (ex.subExercises || []).forEach(sub => {
           const partTag = sub.bodyPart ? `<span class="summary-item-part">[${sub.bodyPart}]</span> ` : '';
+          // 🆕 조합된 이름으로 표시
+          const displayName = buildDisplayName(sub.name, sub.variation);
           const info = (sub.targetWeight > 0 && sub.targetReps > 0)
             ? `${ex.sets}세트 × ${sub.targetWeight}kg × ${sub.targetReps}회` : `${ex.sets}세트`;
-          html += `<div class="summary-item">• ${partTag}${sub.name}: ${info}</div>`;
+          html += `<div class="summary-item">• ${partTag}${displayName}: ${info}</div>`;
         });
       } else {
+        // 🆕 조합된 이름으로 표시
+        const displayName = buildDisplayName(ex.name, ex.variation);
         const info = (ex.targetWeight > 0 && ex.targetReps > 0)
           ? `${ex.sets}세트 × ${ex.targetWeight}kg × ${ex.targetReps}회` : `${ex.sets}세트`;
-        html += `<div class="summary-item">• ${ex.name}: ${info}</div>`;
+        html += `<div class="summary-item">• ${displayName}: ${info}</div>`;
       }
     });
     html += '</div>';
@@ -716,9 +704,7 @@ function renderSettings() {
     <button class="save-settings-btn" onclick="onSaveSettings()">설정 저장</button>`;
 }
 
-function goBackFromSettings() {
-  history.back();
-}
+function goBackFromSettings() { history.back(); }
 
 function onSaveSettings() {
   const week     = getThisWeekRange();
@@ -920,22 +906,42 @@ async function startWorkout() {
   missionData = missionCache;
   const lastLog = missionData.lastWeekLog || [];
   const norm    = str => str.replace(/\s/g,'');
+
   exercises = missionData.exercises.map((ex, i) => {
     if (ex.isSuperset) {
       const subExercises = (ex.subExercises || []).map(sub => {
-        const lastEx = lastLog.find(l => norm(l.name) === norm(sub.name));
+        // 🆕 lastLog 매칭 시 name + variation 조합으로 비교
+        const displayName = buildDisplayName(sub.name, sub.variation);
+        const lastEx = lastLog.find(l => norm(buildDisplayName(l.name, l.variation)) === norm(displayName));
         return {
-          name: sub.name, variation: sub.variation || '',
-          targetWeight: sub.targetWeight || 0, targetReps: sub.targetReps || 0,
-          lastRecord: lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null,
+          name:         sub.name,
+          variation:    sub.variation || '',
+          displayName:  displayName,  // 🆕 화면 표시용
+          targetWeight: sub.targetWeight || 0,
+          targetReps:   sub.targetReps || 0,
+          lastRecord:   lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null,
         };
       });
-      return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, isSuperset: true, subExercises };
+      return { id: i+1, name: ex.name, variation: ex.variation||'', sets: ex.sets, tag: ex.tag||null, isSuperset: true, subExercises };
     }
-    const lastEx     = lastLog.find(l => norm(l.name) === norm(ex.name));
-    const lastRecord = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
-    return { id: i+1, name: ex.name, sets: ex.sets, tag: ex.tag||null, isSuperset: false, variation: ex.variation||'', targetWeight: ex.targetWeight||0, targetReps: ex.targetReps||0, lastRecord };
+    const displayName = buildDisplayName(ex.name, ex.variation);
+    const lastEx      = lastLog.find(l => norm(buildDisplayName(l.name, l.variation)) === norm(displayName));
+    const lastRecord  = lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null;
+    return {
+      id: i+1,
+      name:        ex.name,
+      variation:   ex.variation || '',
+      displayName: displayName,  // 🆕 화면 표시용
+      sets:        ex.sets,
+      tag:         ex.tag || null,
+      isSuperset:  false,
+      bodyPart:    ex.bodyPart || '',
+      targetWeight: ex.targetWeight || 0,
+      targetReps:   ex.targetReps || 0,
+      lastRecord,
+    };
   });
+
   programName  = missionData.routineName.includes(':') ? missionData.routineName.split(':').slice(1).join(':').trim() : missionData.routineName;
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
@@ -958,7 +964,6 @@ async function startFreeWorkout() {
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {};
-  // 화면 먼저 전환 후 백그라운드에서 자동완성 목록 로드
   pushPage('dashboard');
   renderMain();
   (async () => {
@@ -1084,7 +1089,7 @@ function renderCards() {
       card.innerHTML = `
         <div class="card-top-row" style="align-items:center">
           <div class="card-info">
-            <div class="ex-name" style="margin-bottom:0">${ex.name}</div>
+            <div class="ex-name" style="margin-bottom:0">${ex.displayName || ex.name}</div>
           </div>
           <span style="font-size:22px;color:var(--green);flex-shrink:0">✓</span>
         </div>`;
@@ -1109,10 +1114,11 @@ function renderCards() {
           setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-left:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
+        // 🆕 displayName 사용
         sectionsHTML += `
           <div class="superset-section">
             <div class="superset-section-header">
-              <span class="superset-section-label">${subLabels[subIdx]||''} ${sub.name}${subPartTag}</span>
+              <span class="superset-section-label">${subLabels[subIdx]||''} ${sub.displayName || sub.name}${subPartTag}</span>
               <span style="color:var(--accent);font-size:12px;font-weight:800;">🎯 ${tgt}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1131,12 +1137,12 @@ function renderCards() {
         <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
       const ssEditFieldsHTML = isEditing ? `
         <div class="edit-fields">
-          <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.name}" oninput="exercises[${idx}].name=this.value"></div>
+          <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.displayName || ex.name}" oninput="exercises[${idx}].name=this.value;exercises[${idx}].displayName=this.value"></div>
           <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
           ${(ex.subExercises||[]).map((sub,si) => `
           <div style="background:#1c1c1e;border:1.5px solid #48484a;border-radius:10px;padding:10px;margin-top:8px;">
             <div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:8px;">${['🅐','🅑','🅒'][si]||''} 종목 ${si+1}</div>
-            <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:14px" value="${sub.name}" oninput="exercises[${idx}].subExercises[${si}].name=this.value"></div>
+            <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:14px" value="${sub.displayName || sub.name}" oninput="exercises[${idx}].subExercises[${si}].name=this.value;exercises[${idx}].subExercises[${si}].displayName=this.value"></div>
             <div class="edit-row"><span class="edit-label">중량</span><input class="edit-input" type="number" value="${sub.targetWeight||0}" style="max-width:80px" oninput="exercises[${idx}].subExercises[${si}].targetWeight=Number(this.value)" inputmode="numeric"><span class="edit-unit">kg</span></div>
             <div class="edit-row"><span class="edit-label">목표</span><input class="edit-input" type="number" value="${sub.targetReps||0}" style="max-width:60px" oninput="exercises[${idx}].subExercises[${si}].targetReps=Number(this.value)" inputmode="numeric"><span class="edit-unit">회</span></div>
           </div>`).join('')}
@@ -1156,7 +1162,8 @@ function renderCards() {
       card.className = `ex-card${isSkipped?' skipped':''}`;
       const ssDoneBtn = !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
         ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
-      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div></div>${ssRightBtns}</div>${ssEditFieldsHTML}${!isEditing ? sectionsHTML : ''}${!isEditing ? sharedBody : ''}${ssDoneBtn}`;
+      // 🆕 displayName 사용
+      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.displayName || ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div></div>${ssRightBtns}</div>${ssEditFieldsHTML}${!isEditing ? sectionsHTML : ''}${!isEditing ? sharedBody : ''}${ssDoneBtn}`;
       container.appendChild(card);
       return;
     }
@@ -1177,7 +1184,7 @@ function renderCards() {
 
     const editFieldsHTML = isEditing ? `
       <div class="edit-fields">
-        <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.name}" oninput="exercises[${idx}].name=this.value;document.getElementById('exname-${idx}').textContent=this.value"></div>
+        <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.displayName || ex.name}" oninput="exercises[${idx}].name=this.value;exercises[${idx}].displayName=this.value;document.getElementById('exname-${idx}').textContent=this.value"></div>
         <div class="edit-row"><span class="edit-label">중량</span><input class="edit-input" type="number" value="${ex.targetWeight||0}" style="max-width:80px" oninput="exercises[${idx}].targetWeight=Number(this.value)" inputmode="numeric"><span class="edit-unit">kg</span></div>
         <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
         <div class="edit-row"><span class="edit-label">목표</span><input class="edit-input" type="number" value="${ex.targetReps||0}" style="max-width:60px" oninput="exercises[${idx}].targetReps=Number(this.value)" inputmode="numeric"><span class="edit-unit">회</span></div>
@@ -1223,7 +1230,8 @@ function renderCards() {
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
     const bpBadge = ex.bodyPart ? `<span class="body-part-tag">${ex.bodyPart}</span>` : '';
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div>${bpBadge}</div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    // 🆕 displayName 사용
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.displayName || ex.name}</div>${bpBadge}</div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
@@ -1293,7 +1301,7 @@ function moveEx(idx, dir) {
   renderCards();
 }
 function deleteEx(idx) {
-  if (!confirm(`"${exercises[idx].name}" 을(를) 삭제할까요?`)) return;
+  if (!confirm(`"${exercises[idx].displayName || exercises[idx].name}" 을(를) 삭제할까요?`)) return;
   delete editingCards[exercises[idx].id];
   exercises.splice(idx, 1);
   renderCards();
@@ -1449,17 +1457,23 @@ function confirmAdd() {
       const name = document.getElementById('ssSubName' + i)?.value.trim();
       if (!name) { alert((SS_LABELS[i] || '') + ' 종목명을 입력해주세요'); return; }
       subExercises.push({
-        name, variation: '',
+        name, variation: '', displayName: name,
         targetWeight: Number(document.getElementById('ssSubKg' + i)?.value) || 0,
         targetReps:   Number(document.getElementById('ssSubTarget' + i)?.value) || 10,
         lastRecord: null,
       });
     }
-    exercises.push({ id: Date.now(), name: ssName, sets: ssSets, tag: null, isSuperset: true, subExercises });
+    exercises.push({ id: Date.now(), name: ssName, variation: '', displayName: ssName, sets: ssSets, tag: null, isSuperset: true, subExercises });
   } else {
     const name = document.getElementById('newName')?.value.trim();
     if (!name) { alert('운동명을 입력해주세요'); return; }
-    exercises.push({ id: Date.now(), name, sets: Number(document.getElementById('newSets')?.value)||3, targetWeight: Number(document.getElementById('newKg')?.value)||0, targetReps: Number(document.getElementById('newTarget')?.value)||10, tag: null, lastRecord: null, variation: '' });
+    exercises.push({
+      id: Date.now(), name, variation: '', displayName: name,
+      sets: Number(document.getElementById('newSets')?.value)||3,
+      targetWeight: Number(document.getElementById('newKg')?.value)||0,
+      targetReps: Number(document.getElementById('newTarget')?.value)||10,
+      tag: null, lastRecord: null,
+    });
     ['newName','newKg','newSets','newTarget'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   }
   const t = document.getElementById('ssToggle');
@@ -1488,19 +1502,15 @@ async function openImportSheet(type, subIdx) {
   if (type === 'normal') { importTarget = 'normal'; } else { importTarget = { type: 'ss', subIdx }; }
   await _openImportSheet();
 }
+
 async function _openImportSheet() {
-  openBottomSheet(
-    '<div class="popup-header">' +
-      '<span class="popup-label">📂 기존 운동 가져오기</span>' +
-      '<button class="popup-close" onclick="closeBottomSheet()">닫기</button>' +
-    '</div>' +
-    '<div id="importBody" style="max-height:58vh;overflow-y:auto;">' +
-      '<div class="loading" style="height:auto;padding:24px 0;">' +
-        '<div class="spinner"></div>' +
-        '<div class="loading-text" style="margin-top:12px;">종목 불러오는 중...</div>' +
-      '</div>' +
-    '</div>'
-  );
+  openBottomSheet(`
+    <div class="popup-header">
+      <span class="popup-label">기존 운동 가져오기</span>
+      <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
+    </div>
+    <div id="importBody"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
+  `);
   try {
     const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
     renderImportExList(res.exercises || []);
@@ -1682,25 +1692,30 @@ async function onComplete() {
   const results = exercises.map(ex => {
     if (ex.isSuperset) {
       return {
-        name: ex.name, isSuperset: true, sets: ex.sets,
+        // 🆕 name은 원래 운동명, variation 분리 유지
+        name: ex.name, variation: ex.variation||'', isSuperset: true, sets: ex.sets,
         memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
         rest:    skipped[ex.id] ? '' : formatRest(restData[ex.id]),
         skipped: !!skipped[ex.id],
         subResults: (ex.subExercises || []).map((sub, si) => ({
-          name: sub.name, variation: sub.variation||'',
-          weight: sub.targetWeight||0,
-          targetReps: sub.targetReps||0,
+          name:      sub.name,
+          variation: sub.variation || '',
+          weight:    sub.targetWeight || 0,
+          targetReps: sub.targetReps || 0,
           weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[`${ex.id}_${si}`]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (sub.targetWeight||0); }),
-          reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
+          reps:    Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
         })),
       };
     }
     return {
-      name: ex.name, variation: ex.variation||'', sets: ex.sets,
-      weight: ex.targetWeight||0,
-      targetReps: ex.targetReps||0,
+      // 🆕 name은 원래 운동명, variation 분리 유지
+      name:      ex.name,
+      variation: ex.variation || '',
+      sets:      ex.sets,
+      weight:    ex.targetWeight || 0,
+      targetReps: ex.targetReps || 0,
       weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[ex.id]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (ex.targetWeight||0); }),
-      reps: Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
+      reps:    Array.from({ length: ex.sets }, (_, s) => { const v = repsData[ex.id]?.[s+1]; return v ? parseInt(v) : 0; }),
       memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
       rest:    skipped[ex.id] ? '' : formatRest(restData[ex.id]),
       skipped: !!skipped[ex.id],
@@ -1711,7 +1726,6 @@ async function onComplete() {
   if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">저장 중...</div>';
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
-    // 오늘 운동 완료 플래그 저장
     localStorage.setItem('gc_done_' + missionData.date, '1');
     if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
     const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
@@ -1966,9 +1980,11 @@ function renderDateResult(el, res) {
       const r = reps[i]?.trim()    || '-';
       setsHTML += `<div class="search-result-set">${i+1}세트 &nbsp;&nbsp; ${w}kg × ${r}회</div>`;
     }
+    // 🆕 검색 결과에서도 조합된 이름 표시
+    const displayName = buildDisplayName(ex.name, ex.variation);
     html += `
       <div class="search-result-card">
-        <div class="search-result-name">${ex.name}${ex.variation ? ' <span style="color:var(--text2);font-size:13px;font-weight:600;">'+ex.variation+'</span>' : ''}</div>
+        <div class="search-result-name">${displayName}</div>
         <div class="search-result-target">🎯 ${ex.targetWeight||'-'}kg × ${ex.targetReps||'-'}회 × ${ex.targetSets||'-'}세트</div>
         ${setsHTML}
         ${ex.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;">📝 ${ex.memo}</div>` : ''}
@@ -1997,17 +2013,20 @@ function renderSearchExerciseTab(body, exList) {
   exList.forEach(ex => {
     const part = (typeof ex === 'string') ? '기타' : (ex.bodyPart || '기타');
     const name = (typeof ex === 'string') ? ex : ex.name;
+    const variation = (typeof ex === 'string') ? '' : (ex.variation || '');
     if (!groups[part]) { groups[part] = []; order.push(part); }
-    groups[part].push(name);
+    groups[part].push({ name, variation });
   });
   let html = `<div class="search-section-label">최근 4주 종목</div>`;
   order.forEach(part => {
     html += `<div style="margin-bottom:14px;">`;
     html += `<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${part}</div>`;
     html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-    groups[part].forEach(name => {
+    groups[part].forEach(({ name, variation }) => {
+      // 🆕 조합된 이름으로 버튼 표시
+      const displayName = buildDisplayName(name, variation);
       const safeName = name.replace(/'/g, '&#39;');
-      html += `<button class="search-ex-btn${searchExSelected===name?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${name}</button>`;
+      html += `<button class="search-ex-btn${searchExSelected===name?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${displayName}</button>`;
     });
     html += `</div></div>`;
   });
@@ -2079,9 +2098,7 @@ function pushPage(pageId) {
 }
 
 function closeApp() {
-  // window.close() works on Android Chrome standalone PWA
   window.close();
-  // Fallback: go back as far as possible (exits standalone PWA)
   history.go(-history.length);
 }
 
@@ -2104,11 +2121,9 @@ function showExitDialog() {
 
 window.addEventListener('popstate', function() {
   if (currentPage === 'landing') {
-    // 랜딩에서 뒤로가기 → 종료 확인
     history.pushState({ page: 'landing' }, '');
     showExitDialog();
   } else {
-    // 다른 페이지에서 뒤로가기 → 랜딩으로
     currentPage = 'landing';
     renderLanding(); updateLandingStatus(); updateWeekAlert();
     if (_reloadAfterNav) { _reloadAfterNav = false; loadBackgroundData(); }
@@ -2117,9 +2132,8 @@ window.addEventListener('popstate', function() {
 
 /* ── Init ──────────────────────────────────────────────────── */
 renderLanding();
-// 초기 guard 상태 push: popstate가 랜딩에서도 항상 발동하도록
-history.replaceState(null, '');          // base (pos=0) — 앱 진입 이전 슬롯
-history.pushState({ page: 'landing' }, ''); // guard (pos=1) — 여기서 뒤로가기 시 종료 확인
+history.replaceState(null, '');
+history.pushState({ page: 'landing' }, '');
 loadBackgroundData();
 </script>
 </body>
