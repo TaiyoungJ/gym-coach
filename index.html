@@ -435,7 +435,7 @@ async function apiGet(params) {
 async function apiPost(body) {
   const res = await fetch(GAS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    
     body: JSON.stringify({ ...body, token: TOKEN }),
   });
   if (!res.ok) throw new Error('Network error: ' + res.status);
