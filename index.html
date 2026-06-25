@@ -86,6 +86,7 @@
     .meta-tag.last { border-color: rgba(34,197,94,0.25); }
     .meta-tag.last span { color: var(--green); }
     .card-btns { display: flex; flex-direction: row; gap: 6px; align-items: center; flex-shrink: 0; }
+    .card-btn-row { display: flex; flex-direction: row; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 8px; margin-bottom: 4px; }
     .card-btn { background: var(--surface2); border: 1.5px solid var(--border2); color: #888; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; white-space: nowrap; }
     .card-btn.edit-on { border-color: var(--accent); color: var(--accent); }
     .card-btn.skip-on { background: #1f1209; border-color: var(--accent); color: var(--accent); }
@@ -957,13 +958,15 @@ async function startFreeWorkout() {
   skipped = {}; editingCards = {}; showAddForm = false; introText = null; collapsedCards = {};
   doneCards = {}; completedCards = {};
   repsData = {}; memoData = {}; restData = {}; weightData = {};
-  // 자동완성용 종목 목록 미리 로드 (12주 기록 기반)
-  try {
-    const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
-    freeExerciseNames = (res.exercises || []).map(ex => (typeof ex === 'string') ? ex : ex.name);
-  } catch { freeExerciseNames = []; }
+  // 화면 먼저 전환 후 백그라운드에서 자동완성 목록 로드
   pushPage('dashboard');
   renderMain();
+  (async () => {
+    try {
+      const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
+      freeExerciseNames = (res.exercises || []).map(ex => (typeof ex === 'string') ? ex : ex.name);
+    } catch { freeExerciseNames = []; }
+  })();
 }
 
 /* ── Render utilities ──────────────────────────────────────── */
@@ -1126,19 +1129,34 @@ function renderCards() {
         </div>
         <div class="sec-label">메모</div>
         <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
-      const ssRightBtns = `<div class="card-btns">
-        <button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button>
-        <div class="skip-arrow-row">
-          <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
-          <button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button>
-        </div>
-      </div>`;
+      const ssEditFieldsHTML = isEditing ? `
+        <div class="edit-fields">
+          <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.name}" oninput="exercises[${idx}].name=this.value"></div>
+          <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
+          ${(ex.subExercises||[]).map((sub,si) => `
+          <div style="background:#1c1c1e;border:1.5px solid #48484a;border-radius:10px;padding:10px;margin-top:8px;">
+            <div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:8px;">${['🅐','🅑','🅒'][si]||''} 종목 ${si+1}</div>
+            <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:14px" value="${sub.name}" oninput="exercises[${idx}].subExercises[${si}].name=this.value"></div>
+            <div class="edit-row"><span class="edit-label">중량</span><input class="edit-input" type="number" value="${sub.targetWeight||0}" style="max-width:80px" oninput="exercises[${idx}].subExercises[${si}].targetWeight=Number(this.value)" inputmode="numeric"><span class="edit-unit">kg</span></div>
+            <div class="edit-row"><span class="edit-label">목표</span><input class="edit-input" type="number" value="${sub.targetReps||0}" style="max-width:60px" oninput="exercises[${idx}].subExercises[${si}].targetReps=Number(this.value)" inputmode="numeric"><span class="edit-unit">회</span></div>
+          </div>`).join('')}
+        </div>` : '';
+      const ssRightBtns = isEditing
+        ? `<div class="card-btn-row"><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id});renderCards()">✓ 완료</button></div>`
+        : `<div class="card-btn-row">
+            <button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button>
+            <div class="skip-arrow-row">
+              <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
+              <button class="arrow-btn" onclick="moveEx(${idx},1)">↓</button>
+            </div>
+            <button class="card-btn" onclick="toggleCardEdit(${ex.id});renderCards()">✏️ 편집</button>
+           </div>`;
       const card = document.createElement('div');
       card.id = `card-${idx}`;
       card.className = `ex-card${isSkipped?' skipped':''}`;
       const ssDoneBtn = !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
         ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
-      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div>${ssRightBtns}</div></div>${sectionsHTML}${sharedBody}${ssDoneBtn}`;
+      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div></div>${ssRightBtns}</div>${ssEditFieldsHTML}${!isEditing ? sectionsHTML : ''}${!isEditing ? sharedBody : ''}${ssDoneBtn}`;
       container.appendChild(card);
       return;
     }
@@ -1189,8 +1207,8 @@ function renderCards() {
       <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
 
     const rightBtns = isEditing
-      ? `<div class="card-btns"><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button></div>`
-      : `<div class="card-btns">
+      ? `<div class="card-btn-row"><button class="card-btn delete" onclick="deleteEx(${idx})">× 삭제</button><button class="card-btn edit-on" onclick="toggleCardEdit(${ex.id})">✓ 완료</button></div>`
+      : `<div class="card-btn-row">
           <button class="card-btn${isSkipped?' skip-on':''}" onclick="toggleSkip(${ex.id})">${isSkipped?'생략됨':'생략'}</button>
           <div class="skip-arrow-row">
             <button class="arrow-btn" onclick="moveEx(${idx},-1)">↑</button>
@@ -1205,7 +1223,7 @@ function renderCards() {
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
     const bpBadge = ex.bodyPart ? `<span class="body-part-tag">${ex.bodyPart}</span>` : '';
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div>${bpBadge}</div>${rightBtns}</div><div style="margin-top:8px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.name}</div>${bpBadge}</div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
@@ -1320,6 +1338,45 @@ function hideExNameDropdown() {
   if (dropdown) dropdown.classList.remove('show');
 }
 
+function onSsSubNameInput(idx) {
+  const input    = document.getElementById('ssSubName' + idx);
+  const dropdown = document.getElementById('ssSubDropdown' + idx);
+  if (!input || !dropdown) return;
+
+  const query = input.value.trim();
+  if (!query || freeExerciseNames.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  const norm    = s => s.replace(/[\s\-_]/g, '').toLowerCase();
+  const matched = freeExerciseNames.filter(n => norm(n).includes(norm(query)));
+
+  if (matched.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  dropdown.innerHTML = matched.map(n =>
+    `<div class="autocomplete-item" ontouchstart="" onclick="selectSsSubName(${idx}, '${n.replace(/'/g, "\\'")}')">${n}</div>`
+  ).join('');
+  dropdown.classList.add('show');
+}
+
+function selectSsSubName(idx, name) {
+  const input    = document.getElementById('ssSubName' + idx);
+  const dropdown = document.getElementById('ssSubDropdown' + idx);
+  if (input)    input.value = name;
+  if (dropdown) dropdown.classList.remove('show');
+}
+
+function hideSsSubDropdown(idx) {
+  setTimeout(() => {
+    const dropdown = document.getElementById('ssSubDropdown' + idx);
+    if (dropdown) dropdown.classList.remove('show');
+  }, 150);
+}
+
 function toggleAddForm() {
   showAddForm = !showAddForm;
   document.getElementById('addForm').classList.toggle('show', showAddForm);
@@ -1359,7 +1416,10 @@ function renderSsSub(idx) {
     '<div class="add-ss-sub-label">' + (SS_LABELS[idx] || '\u{1F152}') + ' 종목 ' + (idx + 1) + '</div>' +
     '<div class="add-field full" style="margin-bottom:8px;">' +
       '<label>종목명</label>' +
-      '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스">' +
+      '<div class="ex-name-wrap">' +
+        '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스" oninput="onSsSubNameInput(' + idx + ')" onblur="hideSsSubDropdown(' + idx + ')">' +
+        '<div class="autocomplete-dropdown" id="ssSubDropdown' + idx + '"></div>' +
+      '</div>' +
       '<button class="import-btn" onclick="openImportForSub(' + idx + ')">📂 기존 운동 가져오기</button>' +
     '</div>' +
     '<div class="add-grid" style="margin-bottom:0">' +
