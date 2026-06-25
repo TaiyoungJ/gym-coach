@@ -1,0 +1,14 @@
+{
+  "name": "gas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Code.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "clasp push && clasp deploy --deploymentId AKfycbzCJMLtt5RHCLMVYE_CSxJXtBEKR1p9AlriiQBFgZIbmOYXKcPs-wkr0xSA1RYS2LvemQ --description 업데이트"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
