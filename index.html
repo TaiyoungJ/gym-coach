@@ -2097,33 +2097,8 @@ function pushPage(pageId) {
   history.pushState({ page: pageId }, '');
 }
 
-function closeApp() {
-  window.close();
-  history.go(-history.length);
-}
-
-function showExitDialog() {
-  openBottomSheet(`
-    <div class="popup-header">
-      <span class="popup-label">앱 종료</span>
-    </div>
-    <div style="text-align:center;padding:8px 0 20px;">
-      <div style="font-size:32px;margin-bottom:12px;">👋</div>
-      <div style="font-size:17px;font-weight:800;color:var(--text1);margin-bottom:8px;">오늘도 수고했어요!</div>
-      <div style="font-size:14px;color:var(--text2);margin-bottom:24px;">앱을 종료할까요?</div>
-      <div style="display:flex;gap:10px;">
-        <button class="add-cancel" style="flex:1;" onclick="closeBottomSheet()">취소</button>
-        <button class="add-confirm" style="flex:1;background:#e05555;" onclick="closeApp()">종료</button>
-      </div>
-    </div>
-  `);
-}
-
 window.addEventListener('popstate', function() {
-  if (currentPage === 'landing') {
-    history.pushState({ page: 'landing' }, '');
-    showExitDialog();
-  } else {
+  if (currentPage !== 'landing') {
     currentPage = 'landing';
     renderLanding(); updateLandingStatus(); updateWeekAlert();
     if (_reloadAfterNav) { _reloadAfterNav = false; loadBackgroundData(); }
