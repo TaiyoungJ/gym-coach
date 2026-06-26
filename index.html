@@ -57,7 +57,8 @@
 
     /* ── Popup ── */
     .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: flex-end; }
-    .popup-sheet { width: 100%; max-width: 480px; margin: 0 auto; background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px 40px; border-top: 1.5px solid var(--border); animation: slideUp .25s ease; }
+    .popup-sheet { width: 100%; max-width: 480px; margin: 0 auto; background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px 40px; border-top: 1.5px solid var(--border); animation: slideUp .25s ease; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
+    .sheet-scroll-body { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .popup-label { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
@@ -1495,6 +1496,7 @@ function openBottomSheet(html) {
     '<div class="popup-overlay" id="bsOverlay" onclick="if(event.target===this)closeBottomSheet()">' +
       '<div class="popup-sheet" id="bsSheet">' + html + '</div>' +
     '</div>';
+  history.pushState({ page: 'bottomsheet' }, '');
 }
 function closeBottomSheet() {
   document.getElementById('popup-container').innerHTML = '';
@@ -1566,7 +1568,7 @@ async function openRoutineImportSheet() {
       <span class="popup-label">루틴 운동 가져오기</span>
       <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
     </div>
-    <div id="routineImportBody"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
+    <div id="routineImportBody" class="sheet-scroll-body"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
   `);
   try {
     const res = await apiGet({ action: 'getRoutineDoc' });
@@ -2235,6 +2237,11 @@ function pushPage(pageId) {
 }
 
 window.addEventListener('popstate', function() {
+  const container = document.getElementById('popup-container');
+  if (container && container.innerHTML.trim()) {
+    container.innerHTML = '';
+    return;
+  }
   if (currentPage !== 'landing') {
     currentPage = 'landing';
     renderLanding(); updateLandingStatus(); updateWeekAlert();
