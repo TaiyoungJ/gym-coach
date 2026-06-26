@@ -335,6 +335,10 @@
     .add-ss-add-btn:active { border-color: var(--accent); color: var(--accent); }
     .import-btn { background: none; border: 1.5px solid #2a2a2a; color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 6px; display: block; width: 100%; text-align: left; }
     .import-btn:active { border-color: var(--accent); color: var(--accent); }
+    .import-btn-sm { background: none; border: 1.5px solid #2a2a2a; color: var(--text2); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .import-btn-sm:active { border-color: var(--accent); color: var(--accent); }
+    .ss-sub-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .ss-sub-label-btns { display: flex; gap: 5px; }
 
     /* ── Routine Import Period Sections ── */
     .import-period-card { background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
@@ -1427,14 +1431,19 @@ function renderSsSub(idx) {
   div.className = 'add-ss-sub';
   div.id = 'ss-sub-' + idx;
   div.innerHTML =
-    '<div class="add-ss-sub-label">' + (SS_LABELS[idx] || '\u{1F152}') + ' 종목 ' + (idx + 1) + '</div>' +
+    '<div class="ss-sub-label-row">' +
+      '<span class="add-ss-sub-label" style="margin-bottom:0;">' + (SS_LABELS[idx] || '\\u{1F152}') + ' 종목 ' + (idx + 1) + '</span>' +
+      '<div class="ss-sub-label-btns">' +
+        '<button class="import-btn-sm" onclick="openImportForSub(' + idx + ')">📂 과거 운동</button>' +
+        '<button class="import-btn-sm" onclick="openRoutineImportForSub(' + idx + ')">📄 루틴 운동</button>' +
+      '</div>' +
+    '</div>' +
     '<div class="add-field full" style="margin-bottom:8px;">' +
       '<label>종목명</label>' +
       '<div class="ex-name-wrap">' +
         '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스" oninput="onSsSubNameInput(' + idx + ')" onblur="hideSsSubDropdown(' + idx + ')">' +
         '<div class="autocomplete-dropdown" id="ssSubDropdown' + idx + '"></div>' +
       '</div>' +
-      '<button class="import-btn" onclick="openImportForSub(' + idx + ')">📂 과거 운동</button>' +
     '</div>' +
     '<div class="add-grid" style="margin-bottom:0">' +
       '<div class="add-field"><label>중량 (kg)</label><input id="ssSubKg' + idx + '" type="number" placeholder="0" inputmode="numeric"></div>' +
@@ -1621,14 +1630,21 @@ function toggleRoutineImportPeriod(idx) {
 }
 
 function applyRoutineImport(name) {
-  const input = document.getElementById('newName');
-  if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+  if (importTarget && typeof importTarget === 'object' && importTarget.type === 'ss') {
+    const input = document.getElementById('ssSubName' + importTarget.subIdx);
+    if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+  } else {
+    const input = document.getElementById('newName');
+    if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+  }
+  importTarget = null;
   closeBottomSheet();
 }
 
 /* ── Import Sheet ──────────────────────────────────────────── */
 function openImportForNormal() { importTarget = 'normal'; _openImportSheet(); }
 function openImportForSub(idx)  { importTarget = { type: 'ss', subIdx: idx }; _openImportSheet(); }
+function openRoutineImportForSub(idx) { importTarget = { type: 'ss', subIdx: idx }; openRoutineImportSheet(); }
 async function openImportSheet(type, subIdx) {
   if (type === 'normal') { importTarget = 'normal'; } else { importTarget = { type: 'ss', subIdx }; }
   await _openImportSheet();
