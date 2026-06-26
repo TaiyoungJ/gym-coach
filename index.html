@@ -1517,9 +1517,9 @@ function extractRoutineExercises(md) {
         if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
       });
     } else {
-      // 일반 종목: (N세트), **[태그]** 제거
+      // 일반 종목: (N) 또는 (N세트), **[태그]** 제거
       const cleaned = content
-        .replace(/\s*\(\d+세트\).*$/, '')
+        .replace(/\s*\(\d+(?:세트)?\).*$/, '')
         .replace(/\s*\*\*\[.*?\]\*\*/, '')
         .trim();
       const name = parseRoutineExName(cleaned);
