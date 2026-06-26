@@ -335,6 +335,14 @@
     .import-btn { background: none; border: 1.5px solid #2a2a2a; color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 6px; display: block; width: 100%; text-align: left; }
     .import-btn:active { border-color: var(--accent); color: var(--accent); }
 
+    /* ── Routine Import Period Sections ── */
+    .import-period-card { background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+    .import-period-header { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; font-family: inherit; color: var(--text1); gap: 8px; }
+    .import-period-header:active { background: rgba(255,255,255,0.05); }
+    .import-period-title { font-size: 14px; font-weight: 800; text-align: left; flex: 1; }
+    .import-period-icon { font-size: 18px; color: var(--text3); flex-shrink: 0; transition: transform .25s; display: inline-block; }
+    .import-period-body { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+
     /* ── Done Animation ── */
     @keyframes cardGlow {
       0%   { box-shadow: none; }
@@ -1495,16 +1503,32 @@ function closeBottomSheet() {
 /* ── Routine Import ────────────────────────────────────────── */
 function extractRoutineExercises(md) {
   const lines = md.split('\n');
-  const groups = [];
-  let currentGroup = null;
+  const periods = [];
+  let currentPeriod = null;
+  let currentGroup  = null;
 
   for (const line of lines) {
-    const dayMatch = line.match(/^### (월요일|화요일|수요일|목요일|금요일|토요일|일요일)/);
-    if (dayMatch) {
-      currentGroup = { day: dayMatch[1], exercises: [] };
-      groups.push(currentGroup);
+    // ## 기간 헤딩 파싱
+    const periodMatch = line.match(/^## (.+)/);
+    if (periodMatch) {
+      currentGroup  = null;
+      currentPeriod = { period: periodMatch[1].trim(), groups: [] };
+      periods.push(currentPeriod);
       continue;
     }
+
+    // ### 요일 헤딩 파싱
+    const dayMatch = line.match(/^### (월요일|화요일|수요일|목요일|금요일|토요일|일요일)/);
+    if (dayMatch) {
+      if (!currentPeriod) {
+        currentPeriod = { period: '', groups: [] };
+        periods.push(currentPeriod);
+      }
+      currentGroup = { day: dayMatch[1], exercises: [] };
+      currentPeriod.groups.push(currentGroup);
+      continue;
+    }
+
     if (!currentGroup || !/^\d+\. /.test(line)) continue;
 
     const content = line.replace(/^\d+\. /, '').trim();
@@ -1526,7 +1550,7 @@ function extractRoutineExercises(md) {
       if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
     }
   }
-  return groups;
+  return periods;
 }
 
 function parseRoutineExName(raw) {
@@ -1554,26 +1578,44 @@ async function openRoutineImportSheet() {
   }
 }
 
-function renderRoutineImportList(groups) {
+function renderRoutineImportList(periods) {
   const body = document.getElementById('routineImportBody');
   if (!body) return;
-  const validGroups = groups.filter(g => g.exercises.length > 0);
-  if (!validGroups.length) {
+  const validPeriods = periods.filter(p => p.groups.some(g => g.exercises.length > 0));
+  if (!validPeriods.length) {
     body.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">루틴 운동을 찾을 수 없어요</div>';
     return;
   }
   let html = '';
-  validGroups.forEach(g => {
-    html += `<div style="margin-bottom:16px;">`;
-    html += `<div class="search-section-label" style="margin-bottom:8px;">${g.day}</div>`;
-    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-    g.exercises.forEach(name => {
-      const safe = name.replace(/'/g, '&#39;');
-      html += `<button class="search-ex-btn" onclick="applyRoutineImport('${safe}')">${name}</button>`;
+  validPeriods.forEach((p, pi) => {
+    html += `<div class="import-period-card">`;
+    html += `<button class="import-period-header" onclick="toggleRoutineImportPeriod(${pi})">
+               <span class="import-period-title">${p.period}</span>
+               <span class="import-period-icon" id="rip-icon-${pi}">›</span>
+             </button>`;
+    html += `<div class="import-period-body" id="rip-body-${pi}" style="display:none;">`;
+    p.groups.filter(g => g.exercises.length > 0).forEach(g => {
+      html += `<div style="margin-bottom:14px;margin-top:12px;">`;
+      html += `<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${g.day}</div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+      g.exercises.forEach(name => {
+        const safe = name.replace(/'/g, '&#39;');
+        html += `<button class="search-ex-btn" onclick="applyRoutineImport('${safe}')">${name}</button>`;
+      });
+      html += `</div></div>`;
     });
     html += `</div></div>`;
   });
   body.innerHTML = html;
+}
+
+function toggleRoutineImportPeriod(idx) {
+  const body = document.getElementById('rip-body-' + idx);
+  const icon = document.getElementById('rip-icon-' + idx);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
 function applyRoutineImport(name) {
