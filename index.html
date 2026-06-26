@@ -465,8 +465,6 @@ function buildDisplayName(name, variation) {
 function renderLanding() {
   const now  = new Date();
   const y    = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const dayAbbr = days[now.getDay()];
 
   document.getElementById('app').innerHTML = `
     <div class="landing-nav">
@@ -475,9 +473,8 @@ function renderLanding() {
       </div>
       <button class="settings-icon-btn" onclick="renderSettings()" aria-label="설정">⚙️</button>
     </div>
-    <div class="landing-date-block" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+    <div class="landing-date-block" style="margin-bottom: 24px;">
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
-      <div class="landing-day-text" style="color: var(--accent); font-weight: 900; font-size: 20px; text-align: right; margin: 0;">${dayAbbr}.</div>
     </div>
     <div style="margin-bottom: 10px; display:flex; gap:8px;">
       <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄 운동 루틴</button>
@@ -1428,7 +1425,7 @@ function renderSsSub(idx) {
         '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스" oninput="onSsSubNameInput(' + idx + ')" onblur="hideSsSubDropdown(' + idx + ')">' +
         '<div class="autocomplete-dropdown" id="ssSubDropdown' + idx + '"></div>' +
       '</div>' +
-      '<button class="import-btn" onclick="openImportForSub(' + idx + ')">📂 기존 운동 가져오기</button>' +
+      '<button class="import-btn" onclick="openImportForSub(' + idx + ')">📂 과거 운동</button>' +
     '</div>' +
     '<div class="add-grid" style="margin-bottom:0">' +
       '<div class="add-field"><label>중량 (kg)</label><input id="ssSubKg' + idx + '" type="number" placeholder="0" inputmode="numeric"></div>' +
@@ -1493,6 +1490,96 @@ function openBottomSheet(html) {
 }
 function closeBottomSheet() {
   document.getElementById('popup-container').innerHTML = '';
+}
+
+/* ── Routine Import ────────────────────────────────────────── */
+function extractRoutineExercises(md) {
+  const lines = md.split('\n');
+  const groups = [];
+  let currentGroup = null;
+
+  for (const line of lines) {
+    const dayMatch = line.match(/^### (월요일|화요일|수요일|목요일|금요일|토요일|일요일)/);
+    if (dayMatch) {
+      currentGroup = { day: dayMatch[1], exercises: [] };
+      groups.push(currentGroup);
+      continue;
+    }
+    if (!currentGroup || !/^\d+\. /.test(line)) continue;
+
+    const content = line.replace(/^\d+\. /, '').trim();
+
+    if (content.includes(': ') && content.includes(' + ')) {
+      // 슈퍼세트: 콜론 뒤를 + 로 쪼개서 개별 종목 추출
+      const afterColon = content.split(': ').slice(1).join(': ');
+      afterColon.split(' + ').forEach(sub => {
+        const name = parseRoutineExName(sub.trim());
+        if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
+      });
+    } else {
+      // 일반 종목: (N세트), **[태그]** 제거
+      const cleaned = content
+        .replace(/\s*\(\d+세트\).*$/, '')
+        .replace(/\s*\*\*\[.*?\]\*\*/, '')
+        .trim();
+      const name = parseRoutineExName(cleaned);
+      if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
+    }
+  }
+  return groups;
+}
+
+function parseRoutineExName(raw) {
+  // "운동명 [세부종목]" → buildDisplayName("운동명", "세부종목")
+  const match = raw.match(/^(.+?)\s*\[(.+?)\]$/);
+  if (match) return buildDisplayName(match[1].trim(), match[2].trim());
+  return raw.trim() || null;
+}
+
+async function openRoutineImportSheet() {
+  openBottomSheet(`
+    <div class="popup-header">
+      <span class="popup-label">루틴 운동 가져오기</span>
+      <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
+    </div>
+    <div id="routineImportBody"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
+  `);
+  try {
+    const res = await apiGet({ action: 'getRoutineDoc' });
+    const groups = extractRoutineExercises(res.content || '');
+    renderRoutineImportList(groups);
+  } catch(err) {
+    const body = document.getElementById('routineImportBody');
+    if (body) body.innerHTML = '<div class="error-card"><h3>오류</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+function renderRoutineImportList(groups) {
+  const body = document.getElementById('routineImportBody');
+  if (!body) return;
+  const validGroups = groups.filter(g => g.exercises.length > 0);
+  if (!validGroups.length) {
+    body.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">루틴 운동을 찾을 수 없어요</div>';
+    return;
+  }
+  let html = '';
+  validGroups.forEach(g => {
+    html += `<div style="margin-bottom:16px;">`;
+    html += `<div class="search-section-label" style="margin-bottom:8px;">${g.day}</div>`;
+    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+    g.exercises.forEach(name => {
+      const safe = name.replace(/'/g, '&#39;');
+      html += `<button class="search-ex-btn" onclick="applyRoutineImport('${safe}')">${name}</button>`;
+    });
+    html += `</div></div>`;
+  });
+  body.innerHTML = html;
+}
+
+function applyRoutineImport(name) {
+  const input = document.getElementById('newName');
+  if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+  closeBottomSheet();
 }
 
 /* ── Import Sheet ──────────────────────────────────────────── */
@@ -1781,7 +1868,10 @@ function renderMain() {
     <div class="header">
       <div style="margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
         <button class="back-btn" onclick="history.back()">← 뒤로</button>
-        <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍</button>
+        <div style="display:flex;gap:8px;">
+          <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄</button>
+          <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍</button>
+        </div>
       </div>
       <div style="margin-bottom: 10px;">
         <span class="logo" style="font-size:22px;letter-spacing:0.05em;text-transform:none;">🏋️핸니의 체육관🏋️</span>
@@ -1802,7 +1892,13 @@ function renderMain() {
     <div id="cards"></div>
     <button class="add-ex-btn" onclick="toggleAddForm()">+ 운동 추가</button>
     <div class="add-form" id="addForm">
-      <div class="add-form-title">새 운동 추가</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="add-form-title" style="font-size:15px;margin-bottom:0;">새 운동 추가</div>
+        <div style="display:flex;gap:6px;">
+          <button class="import-btn" style="margin-top:0;display:inline-block;width:auto;text-align:center;" onclick="openImportForNormal()">📂 과거 운동</button>
+          <button class="import-btn" style="margin-top:0;display:inline-block;width:auto;text-align:center;" onclick="openRoutineImportSheet()">📄 루틴 운동</button>
+        </div>
+      </div>
       <div id="normalFields">
         <div class="add-grid">
           <div class="add-field full">
@@ -1811,7 +1907,6 @@ function renderMain() {
               <input id="newName" type="text" placeholder="예: 레그 컬" oninput="onExNameInput()" autocomplete="off">
               <div id="exNameDropdown" class="autocomplete-dropdown"></div>
             </div>
-            <button class="import-btn" onclick="openImportForNormal()">📂 기존 운동 가져오기</button>
           </div>
           <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
           <div class="add-field"><label>세트 수</label><input id="newSets" type="number" placeholder="3" inputmode="numeric"></div>
