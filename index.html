@@ -1871,36 +1871,55 @@ async function onComplete() {
   const condition = document.getElementById('condition')?.value?.trim() || '';
   const completeArea = document.getElementById('completeArea');
   if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">저장 중...</div>';
+
+  // 1단계: 운동 결과 저장 — 실패 시 슬라이드 버튼 복구 후 중단
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     localStorage.setItem('gc_done_' + missionData.date, '1');
-    if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
+  } catch(err) {
+    if (completeArea) { completeArea.innerHTML = '<div class="slide-wrap ready" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">밀어서 운동 완료 →</span></div>'; initSlideBtn(); }
+    alert('오류: ' + err.message);
+    return;
+  }
+
+  // 2단계: AI 피드백 — 실패해도 일지 저장은 가능
+  if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
+  let outroText = '오늘도 수고했어! 💪';
+  let outroSummary = '';
+  let conditionSummary = '';
+
+  try {
     const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
     const outroPayload = isFreeWorkout
       ? { results, condition }
       : { mission: missionData, results, condition };
     const outro = await apiPost({ action: 'getCoaching', type: outroType, missionData: outroPayload });
-    outroWorkoutData = {
-      date:         missionData.date,
-      day:          missionData.day,
-      routineName:  programName,
-      results,
-      outroSummary: outro.summary || ''
-    };
-    const outroEl = document.createElement('div');
-    outroEl.className = 'outro-card';
-    outroEl.innerHTML = `
+    outroText = outro.text || '오늘도 수고했어! 💪';
+    outroSummary = outro.summary || '';
+    conditionSummary = outro.conditionSummary || '';
+  } catch(err) {
+    // AI 호출 실패 — 기본값으로 계속 진행
+  }
+
+  outroWorkoutData = {
+    date:             missionData.date,
+    day:              missionData.day,
+    routineName:      programName,
+    results,
+    condition,
+    outroSummary,
+    conditionSummary
+  };
+  const outroEl = document.createElement('div');
+  outroEl.className = 'outro-card';
+  outroEl.innerHTML = `
       <div class="outro-label">🔥 오늘의 피드백</div>
-      <div class="outro-text">${outro.text||'오늘도 수고했어! 💪'}</div>
+      <div class="outro-text">${outroText}</div>
       <button id="logSaveBtn" class="done-btn" style="margin-top:14px;" onclick="onSaveWorkoutLog()">📝 운동일지 저장</button>
       <button class="complete-btn" style="margin-top: 14px; background: linear-gradient(135deg, #22C55E, #15803D); color: #000;" onclick="history.back()">끝</button>
     `;
-    completeArea.replaceWith(outroEl);
-    outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } catch(err) {
-    if (completeArea) { completeArea.innerHTML = '<div class="slide-wrap ready" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">밀어서 운동 완료 →</span></div>'; initSlideBtn(); }
-    alert('오류: ' + err.message);
-  }
+  completeArea.replaceWith(outroEl);
+  outroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ── Save Workout Log ──────────────────────────────────────── */

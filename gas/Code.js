@@ -412,8 +412,11 @@ function getCoaching(type, missionData, props) {
 
   } else if (type === 'outro') {
     isOutroType = true;
-    const condition = missionData?.condition
-      ? `\n컨디션·특이사항: ${missionData.condition}` : '';
+    const conditionRaw = missionData?.condition || '';
+    const condition = conditionRaw ? `\n컨디션·특이사항: ${conditionRaw}` : '';
+    const conditionSummaryInstruction = conditionRaw
+      ? `\n[CONDITION_SUMMARY]컨디션 및 특이사항 한 줄 요약[/CONDITION_SUMMARY]\n(예: [CONDITION_SUMMARY]왼쪽 승모근 뭉침, 전반 컨디션 저조[/CONDITION_SUMMARY])`
+      : '';
     userPrompt =
       `오늘 운동 완료 후 아웃트로 피드백을 써줘.
 아래 세 단락으로 나눠서 써줘. 각 단락 사이에 빈 줄 하나씩 넣어줘.
@@ -422,11 +425,15 @@ function getCoaching(type, missionData, props) {
 2. 잘한 점 또는 개선 점 구체적으로 (1-2문장)
 3. 오늘 마무리 한마디 (1문장)
 
-오늘 결과 데이터: ${JSON.stringify(missionData, null, 2)}${condition}` + summaryInstruction;
+오늘 결과 데이터: ${JSON.stringify(missionData, null, 2)}${condition}` + summaryInstruction + conditionSummaryInstruction;
 
   } else if (type === 'freeOutro') {
     isOutroType = true;
-    const condition = missionData?.condition || '(없음)';
+    const conditionRaw = missionData?.condition || '';
+    const condition = conditionRaw || '(없음)';
+    const conditionSummaryInstruction = conditionRaw
+      ? `\n[CONDITION_SUMMARY]컨디션 및 특이사항 한 줄 요약[/CONDITION_SUMMARY]\n(예: [CONDITION_SUMMARY]왼쪽 승모근 뭉침, 전반 컨디션 저조[/CONDITION_SUMMARY])`
+      : '';
     userPrompt =
       `자유 운동 완료 후 피드백을 써줘.
 오늘은 루틴 없이 자유롭게 구성한 운동이야. 목표 중량 비교 대신 오늘 한 운동 자체에 집중해서 피드백해줘.
@@ -437,7 +444,7 @@ function getCoaching(type, missionData, props) {
 3. 마무리 한마디 (1문장)
 
 컨디션·특이사항: ${condition}
-오늘 결과 데이터: ${JSON.stringify(missionData?.results || [], null, 2)}` + summaryInstruction;
+오늘 결과 데이터: ${JSON.stringify(missionData?.results || [], null, 2)}` + summaryInstruction + conditionSummaryInstruction;
 
   } else {
     return { text: '알 수 없는 코칭 타입입니다.' };
@@ -470,15 +477,20 @@ function getCoaching(type, missionData, props) {
 
 // ── parseOutroText ────────────────────────────────────────
 function parseOutroText(rawText) {
-  const match   = rawText.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
-  const summary = match ? match[1].trim() : '';
-  const text    = rawText.replace(/\[SUMMARY\][\s\S]*?\[\/SUMMARY\]/, '').trim();
-  return { text, summary };
+  const summaryMatch    = rawText.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
+  const summary         = summaryMatch ? summaryMatch[1].trim() : '';
+  const conditionMatch  = rawText.match(/\[CONDITION_SUMMARY\]([\s\S]*?)\[\/CONDITION_SUMMARY\]/);
+  const conditionSummary = conditionMatch ? conditionMatch[1].trim() : '';
+  const text = rawText
+    .replace(/\[SUMMARY\][\s\S]*?\[\/SUMMARY\]/, '')
+    .replace(/\[CONDITION_SUMMARY\][\s\S]*?\[\/CONDITION_SUMMARY\]/, '')
+    .trim();
+  return { text, summary, conditionSummary };
 }
 
 // ── saveWorkoutLog ─────────────────────────────────────────
 function saveWorkoutLog(data, props) {
-  const { date, day, routineName, results, outroSummary } = data;
+  const { date, day, routineName, results, outroSummary, conditionSummary } = data;
 
   const doc  = DocumentApp.openById(props.workoutLogDocId);
   const body = doc.getBody();
@@ -497,6 +509,13 @@ function saveWorkoutLog(data, props) {
   heading.editAsText()
     .setBold(0, titleText.length - 1, false)
     .setBold(0, datePart.length - 1, true);
+
+  // 컨디션 요약 (있을 때만 이탤릭으로 삽입)
+  if (conditionSummary) {
+    const condText = `📝 ${conditionSummary}`;
+    const condPara = body.insertParagraph(idx++, condText);
+    condPara.editAsText().setItalic(0, condText.length - 1, true);
+  }
 
   const lines = buildExerciseSummary(results);
   lines.forEach(line => {
