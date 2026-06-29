@@ -782,11 +782,14 @@ function getLastSessionLog(ss, routineName) {
       const weightRaw   = String(row[9]).split(',')[0].trim();
       const weightValue = weightRaw ? Number(weightRaw) : Number(row[5]);
       return {
-        name:      row[3],
-        variation: row[4],
-        sets:      row[10],
-        reps:      String(row[11]).split(','),
-        weight:    weightValue,
+        name:         row[3],
+        variation:    row[4],
+        sets:         row[10],
+        reps:         String(row[11]).split(','),
+        weight:       weightValue,
+        targetWeight: Number(row[5]),
+        targetReps:   Number(row[7]),
+        memo:         String(row[12]).trim(),
       };
     });
 }
