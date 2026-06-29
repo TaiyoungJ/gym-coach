@@ -510,11 +510,14 @@ function saveWorkoutLog(data, props) {
     .setBold(0, titleText.length - 1, false)
     .setBold(0, datePart.length - 1, true);
 
-  // 컨디션 요약 (있을 때만 이탤릭으로 삽입)
+  // ✅ 제목 다음 빈 줄 추가
+  body.insertParagraph(idx++, '');
+
+  // ✅ 컨디션 요약: 🩺 이모지, 볼드, 이탤릭 제거
   if (conditionSummary) {
-    const condText = `📝 ${conditionSummary}`;
+    const condText = `🩺 ${conditionSummary}`;
     const condPara = body.insertParagraph(idx++, condText);
-    condPara.editAsText().setItalic(0, condText.length - 1, true);
+    condPara.editAsText().setBold(0, condText.length - 1, true);
   }
 
   const lines = buildExerciseSummary(results);
@@ -528,7 +531,8 @@ function saveWorkoutLog(data, props) {
   if (outroSummary) {
     // 운동 목록과 코치 요약 사이 빈 줄
     body.insertParagraph(idx++, '');
-    const summaryText = `💬 ${outroSummary}`;
+    // ✅ 아웃트로 요약: 이모지 앞 공백 두 칸
+    const summaryText = `  💬 ${outroSummary}`;
     const commentPara = body.insertParagraph(idx++, summaryText);
     commentPara.editAsText().setItalic(0, summaryText.length - 1, true);
   }
@@ -567,7 +571,7 @@ function formatExerciseLine(name, variation, weights, reps) {
     .map((w, i) => ({ w: w.trim(), r: (rArr[i] || '').trim() }))
     .filter(p => p.w && p.w !== '0' && p.r && p.r !== '0');
 
-  const displayName = variation ? `${name} ${variation}` : name;
+  const displayName = variation ? `${variation} ${name}` : name;
 
   if (pairs.length === 0) {
     return { text: displayName, boldEnd: displayName.length - 1 };
