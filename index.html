@@ -1266,6 +1266,16 @@ function renderCards() {
 }
 
 /* ── Card interactions ─────────────────────────────────────── */
+function addDoneButton(idx, id) {
+  if (editingCards[id] || skipped[id]) return;
+  const card = document.getElementById(`card-${idx}`);
+  if (!card || card.querySelector('.done-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'done-btn';
+  btn.textContent = completedCards[id] ? '✓ 수정 완료' : '✓ 운동 완료';
+  btn.onclick = () => onCardDone(id);
+  card.appendChild(btn);
+}
 function onSetInput(idx) {
   const ex = exercises[idx]; let all = true;
   if (!repsData[ex.id]) repsData[ex.id] = {};
@@ -1276,7 +1286,7 @@ function onSetInput(idx) {
     if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; colEl?.classList.add('done'); }
     else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; colEl?.classList.remove('done'); }
   }
-  if (all) { doneCards[ex.id] = true; renderCards(); }
+  if (all) { doneCards[ex.id] = true; addDoneButton(idx, ex.id); }
 }
 function onRestInput(id, field, val) {
   if (!restData[id]) restData[id] = {};
@@ -1298,7 +1308,7 @@ function onSupersetInput(idx, subIdx) {
     const k = `${ex.id}_${si}`;
     return Array.from({ length: ex.sets }, (_, s) => !!(repsData[k]?.[s+1])).every(Boolean);
   }).every(Boolean);
-  if (allDone) { doneCards[ex.id] = true; renderCards(); }
+  if (allDone) { doneCards[ex.id] = true; addDoneButton(idx, ex.id); }
 }
 function onWeightInput(idx, setNum) {
   const ex = exercises[idx];
