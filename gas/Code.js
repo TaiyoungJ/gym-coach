@@ -425,7 +425,7 @@ function getCoaching(type, missionData, props) {
 아래 세 단락으로 나눠서 써줘. 각 단락 사이에 빈 줄 하나씩 넣어줘.
 
 1. 오늘 수행 결과 총평 (1-2문장)
-2. 잘한 점 또는 개선 점 구체적으로 (1-2문장)
+2. 잘한 점 또는 개선 점 구체적으로 (2-3문장)
 3. 오늘 마무리 한마디 (1문장)
 
 오늘 결과 데이터: ${JSON.stringify(missionData, null, 2)}${condition}` + summaryInstruction + conditionSummaryInstruction;
@@ -443,7 +443,7 @@ function getCoaching(type, missionData, props) {
 아래 세 단락으로 나눠서 써줘. 각 단락 사이에 빈 줄 하나씩 넣어줘.
 
 1. 오늘 선택한 종목 구성이나 볼륨에 대한 총평 (1-2문장)
-2. 컨디션·특이사항을 반영한 코멘트 또는 다음에 참고할 점 (1-2문장)
+2. 컨디션·특이사항을 반영한 코멘트 또는 다음에 참고할 점 (2-3문장)
 3. 마무리 한마디 (1문장)
 
 컨디션·특이사항: ${condition}
@@ -461,8 +461,8 @@ function getCoaching(type, missionData, props) {
       'content-type':      'application/json',
     },
     payload: JSON.stringify({
-      model:      'claude-sonnet-4-6',
-      max_tokens: isOutroType ? 500 : 400,
+      model:      'claude-sonnet-5',
+      max_tokens: isOutroType ? 1200 : 900,
       system:     systemPrompt,
       messages:   [{ role: 'user', content: userPrompt }],
     }),
