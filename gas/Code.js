@@ -76,7 +76,11 @@ function doGet(e) {
   }
   try {
     const action = e.parameter.action;
-    if (action === 'getMission')      return jsonResponse(getMission(props));
+    if (action === 'getMission') {
+      // 🆕 테스트용 가짜 날짜 (예: &testDate=2026-07-03)
+      const testDate = e.parameter.testDate || null;
+      return jsonResponse(getMission(props, testDate));
+    }
     if (action === 'getCoaching') {
       const type        = e.parameter.type;
       const rawData     = e.parameter.missionData;
@@ -117,11 +121,12 @@ function doPost(e) {
 }
 
 // ── getMission ──────────────────────────────────────────────
-function getMission(props) {
-  const today    = new Date();
+// 🆕 testDate 인자 추가: 값이 있으면 "오늘"인 척 그 날짜를 사용
+function getMission(props, testDate) {
+  const today    = testDate ? new Date(testDate) : new Date();
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
   const dayKor   = dayNames[today.getDay()];
-  const todayStr = formatDate(today);
+  const todayStr = testDate || formatDate(today);
 
   const mdContent = DriveApp.getFileById(props.routineFileId)
                             .getBlob()
@@ -144,7 +149,6 @@ function getMission(props) {
         tag:          ex.tag || null,
         isSuperset:   true,
         subExercises: ex.subExercises.map(sub => {
-          // 🆕 variation 인자 추가
           const match = findTarget(targetRows, sub.name, sub.variation);
           return {
             name:         sub.name,
@@ -157,7 +161,6 @@ function getMission(props) {
         }),
       };
     }
-    // 🆕 variation 인자 추가
     const match = findTarget(targetRows, ex.name, ex.variation);
     return {
       name:         ex.name,
