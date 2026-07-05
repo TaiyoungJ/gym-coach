@@ -770,7 +770,10 @@ function getLastSessionLog(ss, routineName) {
   const data = _getLogData(ss, year) || _getLogData(ss, year - 1);
   if (!data) return [];
 
-  const routineKey   = routineName.split(':')[0].trim();
+  // 🆕 "O요일: " 접두사 제거 (saveWorkoutLog의 cleanRoutineName과 동일한 패턴)
+  const cleanRoutineName = routineName.replace(/^[가-힣]+요일:\s*/, '');
+  const routineKey        = cleanRoutineName.split(':')[0].trim();
+
   const matchingRows = data.slice(2).filter(row =>
     String(row[2]).includes(routineKey) || routineKey.includes(String(row[2]).split(':')[0].trim())
   );
