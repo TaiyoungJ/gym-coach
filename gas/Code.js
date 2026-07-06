@@ -453,29 +453,64 @@ function getCoaching(type, missionData, props) {
     return { text: '알 수 없는 코칭 타입입니다.' };
   }
 
-  const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
-    method:  'post',
-    headers: {
-      'x-api-key':         props.claudeApiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json',
-    },
-    payload: JSON.stringify({
-      model:      'claude-sonnet-5',
-      max_tokens: isOutroType ? 1200 : 900,
-      system:     systemPrompt,
-      messages:   [{ role: 'user', content: userPrompt }],
-    }),
-    muteHttpExceptions: true,
-  });
+  // 🆕 전체를 try-catch로 감싸서, 어떤 이유로든 함수가 조용히 죽지 않고 항상 응답을 반환하게 함
+  try {
+    const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+      method:  'post',
+      headers: {
+        'x-api-key':         props.claudeApiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      payload: JSON.stringify({
+        model:      'claude-sonnet-5',
+        max_tokens: isOutroType ? 1200 : 900,
+        system:     systemPrompt,
+        messages:   [{ role: 'user', content: userPrompt }],
+      }),
+      muteHttpExceptions: true,
+    });
 
-  const result = JSON.parse(response.getContentText());
-  if (result.error) throw new Error('Claude API error: ' + result.error.message);
+    // 🆕 HTTP 상태 코드 확인 — 200이 아니면 서버 에러이므로 여기서 바로 처리
+    const statusCode = response.getResponseCode();
+    if (statusCode !== 200) {
+      Logger.log('Claude API 에러 - 상태코드: ' + statusCode + ', 응답: ' + response.getContentText());
+      return { text: '코치 메시지를 불러오지 못했어요. (서버 응답 코드: ' + statusCode + ')', error: true };
+    }
 
-  if (isOutroType) {
-    return parseOutroText(result.content[0].text);
+    const result = JSON.parse(response.getContentText());
+    if (result.error) {
+      Logger.log('Claude API 에러: ' + result.error.message);
+      return { text: '코치 메시지를 불러오지 못했어요. (' + result.error.message + ')', error: true };
+    }
+
+    // 🆕 content 배열이 없거나 비어있는 경우 방어
+    if (!result.content || !result.content[0] || !result.content[0].text) {
+      Logger.log('Claude API 응답 형식 이상: ' + JSON.stringify(result));
+      return { text: '코치 메시지를 불러오지 못했어요. (응답 형식 오류)', error: true };
+    }
+
+    // 🆕 max_tokens 제한으로 답변이 중간에 잘렸는지 확인
+    const wasTruncated = result.stop_reason === 'max_tokens';
+    if (wasTruncated) {
+      Logger.log('⚠️ 응답이 max_tokens 제한으로 잘림 (type: ' + type + ')');
+    }
+
+    let finalText = result.content[0].text;
+    if (wasTruncated) {
+      finalText += '\n\n(⚠️ 답변이 길어서 일부 잘렸어요)';
+    }
+
+    if (isOutroType) {
+      return parseOutroText(finalText);
+    }
+    return { text: finalText };
+
+  } catch (err) {
+    // 🆕 예상 못한 어떤 에러가 나도 여기서 잡아서 안전하게 반환
+    Logger.log('getCoaching 함수 예외 발생: ' + err.message);
+    return { text: '코치 메시지를 불러오는 중 오류가 발생했어요. 다시 시도해주세요.', error: true };
   }
-  return { text: result.content[0].text };
 }
 
 // ── parseOutroText ────────────────────────────────────────
