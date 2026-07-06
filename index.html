@@ -375,6 +375,7 @@ let programName    = '';
 let isFreeWorkout  = false;
 let weekStatus     = null;
 let introText      = null;
+let introError      = null;  // 🆕 에러 상태를 로딩 상태와 구분하기 위한 변수
 let outroWorkoutData = null;
 let freeExerciseNames = [];
 let programEditMode = false;
@@ -453,7 +454,7 @@ async function apiPost(body) {
   });
   if (!res.ok) throw new Error('Network error: ' + res.status);
   const data = await res.json();
-  if (data.error) throw new Error(data.error);
+  if (data.error) throw new Error(data.text || data.error); // 🆕 실제 에러 메시지 우선 사용
   return data;
 }
 
@@ -1044,11 +1045,16 @@ async function fetchRoutineIntro() {
   const textEl = document.getElementById('introCardText');
   if (!textEl) return;
   textEl.innerHTML = '<div class="popup-loading">코치 메시지 불러오는 중...</div>';
+  introError = null; // 🆕 재시도 시 이전 에러 초기화
   const condition = document.getElementById('condition')?.value?.trim() || '';
   try {
     const r = await apiPost({ action: 'getCoaching', type: 'intro', missionData: { mission: missionData, condition } });
     introText = r.text || null;
-  } catch (_) { introText = null; }
+    if (!introText) introError = '코치 메시지를 받지 못했어요.'; // 🆕
+  } catch (err) {
+    introText = null;
+    introError = err.message || '코치 메시지를 불러오는 중 오류가 발생했어요.'; // 🆕 에러 메시지 보존
+  }
   updateIntroCardContent();
 }
 function updateIntroCardContent() {
@@ -1056,6 +1062,13 @@ function updateIntroCardContent() {
   if (!textEl) return;
   if (introText) {
     textEl.innerHTML = introText.replace(/\n/g, '<br>');
+  } else if (introError) {
+    // 🆕 에러 상태를 "로딩 중"과 구분해서 명확히 보여줌 + 재시도 버튼
+    textEl.innerHTML = `
+      <div style="color:#ef4444;font-size:14px;line-height:1.6;">
+        ⚠️ ${introError}
+      </div>
+      <button class="free-chat-send-btn" style="margin-top:10px;" onclick="fetchRoutineIntro()">다시 시도</button>`;
   } else if (isFreeWorkout) {
     textEl.innerHTML = `
       <div class="free-chat-area">

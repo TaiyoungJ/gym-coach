@@ -484,9 +484,16 @@ function getCoaching(type, missionData, props) {
       return { text: '코치 메시지를 불러오지 못했어요. (' + result.error.message + ')', error: true };
     }
 
-    // 🆕 content 배열이 없거나 비어있는 경우 방어
-    if (!result.content || !result.content[0] || !result.content[0].text) {
-      Logger.log('Claude API 응답 형식 이상: ' + JSON.stringify(result));
+    // 🆕 content 배열 전체를 훑어서 실제 텍스트 블록을 찾음 (사고 블록 등이 섞여 있어도 안전)
+    let extractedText = null;
+    if (Array.isArray(result.content)) {
+      const textBlock = result.content.find(block => block.type === 'text' && block.text);
+      if (textBlock) extractedText = textBlock.text;
+    }
+
+    if (!extractedText) {
+      // 🆕 원본 응답 전체를 로그에 남겨서 다음에 원인 확정 가능하게 함
+      Logger.log('Claude API 응답에서 텍스트를 찾지 못함. 원본 응답: ' + JSON.stringify(result));
       return { text: '코치 메시지를 불러오지 못했어요. (응답 형식 오류)', error: true };
     }
 
@@ -496,7 +503,7 @@ function getCoaching(type, missionData, props) {
       Logger.log('⚠️ 응답이 max_tokens 제한으로 잘림 (type: ' + type + ')');
     }
 
-    let finalText = result.content[0].text;
+    let finalText = extractedText;
     if (wasTruncated) {
       finalText += '\n\n(⚠️ 답변이 길어서 일부 잘렸어요)';
     }
