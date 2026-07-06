@@ -464,7 +464,7 @@ function getCoaching(type, missionData, props) {
       },
       payload: JSON.stringify({
         model:      'claude-sonnet-5',
-        max_tokens: isOutroType ? 1200 : 900,
+        max_tokens: isOutroType ? 2400 : 900,
         system:     systemPrompt,
         messages:   [{ role: 'user', content: userPrompt }],
       }),
