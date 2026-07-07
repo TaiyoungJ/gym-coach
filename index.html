@@ -1154,12 +1154,12 @@ function renderCards() {
           const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (sub.targetWeight || 0));
           setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
-        const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-left:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
+        const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-right:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
         // 🆕 displayName 사용
         sectionsHTML += `
           <div class="superset-section">
             <div class="superset-section-header">
-              <span class="superset-section-label">${subLabels[subIdx]||''} ${sub.displayName || sub.name}${subPartTag}</span>
+              <span class="superset-section-label">${subLabels[subIdx]||''} ${subPartTag}${sub.displayName || sub.name}</span>
               <span style="color:var(--accent);font-size:12px;font-weight:800;">🎯 ${tgt}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1270,9 +1270,9 @@ function renderCards() {
     card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
-    const bpBadge = ex.bodyPart ? `<span class="body-part-tag">${ex.bodyPart}</span>` : '';
+    const bpBadge = ex.bodyPart ? `<span class="body-part-tag" style="margin-top:0;margin-right:8px;vertical-align:middle">${ex.bodyPart}</span>` : '';
     // 🆕 displayName 사용
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name" id="exname-${idx}">${ex.displayName || ex.name}</div>${bpBadge}</div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info">${bpBadge}<div class="ex-name" id="exname-${idx}" style="display:inline-block;vertical-align:middle">${ex.displayName || ex.name}</div></div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
@@ -1715,13 +1715,29 @@ function renderImportExList(exList) {
     body.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 운동 기록이 없어요</div>';
     return;
   }
-  let html = '<div class="search-section-label" style="margin-bottom:10px;">최근 4주 종목</div>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">';
+  // 🆕 부위(bodyPart)별로 그룹 나누기 — 데이터 등장 순서 그대로, 고정 순서표 없음
+  const groups = {}, order = [];
   exList.forEach(ex => {
-    const exName = (typeof ex === 'string') ? ex : ex.name;
-    html += '<button class="search-ex-btn" data-name="' + exName.replace(/"/g, '&quot;') + '" onclick="onImportSelectEx(this.dataset.name,this)">' + exName + '</button>';
+    const part = (typeof ex === 'string') ? '기타' : (ex.bodyPart || '기타');
+    const name = (typeof ex === 'string') ? ex : ex.name;
+    const variation = (typeof ex === 'string') ? '' : (ex.variation || '');
+    if (!groups[part]) { groups[part] = []; order.push(part); }
+    groups[part].push({ name, variation });
   });
-  html += '</div><div id="importExResult"></div>';
+  let html = '<div class="search-section-label" style="margin-bottom:10px;">최근 4주 종목</div>';
+  order.forEach(part => {
+    html += '<div style="margin-bottom:14px;">';
+    html += '<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">' + part + '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    groups[part].forEach(({ name, variation }) => {
+      // 🆕 조합된 이름(세부종목+운동명)으로 표시, 클릭 시 넘기는 값은 원래 운동명 그대로
+      const displayName = buildDisplayName(name, variation);
+      const safeName = name.replace(/"/g, '&quot;');
+      html += '<button class="search-ex-btn" data-name="' + safeName + '" onclick="onImportSelectEx(this.dataset.name,this)">' + displayName + '</button>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div id="importExResult"></div>';
   body.innerHTML = html;
 }
 
@@ -1927,7 +1943,6 @@ async function onComplete() {
   if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">피드백 받는 중...</div>';
   let outroText = '오늘도 수고했어! 💪';
   let outroSummary = '';
-  let conditionSummary = '';
 
   try {
     const outroType = isFreeWorkout ? 'freeOutro' : 'outro';
@@ -1937,7 +1952,6 @@ async function onComplete() {
     const outro = await apiPost({ action: 'getCoaching', type: outroType, missionData: outroPayload });
     outroText = outro.text || '오늘도 수고했어! 💪';
     outroSummary = outro.summary || '';
-    conditionSummary = outro.conditionSummary || '';
   } catch(err) {
     // AI 호출 실패 — 기본값으로 계속 진행
   }
@@ -1949,7 +1963,7 @@ async function onComplete() {
     results,
     condition,
     outroSummary,
-    conditionSummary
+    conditionSummary: condition
   };
   const outroEl = document.createElement('div');
   outroEl.className = 'outro-card';
