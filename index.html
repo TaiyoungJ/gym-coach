@@ -468,6 +468,26 @@ async function apiPost(body) {
   return data;
 }
 
+/* ── Mission Cache (stale-while-revalidate) ────────────────── */
+// 오늘 날짜별로 미션을 localStorage에 보관해 재실행 시 즉시 렌더
+function readMissionCache() {
+  try {
+    const raw = localStorage.getItem('gc_mission_' + toIso(new Date()));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function writeMissionCache(data) {
+  try {
+    const todayKey = 'gc_mission_' + toIso(new Date());
+    // 오늘이 아닌 오래된 미션 캐시는 제거 (localStorage 누적 방지)
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('gc_mission_') && k !== todayKey) localStorage.removeItem(k);
+    }
+    localStorage.setItem(todayKey, JSON.stringify(data));
+  } catch {}
+}
+
 /* ── Mock ──────────────────────────────────────────────────── */
 function getMockMission() {
   return {
@@ -915,11 +935,33 @@ function closePopup(e) {
 /* ── Background data loading ───────────────────────────────── */
 async function loadBackgroundData() {
   const s = getSettings();
-  try { weekStatus = await apiGet({ action: 'checkWeekStatus' }); updateWeekAlert(); } catch (_) {}
+
+  // A) 오늘 미션 캐시가 있으면 네트워크를 기다리지 않고 즉시 렌더 (테스트 모드 제외)
+  if (!s.testMode) {
+    const cached = readMissionCache();
+    if (cached && !cached.error) {
+      missionCache   = cached;
+      missionLoading = false;
+      updateLandingStatus();
+    }
+  }
+
+  // B) checkWeekStatus와 getMission은 서로 독립적이므로 동시에 발사 (병렬)
+  const weekP    = apiGet({ action: 'checkWeekStatus' });
+  const missionP = s.testMode ? Promise.resolve(getMockMission())
+                              : apiGet({ action: 'getMission' });
+
+  // 주차 상태: 도착하는 대로 반영, 실패해도 미션 흐름을 막지 않음
+  weekP.then(res => { weekStatus = res; updateWeekAlert(); }).catch(() => {});
+
+  // 미션: 최신본으로 갱신하고 캐시에 저장 (백그라운드 revalidate)
   try {
-    missionCache = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
-  } catch(err) {
-    missionCache = { error: err.message, exercises: [] };
+    const fresh = await missionP;
+    missionCache = fresh;
+    if (!s.testMode && fresh && !fresh.error) writeMissionCache(fresh);
+  } catch (err) {
+    // 네트워크 실패 시 이미 캐시가 있으면 그대로 유지, 없을 때만 에러 표시
+    if (!missionCache) missionCache = { error: err.message, exercises: [] };
   }
   missionLoading = false;
   updateLandingStatus();
