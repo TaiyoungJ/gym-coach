@@ -1611,8 +1611,8 @@ function extractRoutineExercises(md) {
       // 슈퍼세트: 콜론 뒤를 + 로 쪼개서 개별 종목 추출
       const afterColon = content.split(': ').slice(1).join(': ');
       afterColon.split(' + ').forEach(sub => {
-        const name = parseRoutineExName(sub.trim());
-        if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
+        const ex = parseRoutineExName(sub.trim());   // 🆕 {name, variation}
+        if (ex && !currentGroup.exercises.some(e => e.name === ex.name && e.variation === ex.variation)) currentGroup.exercises.push(ex);
       });
     } else {
       // 일반 종목: (N) 또는 (N세트), **[태그]** 제거
@@ -1620,18 +1620,19 @@ function extractRoutineExercises(md) {
         .replace(/\s*\(\d+(?:세트)?\).*$/, '')
         .replace(/\s*\*\*\[.*?\]\*\*/, '')
         .trim();
-      const name = parseRoutineExName(cleaned);
-      if (name && !currentGroup.exercises.includes(name)) currentGroup.exercises.push(name);
+      const ex = parseRoutineExName(cleaned);   // 🆕 {name, variation}
+      if (ex && !currentGroup.exercises.some(e => e.name === ex.name && e.variation === ex.variation)) currentGroup.exercises.push(ex);
     }
   }
   return periods;
 }
 
 function parseRoutineExName(raw) {
-  // "운동명 [세부종목]" → buildDisplayName("운동명", "세부종목")
+  // 🆕 "운동명 [세부종목]" → { name, variation } 로 분리 보관 (합치지 않음)
   const match = raw.match(/^(.+?)\s*\[(.+?)\]$/);
-  if (match) return buildDisplayName(match[1].trim(), match[2].trim());
-  return raw.trim() || null;
+  if (match) return { name: match[1].trim(), variation: match[2].trim() };
+  const name = raw.trim();
+  return name ? { name, variation: '' } : null;
 }
 
 async function openRoutineImportSheet() {
@@ -1672,9 +1673,12 @@ function renderRoutineImportList(periods) {
       html += `<div style="margin-bottom:14px;margin-top:12px;">`;
       html += `<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${g.day}</div>`;
       html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-      g.exercises.forEach(name => {
-        const safe = name.replace(/'/g, '&#39;');
-        html += `<button class="search-ex-btn" onclick="applyRoutineImport('${safe}')">${name}</button>`;
+      g.exercises.forEach(ex => {
+        // 🆕 화면엔 풀네임 표시, 클릭 시 운동명·세부종목 따로 전달
+        const displayName = buildDisplayName(ex.name, ex.variation);
+        const safeName = ex.name.replace(/'/g, '&#39;');
+        const safeVar  = (ex.variation || '').replace(/'/g, '&#39;');
+        html += `<button class="search-ex-btn" onclick="applyRoutineImport('${safeName}','${safeVar}')">${displayName}</button>`;
       });
       html += `</div></div>`;
     });
@@ -1692,13 +1696,18 @@ function toggleRoutineImportPeriod(idx) {
   if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 
-function applyRoutineImport(name) {
+function applyRoutineImport(name, variation) {
+  variation = variation || '';
   if (importTarget && typeof importTarget === 'object' && importTarget.type === 'ss') {
-    const input = document.getElementById('ssSubName' + importTarget.subIdx);
-    if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+    const nameInput = document.getElementById('ssSubName' + importTarget.subIdx);
+    const varInput  = document.getElementById('ssSubVar'  + importTarget.subIdx);
+    if (nameInput) nameInput.value = name;
+    if (varInput)  varInput.value  = variation;   // 🆕 세부종목 칸 채움
   } else {
-    const input = document.getElementById('newName');
-    if (input) { input.value = name; input.dispatchEvent(new Event('input')); }
+    const nameInput = document.getElementById('newName');
+    const varInput  = document.getElementById('newVariation');
+    if (nameInput) nameInput.value = name;
+    if (varInput)  varInput.value  = variation;   // 🆕 세부종목 칸 채움
   }
   importTarget = null;
   closeBottomSheet();
@@ -1754,10 +1763,11 @@ function renderImportExList(exList) {
     html += '<div class="import-ex-group-title" style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">' + part + '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
     groups[part].forEach(({ name, variation }) => {
-      // 🆕 조합된 이름(세부종목+운동명)으로 표시, 클릭 시 넘기는 값은 원래 운동명 그대로
+      // 🆕 조합된 이름(세부종목+운동명)으로 표시, 클릭 시 운동명+세부종목 함께 전달
       const displayName = buildDisplayName(name, variation);
       const safeName = name.replace(/"/g, '&quot;');
-      html += '<button class="search-ex-btn" data-name="' + safeName + '" onclick="onImportSelectEx(this.dataset.name,this)">' + displayName + '</button>';
+      const safeVar  = (variation || '').replace(/"/g, '&quot;');   // 🆕 세부종목도 버튼에 실어줌
+      html += '<button class="search-ex-btn" data-name="' + safeName + '" data-variation="' + safeVar + '" onclick="onImportSelectEx(this.dataset.name,this,this.dataset.variation)">' + displayName + '</button>';
     });
     html += '</div></div>';
   });
@@ -1766,7 +1776,7 @@ function renderImportExList(exList) {
   body.innerHTML = html;
 }
 
-async function onImportSelectEx(exerciseName, btn) {
+async function onImportSelectEx(exerciseName, btn, variation) {
   document.querySelectorAll('#importBody .search-ex-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
@@ -1788,8 +1798,9 @@ async function onImportSelectEx(exerciseName, btn) {
   if (!resultEl) return;
   resultEl.innerHTML = '<div class="loading" style="height:auto;padding:20px 0;"><div class="spinner"></div></div>';
   try {
-    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName });
-    renderImportRecords(exerciseName, res.results || []);
+    // 🆕 세부종목까지 보내서 정확히 그 종목 기록만 조회
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName, variation: variation || '' });
+    renderImportRecords(exerciseName, res.results || [], variation || '');
   } catch(err) {
     resultEl.innerHTML = '<div class="error-card"><h3>오류</h3><p>' + err.message + '</p></div>';
   }
@@ -1812,7 +1823,7 @@ function goBackToImportList() {
   if (backBtn) backBtn.style.display = 'none';
 }
 
-function renderImportRecords(exerciseName, results) {
+function renderImportRecords(exerciseName, results, variation) {
   const resultEl = document.getElementById('importExResult');
   if (!resultEl) return;
   if (results.length === 0) {
@@ -1826,6 +1837,7 @@ function renderImportRecords(exerciseName, results) {
       '<button class="search-date-item"' +
         ' style="display:flex;justify-content:space-between;align-items:center;"' +
         ' data-name="' + exerciseName.replace(/"/g,'&quot;') + '"' +
+        ' data-variation="' + (variation || '').replace(/"/g,'&quot;') + '"' +   // 🆕 세부종목 실어줌
         ' data-weight="' + (r.targetWeight||0) + '"' +
         ' data-sets="'  + (r.targetSets||3)    + '"' +
         ' data-reps="'  + (r.targetReps||10)   + '"' +
@@ -1841,16 +1853,18 @@ function renderImportRecords(exerciseName, results) {
 
 function applyImport(btn) {
   const name   = btn.dataset.name;
+  const variation = btn.dataset.variation || '';   // 🆕 세부종목 읽기
   const weight = Number(btn.dataset.weight);
   const sets   = Number(btn.dataset.sets);
   const reps   = Number(btn.dataset.reps);
   if (importTarget === 'normal') {
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
-    set('newName', name); set('newKg', weight); set('newSets', sets); set('newTarget', reps);
+    set('newName', name); set('newVariation', variation); set('newKg', weight); set('newSets', sets); set('newTarget', reps);   // 🆕 세부종목 칸 채움
   } else {
     const idx = importTarget.subIdx;
     const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     set('ssSubName' + idx, name);
+    set('ssSubVar'  + idx, variation);   // 🆕 세부종목 칸 채움
     set('ssSubKg'   + idx, weight);
     set('ssSubTarget' + idx, reps);
     const setsEl = document.getElementById('ssSets');

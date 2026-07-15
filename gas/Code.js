@@ -238,7 +238,7 @@ function searchHistory(params, props) {
   if (subAction === 'getDayList')      return getHistoryDayList(ss, params.day);
   if (subAction === 'getByDate')       return getHistoryByDate(ss, params.date);
   if (subAction === 'getExerciseList') return getHistoryExerciseList(ss);
-  if (subAction === 'getByExercise')   return getHistoryByExercise(ss, params.exerciseName);
+  if (subAction === 'getByExercise')   return getHistoryByExercise(ss, params.exerciseName, params.variation);
 
   return { error: 'Unknown subAction: ' + subAction };
 }
@@ -339,12 +339,18 @@ function getHistoryExerciseList(ss) {
 }
 
 // ── getHistoryByExercise ─────────────────────────────────────
-function getHistoryByExercise(ss, exerciseName) {
+function getHistoryByExercise(ss, exerciseName, variation) {
   const data = getRecentLogData(ss, 4);
-  const norm = s => s.replace(/[\s·\-_,]/g, '').toLowerCase();
-  const exNorm = norm(exerciseName);
+  const norm = s => String(s).replace(/[\s·\-_,]/g, '').toLowerCase();
+  const exNorm  = norm(exerciseName);
+  const varNorm = variation ? norm(variation) : '';
 
-  const matchingRows = data.filter(row => norm(String(row[3])) === exNorm);
+  // 🆕 운동명 + 세부종목 조합으로 매칭 (세부종목 지정 시 정확 매칭, 미지정 시 운동명만)
+  const matchingRows = data.filter(row => {
+    if (norm(row[3]) !== exNorm) return false;
+    if (varNorm === '') return true;          // 세부종목 미지정 → 운동명만으로 매칭 (기존 동작)
+    return norm(row[4]) === varNorm;          // 세부종목 지정 → 세부종목까지 일치해야 함
+  });
 
   const dateMap = {};
   matchingRows.forEach(row => {
