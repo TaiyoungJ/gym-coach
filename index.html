@@ -43,6 +43,16 @@
     .header-mid-left { display: flex; align-items: center; gap: 8px; }
     .program-badge { background: var(--accent); color: #000; font-size: 13px; font-weight: 900; padding: 7px 20px; border-radius: 20px; letter-spacing: 1.5px; cursor: pointer; }
     .program-input { background: var(--surface2); border: 1.5px solid var(--accent); border-radius: 20px; color: var(--accent); font-size: 13px; font-weight: 900; padding: 7px 20px; letter-spacing: 1.5px; outline: none; width: 140px; font-family: inherit; text-align: center; }
+    /* ── 루틴명 수정 팝업 ── */
+    .rn-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .rn-item { background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text1); font-size: 14px; font-weight: 700; padding: 13px 16px; border-radius: 12px; cursor: pointer; transition: all .2s; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: inherit; }
+    .rn-item.selected { background: rgba(255,140,66,0.10); border-color: var(--accent); color: var(--accent); }
+    .rn-item .rn-check { opacity: 0; font-weight: 900; }
+    .rn-item.selected .rn-check { opacity: 1; }
+    .rn-direct-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 12px; color: var(--text1); font-size: 14px; font-weight: 700; padding: 13px 16px; outline: none; font-family: inherit; box-sizing: border-box; }
+    .rn-direct-input:focus { border-color: var(--accent); }
+    .rn-hint { font-size: 11px; color: var(--text3); margin-top: 8px; }
+    .rn-confirm-btn { width: 100%; background: var(--accent); color: #000; border: none; font-size: 15px; font-weight: 900; padding: 15px; border-radius: 14px; cursor: pointer; font-family: inherit; margin-top: 18px; letter-spacing: 0.5px; }
     .top-btn { background: none; border: 1.5px solid var(--border2); color: #666; font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all .2s; font-family: inherit; }
     .top-btn.active { border-color: var(--accent); color: var(--accent); background: #1f1209; }
     .intro-btn { background: var(--accent-dim); border: 1.5px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 14px; font-weight: 700; padding: 11px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; width: 100%; }
@@ -379,7 +389,6 @@ let introText      = null;
 let introError      = null;  // 🆕 에러 상태를 로딩 상태와 구분하기 위한 변수
 let outroWorkoutData = null;
 let freeExerciseNames = [];
-let programEditMode = false;
 let importTarget   = null;
 let ssSubCount     = 0;
 let searchTab      = 'day';
@@ -1016,17 +1025,82 @@ function renderRestDay() {
 }
 
 /* ── Program badge ─────────────────────────────────────────── */
-function toggleProgramEdit() {
-  programEditMode = !programEditMode;
-  renderProgramBadge();
-  if (programEditMode) setTimeout(() => document.getElementById('programInput')?.focus(), 50);
-}
 function renderProgramBadge() {
   const wrap = document.getElementById('programWrap');
   if (!wrap) return;
-  wrap.innerHTML = programEditMode
-    ? `<input class="program-input" id="programInput" value="${programName}" maxlength="20" oninput="programName=this.value" onblur="programEditMode=false;renderProgramBadge()">`
-    : `<span class="program-badge" onclick="toggleProgramEdit()">${programName}</span>`;
+  wrap.innerHTML = `<span class="program-badge" onclick="openRoutineNameSheet()">${programName}</span>`;
+}
+
+/* ── 루틴명 수정 팝업 ───────────────────────────────────────── */
+let routineNameSelected = '';   // 목록에서 선택된 루틴명 (없으면 '')
+
+async function openRoutineNameSheet() {
+  routineNameSelected = '';
+  openBottomSheet(`
+    <div class="popup-header">
+      <span class="popup-label">루틴명 수정</span>
+      <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
+    </div>
+    <div id="routineNameBody" class="sheet-scroll-body">
+      <div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div>
+    </div>
+    <button class="rn-confirm-btn" onclick="confirmRoutineName()">확인</button>
+  `);
+  try {
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getRecentRoutineNames' });
+    renderRoutineNameSheet(res.names || []);
+  } catch (err) {
+    const body = document.getElementById('routineNameBody');
+    if (body) body.innerHTML = '<div class="error-card"><h3>오류</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+function renderRoutineNameSheet(names) {
+  const body = document.getElementById('routineNameBody');
+  if (!body) return;
+
+  let html = '';
+  if (names.length) {
+    html += `<div class="search-section-label">최근에 쓴 루틴명</div>`;
+    html += `<div class="rn-list">`;
+    names.forEach(name => {
+      const safe = name.replace(/'/g, '&#39;');
+      html += `<button class="rn-item" data-name="${safe}" onclick="selectRoutineName(this)">
+                 <span>${name}</span><span class="rn-check">✓</span>
+               </button>`;
+    });
+    html += `</div>`;
+  }
+  html += `<div class="search-section-label">직접 입력</div>`;
+  html += `<input class="rn-direct-input" id="rnDirectInput" placeholder="새 루틴명을 입력하세요" maxlength="20" oninput="onRoutineDirectInput()">`;
+  html += `<div class="rn-hint">목록에서 고르거나 직접 입력한 뒤 확인을 누르세요</div>`;
+  body.innerHTML = html;
+}
+
+// 목록 항목 선택 → 선택 표시 + 직접 입력칸 비움 (A안)
+function selectRoutineName(btn) {
+  routineNameSelected = btn.getAttribute('data-name') || '';
+  document.querySelectorAll('#routineNameBody .rn-item').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const input = document.getElementById('rnDirectInput');
+  if (input) input.value = '';
+}
+
+// 직접 입력 시작 → 목록 선택 자동 해제 (A안)
+function onRoutineDirectInput() {
+  routineNameSelected = '';
+  document.querySelectorAll('#routineNameBody .rn-item').forEach(b => b.classList.remove('selected'));
+}
+
+// 확인 → 마지막에 건드린 값으로 적용
+function confirmRoutineName() {
+  const input = document.getElementById('rnDirectInput');
+  const typed = input ? input.value.trim() : '';
+  const finalName = typed || routineNameSelected;
+  if (!finalName) { alert('루틴명을 선택하거나 입력해 주세요.'); return; }
+  programName = finalName;
+  closeBottomSheet();
+  renderProgramBadge();
 }
 
 /* ── Intro card ────────────────────────────────────────────── */

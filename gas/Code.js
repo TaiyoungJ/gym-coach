@@ -239,6 +239,7 @@ function searchHistory(params, props) {
   if (subAction === 'getByDate')       return getHistoryByDate(ss, params.date);
   if (subAction === 'getExerciseList') return getHistoryExerciseList(ss);
   if (subAction === 'getByExercise')   return getHistoryByExercise(ss, params.exerciseName, params.variation);
+  if (subAction === 'getRecentRoutineNames') return getRecentRoutineNames(ss);
 
   return { error: 'Unknown subAction: ' + subAction };
 }
@@ -372,6 +373,29 @@ function getHistoryByExercise(ss, exerciseName, variation) {
 
   const results = Object.values(dateMap).sort((a, b) => b.date.localeCompare(a.date));
   return { exerciseName, results };
+}
+
+// ── getRecentRoutineNames ────────────────────────────────────
+// 최근에 저장된 루틴명을 중복 제거 + 최신순으로 최대 5개 반환
+function getRecentRoutineNames(ss) {
+  const data = getAllLogData(ss);
+
+  // 날짜(0열) 최신순으로 정렬 → 최근 기록이 앞에 오도록
+  const sorted = data
+    .filter(row => normDate(row[0]))               // 날짜 있는 행만
+    .sort((a, b) => normDate(b[0]).localeCompare(normDate(a[0])));
+
+  const seen = new Set();
+  const names = [];
+  for (const row of sorted) {
+    const name = String(row[2]).trim();            // 2열 = 루틴명
+    if (!name || seen.has(name)) continue;         // 빈값·중복 건너뜀
+    seen.add(name);
+    names.push(name);
+    if (names.length >= 5) break;                  // 5개까지만
+  }
+
+  return { names };
 }
 
 // ── getCoaching ─────────────────────────────────────────────
