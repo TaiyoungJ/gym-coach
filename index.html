@@ -143,6 +143,7 @@
     .autocomplete-item { padding: 10px 14px; font-size: 14px; color: var(--text1); cursor: pointer; border-bottom: 1px solid var(--border); }
     .autocomplete-item:last-child { border-bottom: none; }
     .autocomplete-item:active { background: var(--accent-dim); }
+    .autocomplete-item .var { color: var(--accent); font-weight: 700; }
     .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .add-field label { font-size: 11px; color: #666; display: block; margin-bottom: 5px; }
     .add-field input { width: 100%; background: #2c2c2e; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 15px; font-weight: 700; padding: 10px 12px; outline: none; font-family: inherit; }
@@ -998,7 +999,10 @@ async function startFreeWorkout() {
   (async () => {
     try {
       const res = await apiGet({ action: 'searchHistory', subAction: 'getExerciseList' });
-      freeExerciseNames = (res.exercises || []).map(ex => (typeof ex === 'string') ? ex : ex.name);
+      // 🆕 name만 뽑던 걸 name+variation 객체로 보관 (세부종목 자동완성용)
+      freeExerciseNames = (res.exercises || []).map(ex =>
+        (typeof ex === 'string') ? { name: ex, variation: '' } : { name: ex.name, variation: ex.variation || '' }
+      );
     } catch { freeExerciseNames = []; }
   })();
 }
@@ -1372,23 +1376,29 @@ function onExNameInput() {
   }
 
   const norm    = s => s.replace(/[\s\-_]/g, '').toLowerCase();
-  const matched = freeExerciseNames.filter(n => norm(n).includes(norm(query)));
+  // 🆕 풀네임(세부종목+운동명) 기준으로 검색
+  const matched = freeExerciseNames.filter(ex => norm(buildDisplayName(ex.name, ex.variation)).includes(norm(query)));
 
   if (matched.length === 0) {
     dropdown.classList.remove('show');
     return;
   }
 
-  dropdown.innerHTML = matched.map(n =>
-    `<div class="autocomplete-item" ontouchstart="" onclick="selectExName('${n.replace(/'/g, "\\'")}')">${n}</div>`
-  ).join('');
+  // 🆕 드롭다운엔 풀네임 표시(세부종목 강조), 선택 시 name/variation 분리 전달
+  dropdown.innerHTML = matched.map(ex => {
+    const esc = s => (s || '').replace(/'/g, "\\'");
+    const varHtml = ex.variation ? `<span class="var">${ex.variation}</span> ` : '';
+    return `<div class="autocomplete-item" ontouchstart="" onclick="selectExName('${esc(ex.name)}', '${esc(ex.variation)}')">${varHtml}${ex.name}</div>`;
+  }).join('');
   dropdown.classList.add('show');
 }
 
-function selectExName(name) {
+function selectExName(name, variation) {
   const input    = document.getElementById('newName');
+  const varInput = document.getElementById('newVariation');
   const dropdown = document.getElementById('exNameDropdown');
   if (input)    input.value = name;
+  if (varInput) varInput.value = variation || '';   // 🆕 세부종목 칸 자동 채움
   if (dropdown) dropdown.classList.remove('show');
 }
 
@@ -1409,23 +1419,29 @@ function onSsSubNameInput(idx) {
   }
 
   const norm    = s => s.replace(/[\s\-_]/g, '').toLowerCase();
-  const matched = freeExerciseNames.filter(n => norm(n).includes(norm(query)));
+  // 🆕 풀네임(세부종목+종목명) 기준으로 검색
+  const matched = freeExerciseNames.filter(ex => norm(buildDisplayName(ex.name, ex.variation)).includes(norm(query)));
 
   if (matched.length === 0) {
     dropdown.classList.remove('show');
     return;
   }
 
-  dropdown.innerHTML = matched.map(n =>
-    `<div class="autocomplete-item" ontouchstart="" onclick="selectSsSubName(${idx}, '${n.replace(/'/g, "\\'")}')">${n}</div>`
-  ).join('');
+  // 🆕 드롭다운엔 풀네임 표시(세부종목 강조), 선택 시 name/variation 분리 전달
+  dropdown.innerHTML = matched.map(ex => {
+    const esc = s => (s || '').replace(/'/g, "\\'");
+    const varHtml = ex.variation ? `<span class="var">${ex.variation}</span> ` : '';
+    return `<div class="autocomplete-item" ontouchstart="" onclick="selectSsSubName(${idx}, '${esc(ex.name)}', '${esc(ex.variation)}')">${varHtml}${ex.name}</div>`;
+  }).join('');
   dropdown.classList.add('show');
 }
 
-function selectSsSubName(idx, name) {
+function selectSsSubName(idx, name, variation) {
   const input    = document.getElementById('ssSubName' + idx);
+  const varInput = document.getElementById('ssSubVar' + idx);
   const dropdown = document.getElementById('ssSubDropdown' + idx);
   if (input)    input.value = name;
+  if (varInput) varInput.value = variation || '';   // 🆕 세부종목 칸 자동 채움
   if (dropdown) dropdown.classList.remove('show');
 }
 
@@ -1482,9 +1498,13 @@ function renderSsSub(idx) {
     '<div class="add-field full" style="margin-bottom:8px;">' +
       '<label>종목명</label>' +
       '<div class="ex-name-wrap">' +
-        '<input id="ssSubName' + idx + '" type="text" placeholder="예: 인클라인 벤치프레스" oninput="onSsSubNameInput(' + idx + ')" onblur="hideSsSubDropdown(' + idx + ')">' +
+        '<input id="ssSubName' + idx + '" type="text" placeholder="예: 벤치프레스" oninput="onSsSubNameInput(' + idx + ')" onblur="hideSsSubDropdown(' + idx + ')">' +
         '<div class="autocomplete-dropdown" id="ssSubDropdown' + idx + '"></div>' +
       '</div>' +
+    '</div>' +
+    '<div class="add-field full" style="margin-bottom:8px;">' +
+      '<label>세부종목 <span style="color:var(--text3);font-weight:400;">(선택)</span></label>' +
+      '<input id="ssSubVar' + idx + '" type="text" placeholder="예: 인클라인" autocomplete="off">' +
     '</div>' +
     '<div class="add-grid" style="margin-bottom:0">' +
       '<div class="add-field"><label>중량 (kg)</label><input id="ssSubKg' + idx + '" type="number" placeholder="0" inputmode="numeric"></div>' +
@@ -1512,8 +1532,9 @@ function confirmAdd() {
     for (let i = 0; i < ssSubCount; i++) {
       const name = document.getElementById('ssSubName' + i)?.value.trim();
       if (!name) { alert((SS_LABELS[i] || '') + ' 종목명을 입력해주세요'); return; }
+      const variation = document.getElementById('ssSubVar' + i)?.value.trim() || '';   // 🆕 세부종목 읽기
       subExercises.push({
-        name, variation: '', displayName: name,
+        name, variation, displayName: buildDisplayName(name, variation),   // 🆕 variation 반영
         targetWeight: Number(document.getElementById('ssSubKg' + i)?.value) || 0,
         targetReps:   Number(document.getElementById('ssSubTarget' + i)?.value) || 10,
         lastRecord: null,
@@ -1523,14 +1544,15 @@ function confirmAdd() {
   } else {
     const name = document.getElementById('newName')?.value.trim();
     if (!name) { alert('운동명을 입력해주세요'); return; }
+    const variation = document.getElementById('newVariation')?.value.trim() || '';   // 🆕 세부종목 읽기
     exercises.push({
-      id: Date.now(), name, variation: '', displayName: name,
+      id: Date.now(), name, variation, displayName: buildDisplayName(name, variation),   // 🆕 variation 반영
       sets: Number(document.getElementById('newSets')?.value)||3,
       targetWeight: Number(document.getElementById('newKg')?.value)||0,
       targetReps: Number(document.getElementById('newTarget')?.value)||10,
       tag: null, lastRecord: null,
     });
-    ['newName','newKg','newSets','newTarget'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    ['newName','newVariation','newKg','newSets','newTarget'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });   // 🆕 세부종목 칸도 초기화
   }
   const t = document.getElementById('ssToggle');
   if (t && t.checked) { t.checked = false; onSsToggle(); }
@@ -2076,6 +2098,10 @@ function renderMain() {
               <input id="newName" type="text" placeholder="예: 레그 컬" oninput="onExNameInput()" autocomplete="off">
               <div id="exNameDropdown" class="autocomplete-dropdown"></div>
             </div>
+          </div>
+          <div class="add-field full">
+            <label>세부종목 <span style="color:var(--text3);font-weight:400;">(선택)</span></label>
+            <input id="newVariation" type="text" placeholder="예: 바벨" autocomplete="off">
           </div>
           <div class="add-field"><label>중량 (kg)</label><input id="newKg" type="number" placeholder="0" inputmode="numeric"></div>
           <div class="add-field"><label>세트 수</label><input id="newSets" type="number" placeholder="3" inputmode="numeric"></div>
