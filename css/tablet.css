@@ -1,0 +1,153 @@
+/* ══════════════════════════════════════════════════════════════
+   태블릿 가로 레이아웃 (갤탭 S8 Ultra 가로 = CSS 1480 × 924 기준)
+
+   style.css 는 폰 기준으로만 유지하고, 폭이 넓어졌을 때의 재배치는
+   전부 이 파일에서만 다룬다. 폰 동작을 바꾸고 싶지 않다면
+   이 파일 밖으로 규칙이 새어나가지 않게 할 것.
+
+   브레이크포인트 1000px 은 js/state.js 의 TABLET_MQ 와 쌍이다.
+   한쪽만 바꾸면 CSS는 2단인데 JS는 폰으로 판단하는 어긋남이 생긴다.
+   ══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1000px) {
+
+  /* ── 기본 골격 ─────────────────────────────────────────── */
+  body {
+    max-width: 1400px;
+    padding: 26px 32px 60px;
+    font-size: 16px;
+  }
+
+  /* 다단으로 재배치하지 않는 화면은 넓은 화면에서 과하게 늘어나지
+     않도록 읽기 좋은 폭으로 되돌린다. */
+  #app.page-dashboard,
+  #app.page-settings {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* ── 랜딩: 좌(오늘의 운동) / 우(이동·알림) 2단 ──────────── */
+  #app.page-landing {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas:
+      "nav   nav"
+      "date  quick"
+      "today alert"
+      "start alert";
+    column-gap: 28px;
+    align-items: start;
+  }
+  #app.page-landing .landing-nav        { grid-area: nav; }
+  #app.page-landing .landing-date-block { grid-area: date; }
+  #app.page-landing .landing-quick-nav  { grid-area: quick; align-self: center; }
+  #app.page-landing .today-card         { grid-area: today; }
+  #app.page-landing .week-alert         { grid-area: alert; }
+  #app.page-landing #start-btn-area     { grid-area: start; }
+
+  #app.page-landing .landing-date-big { font-size: 34px; }
+  #app.page-landing .routine-nav-btn  { font-size: 15px; padding: 12px 20px; flex: 1; }
+  #app.page-landing .today-card       { min-height: 200px; }
+
+  /* ── 기록 검색: 요일 / 날짜 / 상세 3단 ──────────────────── */
+  .search-layout-day {
+    display: grid;
+    grid-template-columns: 160px minmax(220px, 280px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  /* 요일 버튼을 세로로 세워 왼쪽 고정 내비게이션처럼 쓴다 */
+  .search-layout-day .search-day-picker {
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .search-layout-day .search-day-btn {
+    width: 100%;
+    text-align: center;
+    padding: 13px 10px;
+  }
+
+  /* ── 기록 검색: 종목 / 결과 2단 ─────────────────────────── */
+  .search-layout-ex {
+    display: grid;
+    grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  /* 각 패널이 따로 스크롤돼야 왼쪽 목록이 고정된 채로 유지된다 */
+  .search-pane-list,
+  .search-pane-detail {
+    max-height: calc(100vh - 210px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .search-pane-nav {
+    position: sticky;
+    top: 16px;
+  }
+
+  /* 상세 패널이 빈 상태일 때 허전하지 않게 안내 */
+  .search-pane-detail:empty::before {
+    content: "왼쪽에서 항목을 선택하세요";
+    display: block;
+    padding: 60px 0;
+    text-align: center;
+    color: var(--text3);
+    font-size: 14px;
+  }
+
+  /* ── 종목별: 차트 + 목록 동시 표시 ──────────────────────── */
+  /* 폰에서는 뷰 토글로 하나씩 봤지만, 넓은 화면에서는 둘 다 띄운다.
+     (js/search-history.js 의 renderExerciseResultContent 참조) */
+  .ex-dual {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+    gap: 20px;
+    align-items: start;
+  }
+  .ex-dual-list {
+    max-height: calc(100vh - 330px);
+    overflow-y: auto;
+  }
+  /* 차트 SVG 는 viewBox 320×160 을 폭에 맞춰 늘리므로, 너무 납작해지지
+     않도록 상한을 둔다 */
+  .ex-dual-chart .search-chart-wrap { max-width: 720px; }
+
+  /* 종목 결과를 팝업이 아니라 오른쪽 패널에 인라인으로 펼친 경우 */
+  .search-ex-inline .sheet-scroll-body { overflow: visible; }
+  .search-ex-inline .popup-header { margin-bottom: 12px; }
+
+  /* ── 팝업: 바텀시트 → 가운데 모달 ───────────────────────── */
+  /* 가로 924px 높이에서 아래에 붙는 시트는 세로 공간이 너무 부족하다 */
+  .popup-overlay { align-items: center; }
+  .popup-sheet {
+    max-width: 680px;
+    border-radius: 24px;
+    border: 1.5px solid var(--border);
+    padding: 26px 26px 26px;
+    max-height: 82vh;
+    animation: fadeInScale .2s ease;
+  }
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── 운동 루틴 문서: 2컬럼 ──────────────────────────────── */
+  #routine-doc-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  #routine-doc-body > .routine-section { margin-bottom: 0; }
+  /* 로딩·에러 블록은 두 컬럼을 가로질러야 가운데 정렬이 유지된다 */
+  #routine-doc-body > .loading,
+  #routine-doc-body > .error-card,
+  #routine-doc-body > p { grid-column: 1 / -1; }
+
+  /* ── 공통 터치 타깃 ─────────────────────────────────────── */
+  .search-date-item { padding: 15px 18px; }
+  .search-ex-btn    { font-size: 14px; padding: 10px 16px; }
+}

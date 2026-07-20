@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "gym-coach-static",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8420"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "8420", "."],
       "port": 8420
     }
   ]

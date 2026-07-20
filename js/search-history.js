@@ -1,6 +1,7 @@
 /* ── Search History ────────────────────────────────────────── */
-async function renderSearchHistory() {
-  pushPage('search');
+async function renderSearchHistory(skipPush) {
+  // skipPush: 회전 등으로 레이아웃만 다시 그릴 때 히스토리 항목을 중복 추가하지 않기 위함
+  if (skipPush) setPageClass('search'); else pushPage('search');
   searchDaySelected  = null;
   searchDates        = [];
   searchDateSelected = null;
@@ -49,14 +50,22 @@ async function renderSearchBody() {
 }
 
 /* ── 요일별 탭 ─────────────────────────────────────────────── */
+// 3단 구조(요일 → 날짜 목록 → 기록 상세)를 형제 요소로 배치한다.
+// 폰에서는 세로로 쌓여 기존과 동일하게 보이고, 태블릿에서는 CSS 그리드가 좌우로 펼친다.
 function renderSearchDayTab(body) {
   const days = ['월', '화', '수', '목', '금', '토', '일'];
-  let html = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">`;
+  let dayBtns = '';
   days.forEach(d => {
-    html += `<button class="search-day-btn${searchDaySelected===d?' active':''}" onclick="onSelectDay('${d}')">${d}요일</button>`;
+    dayBtns += `<button class="search-day-btn${searchDaySelected===d?' active':''}" onclick="onSelectDay('${d}')">${d}요일</button>`;
   });
-  html += `</div><div id="search-day-result"></div>`;
-  body.innerHTML = html;
+  body.innerHTML = `
+    <div class="search-layout search-layout-day">
+      <div class="search-pane search-pane-nav">
+        <div class="search-day-picker">${dayBtns}</div>
+      </div>
+      <div class="search-pane search-pane-list" id="search-day-result"></div>
+      <div class="search-pane search-pane-detail" id="search-date-result"></div>
+    </div>`;
   if (searchDaySelected) renderSearchDayResult();
 }
 
@@ -69,6 +78,8 @@ async function onSelectDay(day) {
   });
   const resultEl = document.getElementById('search-day-result');
   if (!resultEl) return;
+  const detailEl = document.getElementById('search-date-result');
+  if (detailEl) detailEl.innerHTML = ''; // 요일이 바뀌면 이전 날짜 상세는 비운다
   resultEl.innerHTML = '<div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div>';
   try {
     const res = await apiGet({ action: 'searchHistory', subAction: 'getDayList', day });
@@ -97,8 +108,7 @@ function renderSearchDayResult() {
   searchDates.forEach(date => {
     html += `<button class="search-date-item${searchDateSelected===date?' active':''}" onclick="onSelectDate('${date}')">${fmtKor(date)} <span style="color:var(--text3);font-size:12px;margin-left:6px;">${date}</span></button>`;
   });
-  html += `<div id="search-date-result" style="margin-top:4px;"></div>`;
-  resultEl.innerHTML = html;
+  resultEl.innerHTML = html; // 상세는 형제 패널(#search-date-result)이 담당
 
   if (searchDateSelected) loadAndRenderDateResult(searchDateSelected);
 }
@@ -183,7 +193,7 @@ function renderSearchExerciseTab(body, exList) {
   order.forEach(part => {
     html += `<div style="margin-bottom:14px;">`;
     html += `<div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${part}</div>`;
-    html += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+    html += `<div class="search-ex-group">`;
     groups[part].forEach(({ name, variation }) => {
       // 🆕 조합된 이름으로 버튼 표시
       const displayName = buildDisplayName(name, variation);
@@ -192,7 +202,12 @@ function renderSearchExerciseTab(body, exList) {
     });
     html += `</div></div>`;
   });
-  body.innerHTML = html;
+  // 태블릿에서는 오른쪽 패널에 결과를 펼치고, 폰에서는 이 패널이 비어 있는 채로 바텀시트를 쓴다
+  body.innerHTML = `
+    <div class="search-layout search-layout-ex">
+      <div class="search-pane search-pane-nav">${html}</div>
+      <div class="search-pane search-pane-detail" id="search-ex-panel"></div>
+    </div>`;
 }
 
 async function onSelectExercise(exerciseName, btn) {
@@ -200,13 +215,24 @@ async function onSelectExercise(exerciseName, btn) {
   document.querySelectorAll('.search-ex-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   const safeTitle = String(exerciseName).replace(/</g, '&lt;');
-  openBottomSheet(`
-    <div class="popup-header">
-      <span class="popup-label">${safeTitle}</span>
-      <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
-    </div>
-    <div id="search-ex-sheet-body" class="sheet-scroll-body"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
-  `);
+  const bodyShell = `<div id="search-ex-sheet-body" class="sheet-scroll-body"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>`;
+
+  // 태블릿: 팝업 대신 오른쪽 패널에 인라인으로 펼침 (본문 id를 그대로 써서 하위 로직 공유)
+  const panel = isTablet() ? document.getElementById('search-ex-panel') : null;
+  if (panel) {
+    panel.innerHTML = `<div class="search-ex-inline">
+      <div class="popup-header"><span class="popup-label">${safeTitle}</span></div>
+      ${bodyShell}
+    </div>`;
+  } else {
+    openBottomSheet(`
+      <div class="popup-header">
+        <span class="popup-label">${safeTitle}</span>
+        <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
+      </div>
+      ${bodyShell}
+    `);
+  }
   await loadAndRenderExerciseResult(exerciseName);
 }
 
@@ -238,6 +264,10 @@ function onSelectExView(view) {
 // 지표(최고중량/볼륨) 전환 → 재조회 없이 콘텐츠 영역만 재렌더
 function onSelectExMetric(metric) {
   searchExMetric = metric;
+  // 지표 칩은 #search-ex-content 바깥에 있어 콘텐츠 재렌더로는 갱신되지 않는다
+  document.querySelectorAll('.day-chip[onclick*="onSelectExMetric"]').forEach(b => {
+    b.classList.toggle('on', (b.getAttribute('onclick') || '').includes(`'${metric}'`));
+  });
   renderExerciseResultContent();
 }
 
@@ -250,16 +280,22 @@ function renderExerciseResult(el, res) {
     el.insertAdjacentHTML('afterbegin', buildWeeksRowHtml());
     return;
   }
-  el.innerHTML = `
-    ${buildWeeksRowHtml()}
+  // 태블릿은 차트와 목록을 나란히 띄우므로 뷰 전환 버튼 자체가 필요 없다
+  const tablet = isTablet();
+  const viewRow = tablet ? '' : `
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <button class="search-tab-btn${searchExView==='chart'?' active':''}" onclick="onSelectExView('chart')">📈 차트</button>
       <button class="search-tab-btn${searchExView==='list'?' active':''}" onclick="onSelectExView('list')">📋 목록</button>
-    </div>
-    ${searchExView==='chart' ? `<div class="day-chips" style="margin-bottom:12px;">
+    </div>`;
+  const metricRow = (tablet || searchExView === 'chart') ? `<div class="day-chips" style="margin-bottom:12px;">
       <button class="day-chip${searchExMetric==='maxWeight'?' on':''}" onclick="onSelectExMetric('maxWeight')">최고 중량</button>
       <button class="day-chip${searchExMetric==='volume'?' on':''}" onclick="onSelectExMetric('volume')">총 볼륨</button>
-    </div>` : ''}
+    </div>` : '';
+
+  el.innerHTML = `
+    ${buildWeeksRowHtml()}
+    ${viewRow}
+    ${metricRow}
     <div id="search-ex-content"></div>`;
   renderExerciseResultContent();
 }
@@ -273,9 +309,18 @@ function buildWeeksRowHtml() {
 function renderExerciseResultContent() {
   const contentEl = document.getElementById('search-ex-content');
   if (!contentEl) return;
-  contentEl.innerHTML = searchExView === 'chart'
-    ? buildTrendChartHtml(computeChartPoints(searchExResults, searchExMetric), searchExMetric)
-    : buildExerciseListHtml(searchExResults);
+
+  const chartHtml = () => buildTrendChartHtml(computeChartPoints(searchExResults, searchExMetric), searchExMetric);
+
+  // 태블릿: 차트(위/좌)와 목록(아래/우)을 동시에
+  if (isTablet()) {
+    contentEl.innerHTML = `<div class="ex-dual">
+      <div class="ex-dual-chart">${chartHtml()}</div>
+      <div class="ex-dual-list">${buildExerciseListHtml(searchExResults)}</div>
+    </div>`;
+    return;
+  }
+  contentEl.innerHTML = searchExView === 'chart' ? chartHtml() : buildExerciseListHtml(searchExResults);
 }
 
 function fmtKorDate(iso) {

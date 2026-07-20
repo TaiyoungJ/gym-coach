@@ -3,6 +3,7 @@ function renderLanding() {
   const now  = new Date();
   const y    = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
 
+  setPageClass('landing');
   document.getElementById('app').innerHTML = `
     <div class="landing-nav">
       <div class="landing-logo-wrap">
@@ -13,7 +14,7 @@ function renderLanding() {
     <div class="landing-date-block" style="margin-bottom: 24px;">
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
     </div>
-    <div style="margin-bottom: 10px; display:flex; gap:8px;">
+    <div class="landing-quick-nav" style="margin-bottom: 10px; display:flex; gap:8px;">
       <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄 운동 루틴</button>
       <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍 기록 검색</button>
     </div>

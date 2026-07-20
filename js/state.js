@@ -37,6 +37,18 @@ let restData       = {};
 let weightData     = {};
 let showAddForm    = false;
 
+/* ── Layout ────────────────────────────────────────────────── */
+// 태블릿 가로(갤탭 S8 Ultra 기준 1480px)에서 다단 레이아웃으로 전환.
+// CSS의 브레이크포인트(css/tablet.css)와 반드시 같은 값을 유지할 것.
+const TABLET_MQ = '(min-width: 1000px)';
+function isTablet() { return window.matchMedia(TABLET_MQ).matches; }
+
+// #app에 현재 화면 클래스를 붙여 CSS가 화면별 그리드를 잡을 수 있게 함
+function setPageClass(pageId) {
+  const app = document.getElementById('app');
+  if (app) app.className = 'page-' + pageId;
+}
+
 /* ── Helpers ───────────────────────────────────────────────── */
 function toIso(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
