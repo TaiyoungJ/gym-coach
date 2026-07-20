@@ -327,6 +327,12 @@
     .search-result-set { font-size: 13px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
     .search-result-set:last-of-type { border-bottom: none; }
     .search-section-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .search-chart-wrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+    .chart-legend { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+    .chart-line  { fill: none; stroke: var(--accent); stroke-width: 2; }
+    .chart-point { fill: var(--accent); stroke: var(--surface); stroke-width: 1.5; }
+    .chart-axis-label { fill: var(--text2); font-size: 8px; font-family: inherit; }
+    .chart-axis-line  { stroke: var(--border2); stroke-width: 1; }
 
     /* ── Superset Add Form ── */
     .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }

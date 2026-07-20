@@ -95,6 +95,7 @@ function doGet(e) {
         day:          e.parameter.day,
         date:         e.parameter.date,
         exerciseName: e.parameter.exerciseName,
+        weeks:        e.parameter.weeks,
       };
       return jsonResponse(searchHistory(params, props));
     }
@@ -238,7 +239,7 @@ function searchHistory(params, props) {
   if (subAction === 'getDayList')      return getHistoryDayList(ss, params.day);
   if (subAction === 'getByDate')       return getHistoryByDate(ss, params.date);
   if (subAction === 'getExerciseList') return getHistoryExerciseList(ss);
-  if (subAction === 'getByExercise')   return getHistoryByExercise(ss, params.exerciseName, params.variation);
+  if (subAction === 'getByExercise')   return getHistoryByExercise(ss, params.exerciseName, params.variation, params.weeks);
   if (subAction === 'getRecentRoutineNames') return getRecentRoutineNames(ss);
 
   return { error: 'Unknown subAction: ' + subAction };
@@ -340,8 +341,9 @@ function getHistoryExerciseList(ss) {
 }
 
 // ── getHistoryByExercise ─────────────────────────────────────
-function getHistoryByExercise(ss, exerciseName, variation) {
-  const data = getRecentLogData(ss, 4);
+function getHistoryByExercise(ss, exerciseName, variation, weeks) {
+  const weeksNum = Number(weeks) || 4;
+  const data = getRecentLogData(ss, weeksNum);
   const norm = s => String(s).replace(/[\s·\-_,]/g, '').toLowerCase();
   const exNorm  = norm(exerciseName);
   const varNorm = variation ? norm(variation) : '';
@@ -372,7 +374,7 @@ function getHistoryByExercise(ss, exerciseName, variation) {
   });
 
   const results = Object.values(dateMap).sort((a, b) => b.date.localeCompare(a.date));
-  return { exerciseName, results };
+  return { exerciseName, weeks: weeksNum, results };
 }
 
 // ── getRecentRoutineNames ────────────────────────────────────

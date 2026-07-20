@@ -20,6 +20,10 @@ let searchDaySelected  = null;
 let searchDates        = [];
 let searchDateSelected = null;
 let searchExSelected   = null;
+let searchExWeeks   = 4;           // 4 | 8 | 12 | 24 — 조회 기간
+let searchExMetric  = 'maxWeight'; // 'maxWeight' | 'volume' — 차트 지표
+let searchExView    = 'chart';     // 'chart' | 'list' — 차트/목록 뷰
+let searchExResults = [];          // 마지막 조회 결과 캐시 (지표/뷰 토글 시 재조회 없이 재사용)
 
 let skipped        = {};
 let editingCards   = {};

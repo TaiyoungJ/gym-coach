@@ -5,6 +5,10 @@ async function renderSearchHistory() {
   searchDates        = [];
   searchDateSelected = null;
   searchExSelected   = null;
+  searchExWeeks      = 4;
+  searchExMetric     = 'maxWeight';
+  searchExView       = 'chart';
+  searchExResults    = [];
 
   document.getElementById('app').innerHTML = `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;">
@@ -188,43 +192,98 @@ function renderSearchExerciseTab(body, exList) {
     });
     html += `</div></div>`;
   });
-  html += `<div id="search-ex-result"></div>`;
   body.innerHTML = html;
-  if (searchExSelected) loadAndRenderExerciseResult(searchExSelected);
 }
 
 async function onSelectExercise(exerciseName, btn) {
   searchExSelected = exerciseName;
   document.querySelectorAll('.search-ex-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const resultEl = document.getElementById('search-ex-result');
-  if (!resultEl) return;
-  resultEl.innerHTML = '<div class="loading" style="height:auto;padding:20px 0;"><div class="spinner"></div></div>';
+  if (btn) btn.classList.add('active');
+  const safeTitle = String(exerciseName).replace(/</g, '&lt;');
+  openBottomSheet(`
+    <div class="popup-header">
+      <span class="popup-label">${safeTitle}</span>
+      <button class="popup-close" onclick="closeBottomSheet()">닫기</button>
+    </div>
+    <div id="search-ex-sheet-body" class="sheet-scroll-body"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>
+  `);
   await loadAndRenderExerciseResult(exerciseName);
 }
 
 async function loadAndRenderExerciseResult(exerciseName) {
-  const resultEl = document.getElementById('search-ex-result');
+  const resultEl = document.getElementById('search-ex-sheet-body');
   if (!resultEl) return;
   try {
-    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName });
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName, weeks: searchExWeeks });
     renderExerciseResult(resultEl, res);
   } catch(err) {
     resultEl.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;
   }
 }
 
+// 기간 프리셋 변경 → 서버 재조회
+async function onSelectExWeeks(weeks) {
+  searchExWeeks = weeks;
+  const resultEl = document.getElementById('search-ex-sheet-body');
+  if (resultEl) resultEl.innerHTML = '<div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div>';
+  await loadAndRenderExerciseResult(searchExSelected);
+}
+
+// 차트/목록 뷰 전환 → 재조회 없이 캐시로 재렌더 (지표 토글 행 노출 여부가 뷰에 따라 달라져 전체 셸 재렌더)
+function onSelectExView(view) {
+  searchExView = view;
+  renderExerciseResult(document.getElementById('search-ex-sheet-body'), { results: searchExResults });
+}
+
+// 지표(최고중량/볼륨) 전환 → 재조회 없이 콘텐츠 영역만 재렌더
+function onSelectExMetric(metric) {
+  searchExMetric = metric;
+  renderExerciseResultContent();
+}
+
 function renderExerciseResult(el, res) {
-  const results = res.results || [];
-  if (results.length === 0) {
-    el.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 4주 기록이 없어요</div>`;
+  if (!el) return;
+  searchExResults = res.results || [];
+  if (searchExResults.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">최근 ${searchExWeeks}주 기록이 없어요</div>`;
+    // 결과가 없어도 기간은 바꿔볼 수 있도록 기간 버튼 행은 위에 유지
+    el.insertAdjacentHTML('afterbegin', buildWeeksRowHtml());
     return;
   }
+  el.innerHTML = `
+    ${buildWeeksRowHtml()}
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="search-tab-btn${searchExView==='chart'?' active':''}" onclick="onSelectExView('chart')">📈 차트</button>
+      <button class="search-tab-btn${searchExView==='list'?' active':''}" onclick="onSelectExView('list')">📋 목록</button>
+    </div>
+    ${searchExView==='chart' ? `<div class="day-chips" style="margin-bottom:12px;">
+      <button class="day-chip${searchExMetric==='maxWeight'?' on':''}" onclick="onSelectExMetric('maxWeight')">최고 중량</button>
+      <button class="day-chip${searchExMetric==='volume'?' on':''}" onclick="onSelectExMetric('volume')">총 볼륨</button>
+    </div>` : ''}
+    <div id="search-ex-content"></div>`;
+  renderExerciseResultContent();
+}
+
+function buildWeeksRowHtml() {
+  return `<div class="day-chips" style="margin-top:0;margin-bottom:12px;">
+    ${[4,8,12,24].map(w => `<button class="day-chip${searchExWeeks===w?' on':''}" onclick="onSelectExWeeks(${w})">${w}주</button>`).join('')}
+  </div>`;
+}
+
+function renderExerciseResultContent() {
+  const contentEl = document.getElementById('search-ex-content');
+  if (!contentEl) return;
+  contentEl.innerHTML = searchExView === 'chart'
+    ? buildTrendChartHtml(computeChartPoints(searchExResults, searchExMetric), searchExMetric)
+    : buildExerciseListHtml(searchExResults);
+}
+
+function buildExerciseListHtml(results) {
   const fmtKor = iso => {
     const d = new Date(iso + 'T00:00:00');
     return `${d.getMonth()+1}월 ${d.getDate()}일`;
   };
-  let html = `<div class="search-section-label">최근 4주 기록</div>`;
+  let html = `<div class="search-section-label">최근 ${searchExWeeks}주 기록</div>`;
   results.forEach(r => {
     const weights = r.weights ? String(r.weights).split(',') : [];
     const reps    = r.reps    ? String(r.reps).split(',')    : [];
@@ -243,6 +302,71 @@ function renderExerciseResult(el, res) {
         ${r.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;">📝 ${r.memo}</div>` : ''}
       </div>`;
   });
-  el.innerHTML = html;
+  return html;
+}
+
+// ── 추이 차트 ─────────────────────────────────────────────────
+// 세션별 최고중량/총볼륨을 계산해 오름차순(날짜순) {date, value} 배열 반환
+function computeChartPoints(results, metric) {
+  return results.slice().reverse().map(r => {
+    const weights = r.weights ? String(r.weights).split(',').map(s => parseFloat(s.trim())) : [];
+    const reps    = r.reps    ? String(r.reps).split(',').map(s => parseFloat(s.trim()))    : [];
+    const n = Math.max(weights.length, reps.length);
+    let maxWeight = 0, volume = 0;
+    for (let i = 0; i < n; i++) {
+      const w = weights[i], rp = reps[i];
+      if (!Number.isFinite(w) || !Number.isFinite(rp) || rp === 0) continue;
+      maxWeight = Math.max(maxWeight, w);
+      volume += w * rp;
+    }
+    return { date: r.date, value: metric === 'volume' ? volume : maxWeight };
+  }).filter(p => p.value > 0);
+}
+
+function buildTrendChartHtml(points, metric) {
+  if (points.length === 0) {
+    return `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">표시할 데이터가 없어요</div>`;
+  }
+  const metricLabel = metric === 'volume' ? '총 볼륨 (kg)' : '최고 중량 (kg)';
+  return `<div class="search-chart-wrap"><div class="chart-legend">${metricLabel}</div>${buildTrendChartSvg(points)}</div>`;
+}
+
+function buildTrendChartSvg(points) {
+  const W = 320, H = 160, PAD_L = 36, PAD_R = 12, PAD_T = 16, PAD_B = 28;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+  const vals = points.map(p => p.value);
+  let minV = Math.min(...vals), maxV = Math.max(...vals);
+  if (minV === maxV) { const pad = Math.max(minV * 0.1, 1); minV -= pad; maxV += pad; }
+  else { const pad = (maxV - minV) * 0.1; minV -= pad; maxV += pad; }
+  const stepX = plotW / Math.max(points.length - 1, 1);
+  const x = i => PAD_L + (points.length === 1 ? plotW / 2 : i * stepX);
+  const y = v => PAD_T + plotH - ((v - minV) / (maxV - minV)) * plotH;
+
+  const fmtVal = v => (Number.isInteger(v) ? v : v.toFixed(1));
+  const fmtMd  = iso => { const d = new Date(iso + 'T00:00:00'); return `${d.getMonth()+1}/${d.getDate()}`; };
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
+  const circles = points.map((p, i) =>
+    `<circle class="chart-point" cx="${x(i).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="3.5"><title>${fmtMd(p.date)}: ${fmtVal(p.value)}kg</title></circle>`
+  ).join('');
+
+  const labelEvery = points.length > 8 ? Math.ceil(points.length / 8) : 1;
+  const xLabels = points.map((p, i) =>
+    (i % labelEvery === 0 || i === points.length - 1)
+      ? `<text class="chart-axis-label" x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle">${fmtMd(p.date)}</text>`
+      : ''
+  ).join('');
+
+  const yLabels =
+    `<text class="chart-axis-label" x="${PAD_L - 4}" y="${(PAD_T + 4).toFixed(1)}" text-anchor="end">${fmtVal(maxV)}</text>` +
+    `<text class="chart-axis-label" x="${PAD_L - 4}" y="${(PAD_T + plotH).toFixed(1)}" text-anchor="end">${fmtVal(minV)}</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;">
+    <line class="chart-axis-line" x1="${PAD_L}" y1="${PAD_T + plotH}" x2="${W - PAD_R}" y2="${PAD_T + plotH}"/>
+    <path class="chart-line" d="${linePath}"/>
+    ${circles}
+    ${xLabels}
+    ${yLabels}
+  </svg>`;
 }
 
