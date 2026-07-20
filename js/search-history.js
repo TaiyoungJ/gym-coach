@@ -278,27 +278,45 @@ function renderExerciseResultContent() {
     : buildExerciseListHtml(searchExResults);
 }
 
+function fmtKorDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getMonth()+1}월 ${d.getDate()}일`;
+}
+
+// 세트 배열(무게/횟수 문자열)을 목록/상세용 HTML로 포맷
+function formatSetsHtml(weights, reps) {
+  const sets = Math.max(weights.length, reps.length);
+  let html = '';
+  for (let i = 0; i < sets; i++) {
+    const w  = weights[i]?.trim() || '-';
+    const rp = reps[i]?.trim()    || '-';
+    html += `<div class="search-result-set">${i+1}세트 &nbsp;&nbsp; ${w}kg × ${rp}회</div>`;
+  }
+  return html;
+}
+
+// 세트 배열을 호버 툴팁(SVG <title>)용 여러 줄 텍스트로 포맷
+function formatSetsPlain(weights, reps) {
+  const sets = Math.max(weights.length, reps.length);
+  const lines = [];
+  for (let i = 0; i < sets; i++) {
+    const w  = weights[i]?.trim() || '-';
+    const rp = reps[i]?.trim()    || '-';
+    lines.push(`${i+1}세트 ${w}kg × ${rp}회`);
+  }
+  return lines.join('\n');
+}
+
 function buildExerciseListHtml(results) {
-  const fmtKor = iso => {
-    const d = new Date(iso + 'T00:00:00');
-    return `${d.getMonth()+1}월 ${d.getDate()}일`;
-  };
   let html = `<div class="search-section-label">최근 ${searchExWeeks}주 기록</div>`;
   results.forEach(r => {
     const weights = r.weights ? String(r.weights).split(',') : [];
     const reps    = r.reps    ? String(r.reps).split(',')    : [];
-    const sets    = Math.max(weights.length, reps.length);
-    let setsHTML  = '';
-    for (let i = 0; i < sets; i++) {
-      const w  = weights[i]?.trim() || '-';
-      const rp = reps[i]?.trim()    || '-';
-      setsHTML += `<div class="search-result-set">${i+1}세트 &nbsp;&nbsp; ${w}kg × ${rp}회</div>`;
-    }
     html += `
       <div class="search-result-card">
-        <div class="search-result-date">📅 ${fmtKor(r.date)} (${r.day})</div>
+        <div class="search-result-date">📅 ${fmtKorDate(r.date)} (${r.day})</div>
         <div class="search-result-target">🎯 ${r.targetWeight||'-'}kg × ${r.targetReps||'-'}회 × ${r.targetSets||'-'}세트</div>
-        ${setsHTML}
+        ${formatSetsHtml(weights, reps)}
         ${r.memo ? `<div style="margin-top:8px;font-size:12px;color:var(--text2);white-space:pre-wrap;">📝 ${r.memo}</div>` : ''}
       </div>`;
   });
@@ -306,29 +324,44 @@ function buildExerciseListHtml(results) {
 }
 
 // ── 추이 차트 ─────────────────────────────────────────────────
-// 세션별 최고중량/총볼륨을 계산해 오름차순(날짜순) {date, value} 배열 반환
+// 세션별 최고중량/총볼륨 + 상세(세트/메모)를 계산해 오름차순(날짜순) 배열 반환
 function computeChartPoints(results, metric) {
   return results.slice().reverse().map(r => {
-    const weights = r.weights ? String(r.weights).split(',').map(s => parseFloat(s.trim())) : [];
-    const reps    = r.reps    ? String(r.reps).split(',').map(s => parseFloat(s.trim()))    : [];
-    const n = Math.max(weights.length, reps.length);
+    const wStr = r.weights ? String(r.weights).split(',') : [];
+    const rStr = r.reps    ? String(r.reps).split(',')    : [];
+    const wNum = wStr.map(s => parseFloat(s.trim()));
+    const rNum = rStr.map(s => parseFloat(s.trim()));
+    const n = Math.max(wNum.length, rNum.length);
     let maxWeight = 0, volume = 0;
     for (let i = 0; i < n; i++) {
-      const w = weights[i], rp = reps[i];
+      const w = wNum[i], rp = rNum[i];
       if (!Number.isFinite(w) || !Number.isFinite(rp) || rp === 0) continue;
       maxWeight = Math.max(maxWeight, w);
       volume += w * rp;
     }
-    return { date: r.date, value: metric === 'volume' ? volume : maxWeight };
+    return {
+      date:      r.date,
+      day:       r.day || '',
+      memo:      r.memo || '',
+      value:     metric === 'volume' ? volume : maxWeight,
+      setsHtml:  formatSetsHtml(wStr, rStr),
+      setsPlain: formatSetsPlain(wStr, rStr),
+    };
   }).filter(p => p.value > 0);
 }
 
 function buildTrendChartHtml(points, metric) {
+  searchExChartPoints = points; // 점 클릭 핸들러가 인덱스로 조회
   if (points.length === 0) {
     return `<div style="text-align:center;padding:24px 0;color:var(--text2);font-size:14px;">표시할 데이터가 없어요</div>`;
   }
   const metricLabel = metric === 'volume' ? '총 볼륨 (kg)' : '최고 중량 (kg)';
-  return `<div class="search-chart-wrap"><div class="chart-legend">${metricLabel}</div>${buildTrendChartSvg(points)}</div>`;
+  return `<div class="search-chart-wrap"><div class="chart-legend">${metricLabel}</div>${buildTrendChartSvg(points)}<div class="chart-hint">점을 누르면 그날 세트·메모를 볼 수 있어요</div></div>`;
+}
+
+// SVG <title>/속성에 안전하게 넣기 위한 이스케이프
+function escXml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function buildTrendChartSvg(points) {
@@ -346,9 +379,16 @@ function buildTrendChartSvg(points) {
   const fmtMd  = iso => { const d = new Date(iso + 'T00:00:00'); return `${d.getMonth()+1}/${d.getDate()}`; };
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
-  const circles = points.map((p, i) =>
-    `<circle class="chart-point" cx="${x(i).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="3.5"><title>${fmtMd(p.date)}: ${fmtVal(p.value)}kg</title></circle>`
-  ).join('');
+  const circles = points.map((p, i) => {
+    const cx = x(i).toFixed(1), cy = y(p.value).toFixed(1);
+    const tip = escXml(`${fmtKorDate(p.date)}${p.day ? ` (${p.day})` : ''}\n${p.setsPlain}`);
+    // 투명한 큰 원(r=12)으로 터치 타깃 확보 + 보이는 점(r=3.5)
+    return `<g class="chart-point-hit" onclick="onChartPointClick(${i})">` +
+             `<title>${tip}</title>` +
+             `<circle cx="${cx}" cy="${cy}" r="12" fill="transparent"/>` +
+             `<circle class="chart-point" cx="${cx}" cy="${cy}" r="3.5"/>` +
+           `</g>`;
+  }).join('');
 
   const labelEvery = points.length > 8 ? Math.ceil(points.length / 8) : 1;
   const xLabels = points.map((p, i) =>
@@ -368,5 +408,37 @@ function buildTrendChartSvg(points) {
     ${xLabels}
     ${yLabels}
   </svg>`;
+}
+
+// 차트 점 클릭 → 그날 세트 + 메모를 팝업으로 (기존 시트 위에 겹쳐 띄움)
+function onChartPointClick(i) {
+  const p = searchExChartPoints[i];
+  if (!p) return;
+  const container = document.getElementById('popup-container');
+  if (!container) return;
+  const memoBlock = p.memo
+    ? `<div class="search-result-card" style="margin-top:12px;">
+         <div class="search-result-date">📝 메모</div>
+         <div style="font-size:13px;color:var(--text1);white-space:pre-wrap;line-height:1.6;">${p.memo}</div>
+       </div>`
+    : `<div style="text-align:center;padding:16px 0;color:var(--text3);font-size:13px;">메모 없음</div>`;
+  container.insertAdjacentHTML('beforeend', `
+    <div class="popup-overlay" id="memoOverlay" style="z-index:210;" onclick="if(event.target===this)closeMemoPopup()">
+      <div class="popup-sheet">
+        <div class="popup-header">
+          <span class="popup-label">${fmtKorDate(p.date)}${p.day ? ` (${p.day})` : ''}</span>
+          <button class="popup-close" onclick="closeMemoPopup()">닫기</button>
+        </div>
+        <div class="sheet-scroll-body">
+          <div class="search-result-card">${p.setsHtml}</div>
+          ${memoBlock}
+        </div>
+      </div>
+    </div>`);
+}
+
+function closeMemoPopup() {
+  const el = document.getElementById('memoOverlay');
+  if (el) el.remove();
 }
 
