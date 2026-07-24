@@ -1,6 +1,6 @@
 /* ── Render Main (Dashboard) ───────────────────────────────── */
 function renderMain() {
-  document.getElementById('app').innerHTML = `
+  getRenderRoot().innerHTML = `
     <div class="header">
       <div style="margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center;">
         <button class="back-btn" onclick="history.back()">← 뒤로</button>

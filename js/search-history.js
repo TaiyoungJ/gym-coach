@@ -12,7 +12,7 @@ async function renderSearchHistory(skipPush) {
   searchExView       = 'chart';
   searchExResults    = [];
 
-  document.getElementById('app').innerHTML = `
+  getRenderRoot().innerHTML = `
     <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;width:100%;">
       <div style="display:flex;align-items:center;gap:14px;">
         <button class="back-btn" onclick="history.back()">← 뒤로</button>

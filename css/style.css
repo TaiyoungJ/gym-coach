@@ -77,6 +77,13 @@
     .condition-input::placeholder { color: var(--text3); }
     .condition-input:focus { border-color: var(--accent); }
 
+    /* ── Page Layer (레이어 네비게이션) ──
+       #app(랜딩) 위에 쌓이는 화면. 각 레이어는 뷰포트에 고정되어 자체 스크롤하고,
+       .layer-inner 가 body 의 박스(폭·여백)를 그대로 흉내 내 원래 페이지처럼 보인다.
+       바텀시트(z-index:200)보다 아래에 둬 시트는 항상 최상단을 유지한다. */
+    .layer { position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg); z-index: 100; }
+    .layer-inner { max-width: 480px; margin: 0 auto; padding: 16px 16px 48px; box-sizing: border-box; min-height: 100%; }
+
     /* ── Popup ── */
     .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: flex-end; }
     .popup-sheet { width: 100%; max-width: 480px; margin: 0 auto; background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px 40px; border-top: 1.5px solid var(--border); animation: slideUp .25s ease; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }

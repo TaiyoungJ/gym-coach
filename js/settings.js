@@ -1,6 +1,7 @@
 /* ── Settings Page ─────────────────────────────────────────── */
 function renderSettings() {
   pushPage('settings');
+  // 이하 getRenderRoot() = 방금 만든 settings 레이어의 inner
   const s    = getSettings();
   const week = getThisWeekRange();
   const dayFull  = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
@@ -22,7 +23,7 @@ function renderSettings() {
     dayOptions += `<option value="${idx}"${s.startDay === idx ? ' selected' : ''}>${dayFull[idx]}</option>`;
   }
 
-  document.getElementById('app').innerHTML = `
+  getRenderRoot().innerHTML = `
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 14px;">
         <button class="back-btn" onclick="goBackFromSettings()">← 뒤로</button>

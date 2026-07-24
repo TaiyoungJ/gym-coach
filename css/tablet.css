@@ -18,10 +18,20 @@
     font-size: 16px;
   }
 
+  /* 레이어(운동·설정·루틴·검색)도 body 의 태블릿 박스를 그대로 따라간다.
+     (레이어는 fixed 라 body 규칙이 적용되지 않으므로 여기서 다시 지정) */
+  .layer-inner {
+    max-width: 1400px;
+    padding: 26px 32px 60px;
+  }
+
   /* 다단으로 재배치하지 않는 화면은 넓은 화면에서 과하게 늘어나지
-     않도록 읽기 좋은 폭으로 되돌린다. */
+     않도록 읽기 좋은 폭으로 되돌린다. (#app=랜딩엔 dashboard/settings 없음,
+     레이어일 때만 해당되지만 형태를 맞춰 둘 다 지정) */
   #app.page-dashboard,
-  #app.page-settings {
+  #app.page-settings,
+  .layer-inner.page-dashboard,
+  .layer-inner.page-settings {
     max-width: 760px;
     margin: 0 auto;
   }

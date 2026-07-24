@@ -46,10 +46,13 @@ let showAddForm    = false;
 const TABLET_MQ = '(min-width: 1000px)';
 function isTablet() { return window.matchMedia(TABLET_MQ).matches; }
 
-// #app에 현재 화면 클래스를 붙여 CSS가 화면별 그리드를 잡을 수 있게 함
+// 현재 렌더 루트(#app 또는 최상단 레이어의 inner)에 화면 클래스를 붙여
+// CSS가 화면별 그리드/폭을 잡을 수 있게 함
 function setPageClass(pageId) {
-  const app = document.getElementById('app');
-  if (app) app.className = 'page-' + pageId;
+  const root = getRenderRoot();
+  if (!root) return;
+  if (root.id === 'app') root.className = 'page-' + pageId;
+  else root.className = 'layer-inner page-' + pageId;
 }
 
 /* ── Helpers ───────────────────────────────────────────────── */
