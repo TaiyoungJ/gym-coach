@@ -95,6 +95,7 @@ function doGet(e) {
         day:          e.parameter.day,
         date:         e.parameter.date,
         exerciseName: e.parameter.exerciseName,
+        variation:    e.parameter.variation,   // 🆕 동명 종목(데드리프트 등) 구분용 세부종목
         weeks:        e.parameter.weeks,
       };
       return jsonResponse(searchHistory(params, props));
