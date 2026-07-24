@@ -6,6 +6,7 @@ async function renderSearchHistory(skipPush) {
   searchDates        = [];
   searchDateSelected = null;
   searchExSelected   = null;
+  searchExVariation  = '';
   searchExWeeks      = 4;
   searchExMetric     = 'maxWeight';
   searchExView       = 'chart';
@@ -34,6 +35,7 @@ async function switchSearchTab(tab) {
   searchDates        = [];
   searchDateSelected = null;
   searchExSelected   = null;
+  searchExVariation  = '';
   document.querySelectorAll('.search-tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab)?.classList.add('active');
   await renderSearchBody();
@@ -197,8 +199,11 @@ function renderSearchExerciseTab(body, exList) {
     groups[part].forEach(({ name, variation }) => {
       // 🆕 조합된 이름으로 버튼 표시
       const displayName = buildDisplayName(name, variation);
-      const safeName = name.replace(/'/g, '&#39;');
-      html += `<button class="search-ex-btn${searchExSelected===name?' active':''}" data-name="${safeName}" onclick="onSelectExercise(this.dataset.name, this)">${displayName}</button>`;
+      const safeName = name.replace(/"/g, '&quot;');
+      const safeVar  = (variation || '').replace(/"/g, '&quot;');
+      // 🆕 동명 종목(예: 데드리프트)을 구분하려면 활성 비교/조회에 variation까지 함께 실어야 한다
+      const isActive = searchExSelected === name && searchExVariation === (variation || '');
+      html += `<button class="search-ex-btn${isActive?' active':''}" data-name="${safeName}" data-variation="${safeVar}" onclick="onSelectExercise(this.dataset.name, this, this.dataset.variation)">${displayName}</button>`;
     });
     html += `</div></div>`;
   });
@@ -210,11 +215,12 @@ function renderSearchExerciseTab(body, exList) {
     </div>`;
 }
 
-async function onSelectExercise(exerciseName, btn) {
-  searchExSelected = exerciseName;
+async function onSelectExercise(exerciseName, btn, variation) {
+  searchExSelected  = exerciseName;
+  searchExVariation = variation || '';
   document.querySelectorAll('.search-ex-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  const safeTitle = String(exerciseName).replace(/</g, '&lt;');
+  const safeTitle = String(buildDisplayName(exerciseName, searchExVariation)).replace(/</g, '&lt;');
   const bodyShell = `<div id="search-ex-sheet-body" class="sheet-scroll-body"><div class="loading" style="height:auto;padding:24px 0;"><div class="spinner"></div></div></div>`;
 
   // 태블릿: 팝업 대신 오른쪽 패널에 인라인으로 펼침 (본문 id를 그대로 써서 하위 로직 공유)
@@ -240,7 +246,7 @@ async function loadAndRenderExerciseResult(exerciseName) {
   const resultEl = document.getElementById('search-ex-sheet-body');
   if (!resultEl) return;
   try {
-    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName, weeks: searchExWeeks });
+    const res = await apiGet({ action: 'searchHistory', subAction: 'getByExercise', exerciseName, variation: searchExVariation, weeks: searchExWeeks });
     renderExerciseResult(resultEl, res);
   } catch(err) {
     resultEl.innerHTML = `<div class="error-card"><h3>오류</h3><p>${err.message}</p></div>`;

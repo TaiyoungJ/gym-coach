@@ -20,6 +20,7 @@ let searchDaySelected  = null;
 let searchDates        = [];
 let searchDateSelected = null;
 let searchExSelected   = null;
+let searchExVariation  = '';       // 선택된 종목의 세부종목(variation) — 동명 종목(예: 데드리프트) 구분용
 let searchExWeeks   = 4;           // 4 | 8 | 12 | 24 — 조회 기간
 let searchExMetric  = 'maxWeight'; // 'maxWeight' | 'volume' — 차트 지표
 let searchExView    = 'chart';     // 'chart' | 'list' — 차트/목록 뷰
