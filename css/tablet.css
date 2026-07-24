@@ -68,11 +68,28 @@
   }
 
   /* ── 기록 검색: 종목 / 결과 2단 ─────────────────────────── */
+  /* 창 전체는 뷰포트에 고정하고(=window 스크롤 제거), 왼쪽·오른쪽 단이 각자 내부 스크롤한다.
+     아래 offset(216px)은 페이지 헤더 + 요일별/종목별 탭 행 + body 상하 패딩에 맞춘 값. */
   .search-layout-ex {
     display: grid;
     grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
     gap: 22px;
-    align-items: start;
+    align-items: stretch;
+    height: calc(100vh - 216px);
+  }
+  /* 왼쪽 종목 아코디언: sticky 대신 자기 칸 안에서 스크롤 */
+  .search-layout-ex .search-pane-nav {
+    position: static;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  /* 오른쪽 상세: 이 패널 하나만 스크롤(차트+카드가 한 열로 흐름) → 겹친 스크롤바 제거 */
+  .search-layout-ex .search-pane-detail {
+    height: 100%;
+    max-height: none;
+    overflow-y: auto;
+    padding-right: 4px;
   }
 
   /* 각 패널이 따로 스크롤돼야 왼쪽 목록이 고정된 채로 유지된다 */
@@ -97,26 +114,78 @@
     font-size: 14px;
   }
 
-  /* ── 종목별: 차트 + 목록 동시 표시 ──────────────────────── */
-  /* 폰에서는 뷰 토글로 하나씩 봤지만, 넓은 화면에서는 둘 다 띄운다.
-     (js/search-history.js 의 renderExerciseResultContent 참조) */
-  .ex-dual {
+  /* ── 종목별: 차트(위) + 기록 카드(아래) 한 열 스택 ──────────
+     이전엔 차트|목록 좌우 분할이었으나, 넓은 화면에서 그래프를 크게 쓰고
+     기록 카드를 그래프 폭에 맞춰 아래로 나열하도록 세로 스택으로 변경.
+     내부 스크롤은 부모 .search-pane-detail 하나가 담당한다. */
+  .ex-dual { display: block; }
+  .ex-dual-chart { margin-bottom: 16px; }
+  .ex-dual-list { max-height: none; overflow: visible; }
+
+  /* 차트 카드: .chart-card 를 실제 카드로 쓰고, 내부 SVG 래퍼의 카드 장식은 제거 */
+  .ex-dual-chart .chart-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+  .ex-dual-chart .chart-card .search-chart-wrap {
+    background: none; border: none; border-radius: 0;
+    padding: 0; margin: 0; max-width: none;
+  }
+
+  /* 차트 카드 내부 헤더: 왼쪽 지표 토글 / 오른쪽 주차 토글 */
+  .chart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 34px;
+    margin-bottom: 12px;
+  }
+
+  /* ── 접이식 토글(지표/주차): 평소 현재값만, 클릭 시 나머지 옵션 슬라이드 ── */
+  .chart-toggle { display: inline-flex; align-items: center; cursor: pointer; white-space: nowrap; user-select: none; }
+  .ct-opt {
+    background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text2);
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    padding: 7px 13px; margin-right: 6px; border-radius: 16px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; max-width: 130px;
+    transition: max-width .28s ease, opacity .18s ease, padding .28s ease,
+                margin .28s ease, border-width .28s ease,
+                background .15s, border-color .15s, color .15s;
+  }
+  .ct-opt.cur { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  /* 닫힘 상태: 현재값 외 옵션은 폭 0으로 접힘 */
+  .chart-toggle[data-open="false"] .ct-opt:not(.cur) {
+    max-width: 0; opacity: 0;
+    padding-left: 0; padding-right: 0; margin-right: 0; border-width: 0;
+    pointer-events: none;
+  }
+  .ct-caret { color: var(--text3); font-size: 10px; margin-left: 2px; transition: transform .25s; }
+  .chart-toggle[data-open="true"] .ct-caret { transform: rotate(180deg); }
+
+  /* ── 운동명 타이틀 확대 ── */
+  .search-ex-inline .popup-label { font-size: 22px; font-weight: 900; }
+
+  /* ── 기록 카드: 좌(날짜·세트) / 우(메모) 2분할, 그래프 폭에 맞춰 하루씩 ── */
+  .ex-dual-list .search-result-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
-    gap: 20px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 18px;
     align-items: start;
+    padding: 16px 20px;
   }
-  .ex-dual-list {
-    max-height: calc(100vh - 330px);
-    overflow-y: auto;
+  .ex-dual-list .src-right {
+    border-left: 1.5px solid var(--border);
+    padding-left: 18px;
+    align-self: stretch;
   }
-  /* 차트 SVG 는 viewBox 320×160 을 폭에 맞춰 늘리므로, 너무 납작해지지
-     않도록 상한을 둔다 */
-  .ex-dual-chart .search-chart-wrap { max-width: 720px; }
+  .ex-dual-list .src-memo { margin-top: 0; font-size: 13px; line-height: 1.6; }
+  .ex-dual-list .src-memo.empty { display: block; color: var(--text3); }  /* 넓은 화면에선 빈 메모칸도 표시 */
 
   /* 종목 결과를 팝업이 아니라 오른쪽 패널에 인라인으로 펼친 경우 */
   .search-ex-inline .sheet-scroll-body { overflow: visible; }
-  .search-ex-inline .popup-header { margin-bottom: 12px; }
+  .search-ex-inline .popup-header { margin-bottom: 14px; }
 
   /* ── 팝업: 바텀시트 → 가운데 모달 ───────────────────────── */
   /* 가로 924px 높이에서 아래에 붙는 시트는 세로 공간이 너무 부족하다 */

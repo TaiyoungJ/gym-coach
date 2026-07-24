@@ -13,6 +13,26 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    /* ── 다크 테마 스크롤바 (평소 숨김 → hover 시 표시) ──
+       터치 기기는 원래 네이티브로 자동 숨김되고, 아래 규칙은 데스크탑 크롬/엣지에서
+       "스크롤 영역에 마우스를 올렸을 때만" thumb를 드러낸다. (파이어폭스는 얇은 다크바로 유지) */
+    html { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    /* 평소엔 thumb 투명. border 여백 + padding-box 클립으로 얇은 인셋 형태 유지 */
+    ::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      transition: background-color .2s;
+    }
+    /* 스크롤 영역에 마우스가 올라오면(=곧 스크롤할 때) 드러남 */
+    :hover::-webkit-scrollbar-thumb { background: var(--border2); background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background: #5a5a5c; background-clip: padding-box; }
+    ::-webkit-scrollbar-corner { background: transparent; }
+
     body {
       background: var(--bg);
       color: var(--text1);
@@ -329,6 +349,21 @@
     .search-result-set { font-size: 13px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
     .search-result-set:last-of-type { border-bottom: none; }
     .search-section-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
+    /* ── 종목 목록 아코디언 (폰·태블릿 공통) ── */
+    .ex-acc { margin-bottom: 8px; }
+    .ex-acc-head { width: 100%; display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; color: var(--text1); font-family: inherit; font-size: 13px; font-weight: 800; letter-spacing: 0.05em; padding: 11px 14px; cursor: pointer; transition: background .15s; }
+    .ex-acc-head:hover { background: var(--surface2); }
+    .ex-acc-caret { color: var(--text2); font-size: 11px; transition: transform .25s; }
+    .ex-acc.open > .ex-acc-head .ex-acc-caret { transform: rotate(180deg); }
+    .ex-acc-body { overflow: hidden; max-height: 0; opacity: 0; transition: max-height .28s ease, opacity .2s ease, margin .2s ease; }
+    .ex-acc.open > .ex-acc-body { max-height: 1200px; opacity: 1; margin-top: 8px; }
+    .ex-acc-body .search-ex-group { padding: 0 2px 2px; }
+
+    /* ── 기록 카드 좌우 분할 요소 (폰에선 세로로 쌓임) ── */
+    .src-memo { margin-top: 8px; font-size: 12px; color: var(--text2); white-space: pre-wrap; line-height: 1.5; }
+    .src-memo.empty { display: none; }  /* 폰에선 메모 없으면 표시 안 함 (기존 동작 유지) */
+
     .search-chart-wrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
     .chart-legend { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
     .chart-line  { fill: none; stroke: var(--accent); stroke-width: 2; }
@@ -338,6 +373,7 @@
     .chart-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; }
     .chart-axis-label { fill: var(--text2); font-size: 8px; font-family: inherit; }
     .chart-axis-line  { stroke: var(--border2); stroke-width: 1; }
+    .chart-grid-line  { stroke: var(--border); stroke-width: 0.75; stroke-dasharray: 3 3; opacity: 0.6; }
 
     /* ── Superset Add Form ── */
     .add-ss-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 4px; }
