@@ -39,6 +39,23 @@ async function loadBackgroundData() {
   updateLandingStatus();
 }
 
+// lastWeekLog 항목 → "지난:" 배지 팝업에 쓸 상세(날짜·세트별 무게/횟수·메모).
+// weights/date는 신규 GAS 배포에서만 오므로, 없으면 대표 무게를 세트 수만큼 채워 대체한다.
+function buildLastDetail(lastEx) {
+  if (!lastEx) return null;
+  const reps = (lastEx.reps || []).map(r => String(r).trim());
+  const weights = Array.isArray(lastEx.weights) && lastEx.weights.length
+    ? lastEx.weights.map(w => String(w).trim())
+    : reps.map(() => String(lastEx.weight ?? ''));
+  return {
+    date:    lastEx.date || '',
+    day:     lastEx.day || '',
+    weights,
+    reps,
+    memo:    lastEx.memo || '',
+  };
+}
+
 /* ── Start Workout ─────────────────────────────────────────── */
 async function startWorkout() {
   const s = getSettings();
@@ -73,6 +90,7 @@ async function startWorkout() {
           targetWeight: sub.targetWeight || 0,
           targetReps:   sub.targetReps || 0,
           lastRecord:   lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null,
+          lastDetail:   buildLastDetail(lastEx),
         };
       });
       return { id: i+1, name: ex.name, variation: ex.variation||'', sets: ex.sets, tag: ex.tag||null, isSuperset: true, subExercises };
@@ -92,6 +110,7 @@ async function startWorkout() {
       targetWeight: ex.targetWeight || 0,
       targetReps:   ex.targetReps || 0,
       lastRecord,
+      lastDetail:   buildLastDetail(lastEx),
     };
   });
 

@@ -864,7 +864,8 @@ function getLastSessionLog(ss, routineName) {
   return matchingRows
     .filter(row => normDate(row[0]) === lastDate)
     .map(row => {
-      const weightRaw   = String(row[9]).split(',')[0].trim();
+      const weightList  = String(row[9]).split(',');
+      const weightRaw   = weightList[0].trim();
       const weightValue = weightRaw ? Number(weightRaw) : Number(row[5]);
       return {
         name:         row[3],
@@ -872,6 +873,10 @@ function getLastSessionLog(ss, routineName) {
         sets:         row[10],
         reps:         String(row[11]).split(','),
         weight:       weightValue,
+        // 🆕 세트별 무게 원본 + 날짜/요일 (카드의 "지난:" 배지 팝업에서 세트별 상세 표시용)
+        weights:      weightList,
+        date:         lastDate,
+        day:          String(row[1]).trim(),
         targetWeight: Number(row[5]),
         targetReps:   Number(row[7]),
         memo:         String(row[12]).trim(),

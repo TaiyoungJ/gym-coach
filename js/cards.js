@@ -1,3 +1,58 @@
+/* ── "지난:" 배지 ──────────────────────────────────────────── */
+// 상세(lastDetail)가 있으면 눌러서 팝업을 열 수 있는 버튼으로, 없으면 기존처럼 정적 배지로 그린다.
+// subIdx는 슈퍼세트 하위 종목 인덱스, 일반 종목은 -1.
+function buildLastBadge(target, idx, subIdx) {
+  if (!target.lastRecord) return '';
+  const text = `지난: ${target.lastRecord}`;
+  if (!target.lastDetail) {
+    return `<span class="meta-tag last" style="font-size:11px">${text}</span>`;
+  }
+  return `<button type="button" class="meta-tag last last-btn" style="font-size:11px" onclick="openLastRecordPopup(${idx},${subIdx})">${text}</button>`;
+}
+
+// 배지 클릭 → 직전 세션의 세트별 무게·횟수와 메모를 팝업으로 (기록 검색의 차트 점 팝업과 동일한 형식)
+function openLastRecordPopup(idx, subIdx) {
+  const ex = exercises[idx];
+  if (!ex) return;
+  const target = subIdx >= 0 ? (ex.subExercises || [])[subIdx] : ex;
+  const d = target && target.lastDetail;
+  if (!d) return;
+  const container = document.getElementById('popup-container');
+  if (!container) return;
+
+  const title = d.date
+    ? `${fmtKorDate(d.date)}${d.day ? ` (${d.day})` : ''}`
+    : '지난 기록';
+  const memoBlock = d.memo
+    ? `<div class="search-result-card" style="margin-top:12px;">
+         <div class="search-result-date">📝 메모</div>
+         <div style="font-size:13px;color:var(--text1);white-space:pre-wrap;line-height:1.6;">${escXml(d.memo)}</div>
+       </div>`
+    : `<div style="text-align:center;padding:16px 0;color:var(--text3);font-size:13px;">메모 없음</div>`;
+
+  container.insertAdjacentHTML('beforeend', `
+    <div class="popup-overlay" id="lastRecordOverlay" style="z-index:210;" onclick="if(event.target===this)closeLastRecordPopup()">
+      <div class="popup-sheet">
+        <div class="popup-header">
+          <span class="popup-label">${title}</span>
+          <button class="popup-close" onclick="closeLastRecordPopup()">닫기</button>
+        </div>
+        <div class="sheet-scroll-body">
+          <div class="search-result-card" style="font-size:13px;color:var(--text2);margin-bottom:10px;">
+            ${escXml(target.displayName || target.name)}
+          </div>
+          <div class="search-result-card">${formatSetsHtml(d.weights, d.reps)}</div>
+          ${memoBlock}
+        </div>
+      </div>
+    </div>`);
+}
+
+function closeLastRecordPopup() {
+  const el = document.getElementById('lastRecordOverlay');
+  if (el) el.remove();
+}
+
 /* ── Render cards ──────────────────────────────────────────── */
 function renderCards() {
   const container = document.getElementById('cards');
@@ -29,8 +84,7 @@ function renderCards() {
       let sectionsHTML = '';
       (ex.subExercises || []).forEach((sub, subIdx) => {
         const tgt = `${sub.targetWeight||0}kg × ${sub.targetReps||'-'}회`;
-        const lastBadge = sub.lastRecord
-          ? `<span class="meta-tag last" style="font-size:11px">지난: ${sub.lastRecord}</span>` : '';
+        const lastBadge = buildLastBadge(sub, idx, subIdx);
         let setsHTML = '';
         for (let s = 1; s <= ex.sets; s++) {
           const key = `${ex.id}_${subIdx}`;
@@ -125,7 +179,7 @@ function renderCards() {
       const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (ex.targetWeight || 0));
       setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
-    const lastRecordBadge = ex.lastRecord ? `<span class="meta-tag last" style="font-size:11px">지난: ${ex.lastRecord}</span>` : '';
+    const lastRecordBadge = buildLastBadge(ex, idx, -1);
     const bodyHTML = !isEditing && !isSkipped ? `
       <div class="sec-label" style="margin-top: 10px;">휴식시간</div>
       <div class="rest-row">
