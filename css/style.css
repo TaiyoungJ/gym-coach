@@ -128,10 +128,11 @@
     .arrow-btn { background: var(--surface2); border: 1.5px solid #2a2a2a; color: #777; font-size: 13px; width: 34px; height: 34px; border-radius: 12px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
     .arrow-btn:active { background: #252525; color: var(--accent); border-color: var(--accent); }
     .edit-fields { background: #2c2c2e; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-width: 0; }
     .edit-row:last-child { margin-bottom: 0; }
     .edit-label { font-size: 11px; color: #555; min-width: 40px; font-weight: 700; }
-    .edit-input { flex: 1; background: #222; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
+    /* min-width:0 — flex 안의 input 은 기본 최소폭(약 20글자)이 있어서, 좁은 화면이나 큰 글꼴에서 카드 밖으로 삐져나온다 */
+    .edit-input { flex: 1 1 0; min-width: 0; background: #222; border: 1.5px solid var(--border2); border-radius: 10px; color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 9px 12px; outline: none; font-family: inherit; }
     .edit-input:focus { border-color: var(--accent); }
     .edit-unit { font-size: 12px; color: #555; min-width: 24px; }
     .sec-label { font-size: 12px; font-weight: 800; color: #aaa; margin-bottom: 8px; }
