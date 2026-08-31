@@ -91,20 +91,25 @@ function initSlideBtn() {
 async function onComplete() {
   const results = exercises.map(ex => {
     if (ex.isSuperset) {
+      const isSkipped = !!skipped[ex.id];
+      // 🆕 메모는 하위 종목별로 따로 저장한다 (입력 키도 `카드id_하위번호`).
+      const subResults = (ex.subExercises || []).map((sub, si) => ({
+        name:      sub.name,
+        variation: sub.variation || '',
+        weight:    sub.targetWeight || 0,
+        targetReps: sub.targetReps || 0,
+        weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[`${ex.id}_${si}`]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (sub.targetWeight||0); }),
+        reps:    Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
+        memo:    isSkipped ? '(생략)' : (memoData[`${ex.id}_${si}`]?.trim()||''),
+      }));
       return {
         // 🆕 name은 원래 운동명, variation 분리 유지
         name: ex.name, variation: ex.variation||'', isSuperset: true, sets: ex.sets,
-        memo:    skipped[ex.id] ? '(생략)' : (memoData[ex.id]?.trim()||''),
-        rest:    skipped[ex.id] ? '' : formatRest(restData[ex.id]),
-        skipped: !!skipped[ex.id],
-        subResults: (ex.subExercises || []).map((sub, si) => ({
-          name:      sub.name,
-          variation: sub.variation || '',
-          weight:    sub.targetWeight || 0,
-          targetReps: sub.targetReps || 0,
-          weights: Array.from({ length: ex.sets }, (_, s) => { const v = weightData[`${ex.id}_${si}`]?.[s+1]; return (v !== undefined && v !== '') ? parseFloat(v) : (sub.targetWeight||0); }),
-          reps:    Array.from({ length: ex.sets }, (_, s) => { const v = repsData[`${ex.id}_${si}`]?.[s+1]; return v ? parseInt(v) : 0; }),
-        })),
+        // 상위 memo는 하위 메모를 합친 값 — 구버전 GAS(하위 memo를 모르는 배포)에서도 기록이 남게 하려는 대비책
+        memo:    isSkipped ? '(생략)' : subResults.map(sub => sub.memo).filter(Boolean).join(' / '),
+        rest:    isSkipped ? '' : formatRest(restData[ex.id]),
+        skipped: isSkipped,
+        subResults,
       };
     }
     return {

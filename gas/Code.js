@@ -203,7 +203,8 @@ function saveResult(data, props) {
           Array.isArray(sub.weights) ? sub.weights.join(',') : '',
           countActualSets(sub.reps),
           Array.isArray(sub.reps) ? sub.reps.join(',') : String(sub.reps || ''),
-          r.memo || '',
+          // 🆕 메모는 하위 종목별로 따로 기록. 구버전 앱(하위 memo 없음)은 상위 memo 로 대체.
+          sub.memo !== undefined ? sub.memo : (r.memo || ''),
         ]);
       });
     } else {

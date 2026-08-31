@@ -116,6 +116,11 @@ function renderCards() {
           setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-right:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
+        // 🆕 메모는 하위 종목별로 따로 기록한다 (키는 세트·무게 입력과 같은 `카드id_하위번호`)
+        const memoKey = `${ex.id}_${subIdx}`;
+        const subMemoHTML = !isSkipped ? `
+            <div class="sec-label" style="margin-top:10px;">메모</div>
+            <textarea class="memo-textarea" id="e${memoKey}memo" placeholder="특이사항, 느낌 등…" oninput="memoData['${memoKey}']=this.value">${memoData[memoKey]||''}</textarea>` : '';
         // 🆕 displayName 사용
         sectionsHTML += `
           <div class="superset-section">
@@ -127,6 +132,7 @@ function renderCards() {
               <span class="sec-label" style="margin-bottom:0;">수행 결과</span>${lastBadge}
             </div>
             <div class="sets-row">${setsHTML}</div>
+            ${subMemoHTML}
           </div>`;
       });
       const sharedBody = !isSkipped ? `
@@ -134,9 +140,7 @@ function renderCards() {
         <div class="rest-row">
           <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.min||''}" oninput="onRestInput(${ex.id},'min',this.value)"><span class="rest-unit-abs">분</span></div></div>
           <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.sec||''}" oninput="onRestInput(${ex.id},'sec',this.value)"><span class="rest-unit-abs">초</span></div></div>
-        </div>
-        <div class="sec-label">메모</div>
-        <textarea class="memo-textarea" id="e${ex.id}memo" placeholder="특이사항, 느낌 등…" oninput="memoData[${ex.id}]=this.value">${memoData[ex.id]||''}</textarea>` : '';
+        </div>` : '';
       const ssEditFieldsHTML = isEditing ? `
         <div class="edit-fields">
           <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.displayName || ex.name}" oninput="exercises[${idx}].name=this.value;exercises[${idx}].displayName=this.value"></div>
