@@ -845,25 +845,34 @@ function findTarget(targetRows, exerciseName, variation) {
 
 // ── getLastSessionLog ────────────────────────────────────────
 function getLastSessionLog(ss, routineName) {
-  const year = new Date().getFullYear();
-  const data = _getLogData(ss, year) || _getLogData(ss, year - 1);
+  const thisYear = new Date().getFullYear();
+  let logYear = thisYear;
+  let data    = _getLogData(ss, logYear);
+  if (!data) { logYear = thisYear - 1; data = _getLogData(ss, logYear); }
   if (!data) return [];
+
+  // 🆕 휴식(I열)은 시트가 시간 서식이라 getValues() 로는 Date 객체로 온다.
+  // (그대로 문자로 바꾸면 "Sat Dec 30 1899 ..." 가 나옴)
+  // 셀에 보이는 텍스트를 그대로 쓰려고 I열만 표시값으로 따로 읽어 짝지어 둔다.
+  const restCol = _getRestColumn(ss, logYear);
 
   // 🆕 "O요일: " 접두사 제거 (saveWorkoutLog의 cleanRoutineName과 동일한 패턴)
   const cleanRoutineName = routineName.replace(/^[가-힣]+요일:\s*/, '');
   const routineKey        = cleanRoutineName.split(':')[0].trim();
 
-  const matchingRows = data.slice(2).filter(row =>
-    String(row[2]).includes(routineKey) || routineKey.includes(String(row[2]).split(':')[0].trim())
-  );
+  const matchingRows = data.slice(2)
+    .map((row, i) => ({ row, restText: restCol[i] || '' }))
+    .filter(({ row }) =>
+      String(row[2]).includes(routineKey) || routineKey.includes(String(row[2]).split(':')[0].trim())
+    );
   if (matchingRows.length === 0) return [];
 
-  const dates    = [...new Set(matchingRows.map(r => normDate(r[0])))].sort().reverse();
+  const dates    = [...new Set(matchingRows.map(({ row }) => normDate(row[0])))].sort().reverse();
   const lastDate = dates[0];
 
   return matchingRows
-    .filter(row => normDate(row[0]) === lastDate)
-    .map(row => {
+    .filter(({ row }) => normDate(row[0]) === lastDate)
+    .map(({ row, restText }) => {
       const weightList  = String(row[9]).split(',');
       const weightRaw   = weightList[0].trim();
       const weightValue = weightRaw ? Number(weightRaw) : Number(row[5]);
@@ -877,7 +886,7 @@ function getLastSessionLog(ss, routineName) {
         weights:      weightList,
         date:         lastDate,
         day:          String(row[1]).trim(),
-        rest:         String(row[8]).trim(),
+        rest:         normRest(restText, row[8]),
         targetWeight: Number(row[5]),
         targetReps:   Number(row[7]),
         memo:         String(row[12]).trim(),
@@ -885,9 +894,27 @@ function getLastSessionLog(ss, routineName) {
     });
 }
 
+// ── normRest ─────────────────────────────────────────────────
+// 세트 간 휴식(I열)을 셀에 보이는 표시값 기준으로 읽는다.
+// 시간 서식 셀은 원본이 Date 라 문자로 바꾸면 의미 없는 값이 나오므로 버린다.
+function normRest(displayVal, rawVal) {
+  const shown = String(displayVal == null ? '' : displayVal).trim();
+  if (shown) return shown;
+  if (Object.prototype.toString.call(rawVal) === '[object Date]') return '';
+  return String(rawVal == null ? '' : rawVal).trim();
+}
 // ── _getLogData ──────────────────────────────────────────────
 function _getLogData(ss, year) {
   const sheet = getYearSheet(ss, '운동결과', year);
   if (!sheet || sheet.getLastRow() <= 2) return null;
   return sheet.getDataRange().getValues();
+}
+
+// ── _getRestColumn ───────────────────────────────────────────
+// I열(세트 간 휴식)만 셀에 보이는 문자열로 읽는다. 데이터는 3행부터 (머리글 2줄).
+// 시트 전체를 다시 읽으면 미션 로딩이 느려지므로 필요한 한 칸만 가져온다.
+function _getRestColumn(ss, year) {
+  const sheet = getYearSheet(ss, '운동결과', year);
+  if (!sheet || sheet.getLastRow() <= 2) return [];
+  return sheet.getRange(3, 9, sheet.getLastRow() - 2, 1).getDisplayValues().map(r => r[0]);
 }

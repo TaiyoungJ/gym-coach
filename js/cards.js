@@ -10,17 +10,20 @@ function buildLastBadge(target, idx, subIdx) {
   return `<button type="button" class="meta-tag last last-btn" style="font-size:11px" onclick="openLastRecordPopup(${idx},${subIdx})">${text}</button>`;
 }
 
-// 저장된 휴식 문자열("m:ss") → "1분 30초" 같은 표시용 텍스트. 형식이 다르면 원본 그대로 둔다.
+// 시트에 보이는 휴식 값("1:30", "0:01:30" 등) → "1분 30초" 같은 표시용 텍스트.
+// 두 칸이면 분:초, 세 칸이면 시:분:초로 본다. 형식이 다르면 원본 그대로 둔다.
 function fmtRestKor(rest) {
   const s = String(rest || '').trim();
   if (!s) return '';
-  const m = s.match(/^(\d+):(\d{1,2})$/);
+  const m = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
   if (!m) return s;
-  const min = parseInt(m[1], 10), sec = parseInt(m[2], 10);
-  if (!min && !sec) return '';
-  if (!min) return `${sec}초`;
-  if (!sec) return `${min}분`;
-  return `${min}분 ${sec}초`;
+  const nums = [m[1], m[2], m[3]].filter(v => v !== undefined).map(v => parseInt(v, 10));
+  const [h, min, sec] = nums.length === 3 ? nums : [0, nums[0], nums[1]];
+  const parts = [];
+  if (h)   parts.push(`${h}시간`);
+  if (min) parts.push(`${min}분`);
+  if (sec) parts.push(`${sec}초`);
+  return parts.join(' ');
 }
 
 // 배지 클릭 → 직전 세션의 세트별 무게·횟수, 세트 간 휴식, 메모를 팝업으로 (기록 검색의 차트 점 팝업과 동일한 형식)
