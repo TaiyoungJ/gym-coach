@@ -39,8 +39,8 @@ async function loadBackgroundData() {
   updateLandingStatus();
 }
 
-// lastWeekLog 항목 → "지난:" 배지 팝업에 쓸 상세(날짜·세트별 무게/횟수·메모).
-// weights/date는 신규 GAS 배포에서만 오므로, 없으면 대표 무게를 세트 수만큼 채워 대체한다.
+// lastWeekLog 항목 → "지난:" 배지 팝업에 쓸 상세(날짜·세트별 무게/횟수·세트 간 휴식·메모).
+// weights/date/rest는 신규 GAS 배포에서만 오므로, 없으면 대표 무게를 세트 수만큼 채우고 휴식은 표시를 생략한다.
 function buildLastDetail(lastEx) {
   if (!lastEx) return null;
   const reps = (lastEx.reps || []).map(r => String(r).trim());
@@ -52,6 +52,7 @@ function buildLastDetail(lastEx) {
     day:     lastEx.day || '',
     weights,
     reps,
+    rest:    lastEx.rest || '',
     memo:    lastEx.memo || '',
   };
 }

@@ -873,10 +873,11 @@ function getLastSessionLog(ss, routineName) {
         sets:         row[10],
         reps:         String(row[11]).split(','),
         weight:       weightValue,
-        // 🆕 세트별 무게 원본 + 날짜/요일 (카드의 "지난:" 배지 팝업에서 세트별 상세 표시용)
+        // 🆕 세트별 무게 원본 + 날짜/요일 + 세트 간 휴식 (카드의 "지난:" 배지 팝업에서 상세 표시용)
         weights:      weightList,
         date:         lastDate,
         day:          String(row[1]).trim(),
+        rest:         String(row[8]).trim(),
         targetWeight: Number(row[5]),
         targetReps:   Number(row[7]),
         memo:         String(row[12]).trim(),

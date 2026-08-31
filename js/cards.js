@@ -10,7 +10,20 @@ function buildLastBadge(target, idx, subIdx) {
   return `<button type="button" class="meta-tag last last-btn" style="font-size:11px" onclick="openLastRecordPopup(${idx},${subIdx})">${text}</button>`;
 }
 
-// 배지 클릭 → 직전 세션의 세트별 무게·횟수와 메모를 팝업으로 (기록 검색의 차트 점 팝업과 동일한 형식)
+// 저장된 휴식 문자열("m:ss") → "1분 30초" 같은 표시용 텍스트. 형식이 다르면 원본 그대로 둔다.
+function fmtRestKor(rest) {
+  const s = String(rest || '').trim();
+  if (!s) return '';
+  const m = s.match(/^(\d+):(\d{1,2})$/);
+  if (!m) return s;
+  const min = parseInt(m[1], 10), sec = parseInt(m[2], 10);
+  if (!min && !sec) return '';
+  if (!min) return `${sec}초`;
+  if (!sec) return `${min}분`;
+  return `${min}분 ${sec}초`;
+}
+
+// 배지 클릭 → 직전 세션의 세트별 무게·횟수, 세트 간 휴식, 메모를 팝업으로 (기록 검색의 차트 점 팝업과 동일한 형식)
 function openLastRecordPopup(idx, subIdx) {
   const ex = exercises[idx];
   if (!ex) return;
@@ -30,6 +43,11 @@ function openLastRecordPopup(idx, subIdx) {
        </div>`
     : `<div style="text-align:center;padding:16px 0;color:var(--text3);font-size:13px;">메모 없음</div>`;
 
+  const restText  = fmtRestKor(d.rest);
+  const restBlock = restText
+    ? `<div class="last-rest-row">⏱️ 세트 간 휴식 &nbsp;&nbsp; ${escXml(restText)}</div>`
+    : '';
+
   container.insertAdjacentHTML('beforeend', `
     <div class="popup-overlay" id="lastRecordOverlay" style="z-index:210;" onclick="if(event.target===this)closeLastRecordPopup()">
       <div class="popup-sheet">
@@ -41,7 +59,7 @@ function openLastRecordPopup(idx, subIdx) {
           <div class="search-result-card" style="font-size:13px;color:var(--text2);margin-bottom:10px;">
             ${escXml(target.displayName || target.name)}
           </div>
-          <div class="search-result-card">${formatSetsHtml(d.weights, d.reps)}</div>
+          <div class="search-result-card">${formatSetsHtml(d.weights, d.reps)}${restBlock}</div>
           ${memoBlock}
         </div>
       </div>

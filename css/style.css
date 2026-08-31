@@ -358,6 +358,8 @@
     .search-result-target { font-size: 14px; font-weight: 800; color: var(--text1); margin-bottom: 10px; }
     .search-result-set { font-size: 13px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
     .search-result-set:last-of-type { border-bottom: none; }
+    /* 직전 기록 팝업의 세트 간 휴식 줄 — 위쪽 세트 목록의 마지막 구분선이 경계 역할을 한다 */
+    .last-rest-row { font-size: 13px; color: var(--text2); padding-top: 8px; line-height: 1.5; }
     .search-section-label { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
 
     /* ── 종목 목록 아코디언 (폰·태블릿 공통) ── */
