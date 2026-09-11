@@ -144,7 +144,7 @@ function renderCards() {
       const ssEditFieldsHTML = isEditing ? `
         <div class="edit-fields">
           <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.displayName || ex.name}" oninput="exercises[${idx}].name=this.value;exercises[${idx}].displayName=this.value"></div>
-          <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
+          <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value)" inputmode="numeric"><span class="edit-unit">세트</span></div>
           ${(ex.subExercises||[]).map((sub,si) => `
           <div style="background:#1c1c1e;border:1.5px solid #48484a;border-radius:10px;padding:10px;margin-top:8px;">
             <div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:8px;">${['🅐','🅑','🅒'][si]||''} 종목 ${si+1}</div>
@@ -192,7 +192,7 @@ function renderCards() {
       <div class="edit-fields">
         <div class="edit-row"><span class="edit-label">이름</span><input class="edit-input" style="font-size:15px" value="${ex.displayName || ex.name}" oninput="exercises[${idx}].name=this.value;exercises[${idx}].displayName=this.value;document.getElementById('exname-${idx}').textContent=this.value"></div>
         <div class="edit-row"><span class="edit-label">중량</span><input class="edit-input" type="number" value="${ex.targetWeight||0}" style="max-width:80px" oninput="exercises[${idx}].targetWeight=Number(this.value)" inputmode="numeric"><span class="edit-unit">kg</span></div>
-        <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value);renderCards()" inputmode="numeric"><span class="edit-unit">세트</span></div>
+        <div class="edit-row"><span class="edit-label">세트</span><input class="edit-input" type="number" value="${ex.sets}" style="max-width:60px" oninput="exercises[${idx}].sets=Number(this.value)" inputmode="numeric"><span class="edit-unit">세트</span></div>
         <div class="edit-row"><span class="edit-label">목표</span><input class="edit-input" type="number" value="${ex.targetReps||0}" style="max-width:60px" oninput="exercises[${idx}].targetReps=Number(this.value)" inputmode="numeric"><span class="edit-unit">회</span></div>
       </div>` : '';
 
