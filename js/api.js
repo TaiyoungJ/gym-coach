@@ -24,22 +24,23 @@ async function apiPost(body) {
 }
 
 /* ── Mission Cache (stale-while-revalidate) ────────────────── */
-// 오늘 날짜별로 미션을 localStorage에 보관해 재실행 시 즉시 렌더
-function readMissionCache() {
+// 날짜별로 미션을 localStorage에 보관해 재실행 시 즉시 렌더.
+// 내일·모레 미션도 미리 받아 두므로(prefetchMissions) 오늘보다 이전 날짜 키만 정리한다.
+function readMissionCache(dateIso = toIso(new Date())) {
   try {
-    const raw = localStorage.getItem('gc_mission_' + toIso(new Date()));
+    const raw = localStorage.getItem('gc_mission_' + dateIso);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
-function writeMissionCache(data) {
+function writeMissionCache(data, dateIso = toIso(new Date())) {
   try {
     const todayKey = 'gc_mission_' + toIso(new Date());
-    // 오늘이 아닌 오래된 미션 캐시는 제거 (localStorage 누적 방지)
+    // 지나간 날짜의 미션 캐시는 제거 (localStorage 누적 방지). 오늘·미래 키는 유지.
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('gc_mission_') && k !== todayKey) localStorage.removeItem(k);
+      if (k && k.startsWith('gc_mission_') && k < todayKey) localStorage.removeItem(k);
     }
-    localStorage.setItem(todayKey, JSON.stringify(data));
+    localStorage.setItem('gc_mission_' + dateIso, JSON.stringify(data));
   } catch {}
 }
 

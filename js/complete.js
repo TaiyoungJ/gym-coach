@@ -134,6 +134,7 @@ async function onComplete() {
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     localStorage.setItem('gc_done_' + missionData.date, '1');
+    prefetchMissions();   // 내일·모레 미션의 "지난 기록"에 오늘 결과가 반영되도록 다시 받아 둠
   } catch(err) {
     if (completeArea) { completeArea.innerHTML = '<div class="slide-wrap ready" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">밀어서 운동 완료 →</span></div>'; initSlideBtn(); }
     alert('오류: ' + err.message);

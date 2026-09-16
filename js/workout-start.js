@@ -5,6 +5,13 @@ function closePopup(e) {
 }
 
 /* ── Background data loading ───────────────────────────────── */
+// 앱 시작: 캐시로 즉시 그리고, 뒤에서 최신본을 받아 갱신한다.
+// 캐시가 "미리 받아둔"(_prefetched) 것이면 정식 데이터로 쓰되, 낡았을 수 있으니
+// 최신본이 올 때까지 오늘의 운동 카드 상단에 확인 중 바를 흘려 보여준다.
+let missionSyncing     = false;  // 확인 중 바 표시 여부
+let _missionFetching   = false;  // getMission 진행 중 (중복 호출 방지)
+let _lastMissionFetchAt = 0;     // 마지막 getMission 완료 시각 — 앱 복귀 재조회 스로틀용
+
 async function loadBackgroundData() {
   const s = getSettings();
 
@@ -14,31 +21,66 @@ async function loadBackgroundData() {
     if (cached && !cached.error) {
       missionCache   = cached;
       missionLoading = false;
+      missionSyncing = !!cached._prefetched;   // 미리 받은 것이면 "확인 중" 바
       updateLandingStatus();
     }
   }
 
-  // B) checkWeekStatus와 getMission은 서로 독립적이므로 동시에 발사 (병렬)
-  const weekP    = apiGet({ action: 'checkWeekStatus' });
-  const missionP = s.testMode ? Promise.resolve(getMockMission())
-                              : apiGet({ action: 'getMission' });
+  // B) 서로 독립적인 호출은 동시에 발사 (병렬)
+  apiGet({ action: 'checkWeekStatus' })
+    .then(res => { weekStatus = res; updateWeekAlert(); })
+    .catch(() => {});
+  loadBodyLast();   // 신체 기록 마지막 값 (js/body-record.js)
+  await refreshMission();
+}
 
-  // 주차 상태: 도착하는 대로 반영, 실패해도 미션 흐름을 막지 않음
-  weekP.then(res => { weekStatus = res; updateWeekAlert(); }).catch(() => {});
-  // 신체 기록 마지막 값도 독립적으로 병렬 조회 (js/body-record.js)
-  loadBodyLast();
+// 오늘 미션 최신본을 받아 캐시·화면을 갱신한다. 앱 시작·복귀·새로고침 버튼에서 공용.
+// showBar: 사용자가 요청한 새로고침이면 바를 보여준다 (복귀 자동 재조회는 조용히).
+async function refreshMission({ showBar = false } = {}) {
+  if (_missionFetching) return;
+  _missionFetching = true;
+  const s = getSettings();
+  if (showBar) { missionSyncing = true; updateSyncBar(); }
 
-  // 미션: 최신본으로 갱신하고 캐시에 저장 (백그라운드 revalidate)
   try {
-    const fresh = await missionP;
+    const fresh = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
     missionCache = fresh;
-    if (!s.testMode && fresh && !fresh.error) writeMissionCache(fresh);
+    if (!s.testMode && fresh && !fresh.error) {
+      writeMissionCache(fresh);   // 정식 캐시로 저장 (_prefetched 없음)
+      prefetchMissions();         // 내일·모레도 미리 받아 둠 (백그라운드)
+    }
   } catch (err) {
-    // 네트워크 실패 시 이미 캐시가 있으면 그대로 유지, 없을 때만 에러 표시
+    // 네트워크 실패 시 이미 캐시가 있으면(미리 받은 것 포함) 그대로 유지, 없을 때만 에러 표시
     if (!missionCache) missionCache = { error: err.message, exercises: [] };
   }
+  _missionFetching = false;
+  _lastMissionFetchAt = Date.now();
   missionLoading = false;
+  const wasSyncing = missionSyncing;
+  missionSyncing = false;
   updateLandingStatus();
+  if (wasSyncing) finishSyncBar(!missionCache?.error);
+}
+
+// 내일·모레 미션을 미리 받아 날짜별 캐시에 저장한다. 실패는 무시(다음 날 기존처럼 스켈레톤).
+// GAS getMission의 testDate 인자를 그대로 사용하므로 서버 수정이 없다.
+function prefetchMissions() {
+  if (getSettings().testMode) return;
+  [1, 2].forEach(offset => {
+    const d = new Date(); d.setDate(d.getDate() + offset);
+    const dateIso = toIso(d);
+    apiGet({ action: 'getMission', testDate: dateIso })
+      .then(m => { if (m && !m.error) writeMissionCache({ ...m, _prefetched: true }, dateIso); })
+      .catch(() => {});
+  });
+}
+
+// 앱이 다시 앞으로 왔을 때(시트 입력 후 복귀 등) 랜딩이면 조용히 최신본을 다시 받는다.
+function onAppVisible() {
+  if (document.visibilityState !== 'visible' || currentPage !== 'landing') return;
+  if (getSettings().testMode) return;
+  if (Date.now() - _lastMissionFetchAt < 30 * 1000) return;
+  refreshMission();
 }
 
 // lastWeekLog 항목 → "지난:" 배지 팝업에 쓸 상세(날짜·세트별 무게/횟수·세트 간 휴식·메모).

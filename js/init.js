@@ -55,6 +55,9 @@ window.addEventListener('resize', function() {
   }, 150);
 });
 
+// 다른 앱(시트 편집 등)에 갔다가 돌아오면 랜딩의 미션을 조용히 다시 받는다 (js/workout-start.js)
+document.addEventListener('visibilitychange', onAppVisible);
+
 window.addEventListener('popstate', function() {
   // 바텀시트가 열려 있으면 그것만 닫고, 페이지 스택은 건드리지 않는다.
   const container = document.getElementById('popup-container');

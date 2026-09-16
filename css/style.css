@@ -262,9 +262,20 @@
     .body-extra-toggle { background: none; border: none; color: var(--text2); font-size: 12px; font-weight: 700; padding: 10px 0 2px; cursor: pointer; font-family: inherit; }
     #bodyExtra { margin-top: 6px; }
 
-    .today-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; }
+    .today-card { position: relative; overflow: hidden; background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; }
     .today-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .today-card-title { font-size: 16px; font-weight: 800; color: var(--text1); }
+    .today-card-title { font-size: 16px; font-weight: 800; color: var(--text1); display: inline-flex; align-items: center; gap: 6px; }
+    /* 확인 중 바: 미리 받은 미션으로 그렸을 때 최신본이 올 때까지 카드 상단을 흐른다 */
+    .sync-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; display: none; overflow: hidden; }
+    .sync-bar.syncing { display: block; }
+    .sync-bar.syncing::before { content: ''; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: syncSlide 1.2s ease-in-out infinite; }
+    @keyframes syncSlide { from { transform: translateX(-100%); } to { transform: translateX(320%); } }
+    .sync-bar.synced { display: block; background: var(--green); animation: syncDone .9s ease forwards; }
+    @keyframes syncDone { 0% { opacity: 1; } 55% { opacity: 1; } 100% { opacity: 0; } }
+    .mission-refresh-btn { background: none; border: none; color: var(--text2); font-size: 15px; line-height: 1; padding: 2px 4px; cursor: pointer; font-family: inherit; border-radius: 8px; }
+    .mission-refresh-btn:active { color: var(--accent); }
+    .mission-refresh-btn:disabled { opacity: 0.5; cursor: default; }
+    .mission-refresh-btn.spinning { animation: spin 1s linear infinite; }   /* spin 키프레임은 위 슬라이드 버튼 것 재사용 */
     .skel-wrap { display: flex; flex-direction: column; gap: 9px; }
     .skel { height: 13px; border-radius: 6px; background: linear-gradient(90deg, var(--surface2) 25%, #252525 50%, var(--surface2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
     @keyframes shimmer { to { background-position: -200% 0; } }

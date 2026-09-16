@@ -28,7 +28,11 @@ function renderLanding() {
     <div class="body-card" id="body-card"></div>
     </div>
     <div class="today-card">
-      <div class="today-card-header"><span class="today-card-title">오늘의 운동</span><span id="program-badge-slot"></span></div>
+      <div class="sync-bar" id="sync-bar"></div>
+      <div class="today-card-header">
+        <span class="today-card-title">오늘의 운동 <button class="mission-refresh-btn" id="mission-refresh-btn" onclick="onMissionRefresh()" aria-label="최신 정보로 새로고침" title="새로고침">↻</button></span>
+        <span id="program-badge-slot"></span>
+      </div>
       <div id="today-status-body">
         <div class="skel-wrap">
           <div class="skel" style="width:32%;height:22px"></div>
@@ -59,6 +63,7 @@ function updateLandingStatus() {
     if (startArea) startArea.innerHTML =
       `<button class="landing-ghost-btn" onclick="startWorkout()">다시 시작하기</button>
        <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>`;
+    updateSyncBar();
     return;
   }
 
@@ -71,9 +76,11 @@ function updateLandingStatus() {
       <div class="status-rest-sub">${isCustom ? '일정으로 지정한 휴식일이에요' : '회복도 훈련이에요'}</div>`;
     if (startArea) startArea.innerHTML =
       `<button class="landing-ghost-btn" onclick="startWorkout()">그래도 시작하기</button>`;
+    updateSyncBar();
     return;
   }
 
+  updateSyncBar();
   if (!missionCache || missionCache.error) return;
 
   const count  = missionCache.exercises?.length || 0;
@@ -83,6 +90,26 @@ function updateLandingStatus() {
   if (slot) slot.innerHTML = `<span class="status-badge">${display}</span>`;
   bodyEl.innerHTML = buildBodyPartSummary(missionCache.exercises);
 }
+
+/* ── 확인 중 바 / 새로고침 ─────────────────────────────────── */
+// 미리 받아둔 미션으로 그렸거나 사용자가 새로고침을 눌렀을 때, 최신본이 올 때까지
+// 오늘의 운동 카드 상단에 얇은 바를 흘려 "확인 중"임을 보여준다 (js/workout-start.js의 missionSyncing).
+function updateSyncBar() {
+  const bar = document.getElementById('sync-bar');
+  const btn = document.getElementById('mission-refresh-btn');
+  if (bar && !bar.classList.contains('synced')) bar.classList.toggle('syncing', missionSyncing);
+  if (btn) { btn.disabled = missionSyncing; btn.classList.toggle('spinning', missionSyncing); }
+}
+// 최신본 도착: 초록으로 꽉 채웠다가 스르륵 사라진다. 실패면 그냥 숨긴다.
+function finishSyncBar(ok) {
+  const bar = document.getElementById('sync-bar');
+  if (!bar) return;
+  bar.classList.remove('syncing');
+  if (!ok) return;
+  bar.classList.add('synced');
+  setTimeout(() => bar.classList.remove('synced'), 900);
+}
+function onMissionRefresh() { refreshMission({ showBar: true }); }
 
 function buildBodyPartSummary(exercises) {
   if (!exercises || exercises.length === 0) return '';
