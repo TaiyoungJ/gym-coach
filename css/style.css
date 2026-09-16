@@ -235,6 +235,33 @@
     .week-alert-btn { width: 100%; background: var(--accent); color: #000; font-size: 13px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: opacity .2s; }
     .week-alert-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* ── 신체 기록(계체) 카드 — js/body-record.js ──────────────── */
+    .body-card { border-radius: 18px; padding: 16px; margin-bottom: 14px; display: none; border: 1.5px solid transparent; }
+    .body-card.show { display: block; }
+    .body-card.form, .body-card.done { background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.25); }
+    .body-card.missed { background: rgba(255,140,66,0.07); border-color: rgba(255,140,66,0.25); }
+    .body-card-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; color: var(--green); }
+    .body-card.missed .body-card-eyebrow { color: var(--accent); }
+    .body-card-body { font-size: 14px; font-weight: 700; color: var(--text1); margin-bottom: 4px; }
+    .body-card-date { font-size: 12px; font-weight: 600; color: var(--text2); margin-left: 4px; }
+    .body-card-sub { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+    .body-card.done .body-card-sub { margin-bottom: 0; }
+    .body-card-btns { display: flex; gap: 8px; }
+    .body-btn-ghost { flex: 1; background: none; color: var(--text2); font-size: 13px; font-weight: 700; padding: 12px; border: 1.5px solid var(--border2); border-radius: 12px; cursor: pointer; font-family: inherit; }
+    .body-btn-accent { flex: 1; background: var(--accent); color: #000; font-size: 13px; font-weight: 800; padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+    .body-btn-accent:disabled { opacity: 0.4; cursor: not-allowed; }
+    .body-card.form .body-btn-accent, .body-save-btn { background: var(--green); }
+    .body-save-btn { width: 100%; margin-top: 12px; }
+    /* 미기록 카드에서 [입력]을 누르면 아래로 슬라이드되며 입력칸이 펼쳐진다 */
+    .body-form-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+    .body-form-wrap.open { grid-template-rows: 1fr; }
+    .body-form-inner { overflow: hidden; min-height: 0; }
+    .body-grid { margin-bottom: 0; }
+    .body-grid .add-field input { min-width: 0; }
+    .body-req { color: var(--accent); }
+    .body-extra-toggle { background: none; border: none; color: var(--text2); font-size: 12px; font-weight: 700; padding: 10px 0 2px; cursor: pointer; font-family: inherit; }
+    #bodyExtra { margin-top: 6px; }
+
     .today-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; }
     .today-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
     .today-card-title { font-size: 16px; font-weight: 800; color: var(--text1); }

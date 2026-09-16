@@ -73,6 +73,16 @@ function getMockMission() {
   };
 }
 
+// 신체 기록 목업 — { last, prev } 형태 (getBodyLast 응답과 동일)
+function getMockBodyLast() {
+  const d = new Date(); d.setDate(d.getDate() - 7);
+  const p = new Date(d); p.setDate(p.getDate() - 7);
+  return {
+    last: { date: toIso(d), day: '월', weight: 72.4, waist: 82,   fat: 18.2, memo: '' },
+    prev: { date: toIso(p), day: '월', weight: 72.9, waist: 82.5, fat: '',   memo: '' },
+  };
+}
+
 /* ── 🆕 세부종목 + 운동명 조합 헬퍼 ───────────────────────── */
 function buildDisplayName(name, variation) {
   return variation ? `${variation} ${name}` : name;

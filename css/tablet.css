@@ -52,7 +52,7 @@
   #app.page-landing .landing-date-block { grid-area: date; }
   #app.page-landing .landing-quick-nav  { grid-area: quick; align-self: center; }
   #app.page-landing .today-card         { grid-area: today; }
-  #app.page-landing .week-alert         { grid-area: alert; }
+  #app.page-landing .landing-side       { grid-area: alert; }   /* 주차 알림 + 신체 기록 카드 묶음 */
   #app.page-landing #start-btn-area     { grid-area: start; }
 
   #app.page-landing .landing-date-big { font-size: 34px; }

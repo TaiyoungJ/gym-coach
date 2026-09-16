@@ -1,6 +1,11 @@
 /**
- * gym-coach Apps Script v2.0.0
+ * gym-coach Apps Script v2.1.0
  * ──────────────────────────────────────────────────────────
+ * v2.1.0 변경사항:
+ * - 신체 기록(계체) 추가: "(연도) 신체기록" 시트
+ *   · getBodyLast(): 마지막 두 기록 { last, prev } 반환 (GET)
+ *   · saveBodyRecord(): 한 줄 추가, 시트 없으면 헤더와 함께 생성 (POST)
+ *
  * v2.0.0 변경사항:
  * - parseRoutineForDay(): [세부종목] 파싱 추가
  *   · 운동명 [세부종목] (세트수) 형식 지원
@@ -89,6 +94,7 @@ function doGet(e) {
     }
     if (action === 'checkWeekStatus') return jsonResponse(checkWeekStatus(props));
     if (action === 'getRoutineDoc')   return jsonResponse(getRoutineDoc(props));
+    if (action === 'getBodyLast')     return jsonResponse(getBodyLast(props));
     if (action === 'searchHistory') {
       const params = {
         subAction:    e.parameter.subAction,
@@ -116,6 +122,7 @@ function doPost(e) {
     if (body.action === 'getCoaching')     return jsonResponse(getCoaching(body.type, body.missionData, props));
     if (body.action === 'registerWeek')    return jsonResponse(registerWeek(props));
     if (body.action === 'saveWorkoutLog')  return jsonResponse(saveWorkoutLog(body.data, props));
+    if (body.action === 'saveBodyRecord')  return jsonResponse(saveBodyRecord(body.data, props));
     return jsonResponse({ error: 'Unknown action: ' + body.action });
   } catch (err) {
     return jsonResponse({ error: err.message });
@@ -225,6 +232,75 @@ function saveResult(data, props) {
   });
 
   return { success: true, saved: results.length };
+}
+
+// ── 신체 기록(계체) ─────────────────────────────────────────
+// 시트 "(연도) 신체기록": 날짜 | 요일 | 체중 | 허리둘레 | 체지방률 | 메모  (1행 헤더)
+const BODY_HEADER = ['날짜', '요일', '체중(kg)', '허리둘레(cm)', '체지방률(%)', '메모'];
+
+function bodyRowToObj(row) {
+  if (!row) return null;
+  const num = v => (v === '' || v == null) ? '' : Number(v);
+  return {
+    date:   normDate(row[0]),
+    day:    String(row[1] || ''),
+    weight: num(row[2]),
+    waist:  num(row[3]),
+    fat:    num(row[4]),
+    memo:   String(row[5] || ''),
+  };
+}
+
+// 시트의 마지막 두 데이터 행 → { last, prev }. 데이터가 없으면 둘 다 null.
+function readBodyTail(sheet) {
+  if (!sheet) return { last: null, prev: null };
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { last: null, prev: null };
+  const n    = Math.min(2, lastRow - 1);
+  const rows = sheet.getRange(lastRow - n + 1, 1, n, BODY_HEADER.length).getValues();
+  return {
+    last: bodyRowToObj(rows[n - 1]),
+    prev: n === 2 ? bodyRowToObj(rows[0]) : null,
+  };
+}
+
+// 올해 시트에서 읽고, 비어 있으면 작년 시트로 폴백 (연초 대비)
+function getBodyLast(props) {
+  const ss   = SpreadsheetApp.openById(props.spreadsheetId);
+  const year = new Date().getFullYear();
+  let tail = readBodyTail(getYearSheet(ss, '신체기록', year));
+  if (!tail.last) tail = readBodyTail(getYearSheet(ss, '신체기록', year - 1));
+  else if (!tail.prev) {
+    // 올해 기록이 1건뿐이면 변화량 비교용 prev 는 작년 마지막 기록에서
+    tail.prev = readBodyTail(getYearSheet(ss, '신체기록', year - 1)).last;
+  }
+  return tail;
+}
+
+function saveBodyRecord(data, props) {
+  const { date, day, weight, waist, fat, memo } = data || {};
+  if (!date || !(Number(weight) > 0) || !(Number(waist) > 0)) {
+    return { error: '날짜·체중·허리둘레는 필수입니다.' };
+  }
+  const ss    = SpreadsheetApp.openById(props.spreadsheetId);
+  const year  = parseInt(String(date).substring(0, 4)) || new Date().getFullYear();
+  const sheet = getOrCreateYearSheet(ss, '신체기록', year);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(BODY_HEADER);
+    sheet.getRange(1, 1, 1, BODY_HEADER.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  // 변화량 표시용: 이번 기록을 넣기 전의 마지막 기록
+  let prev = readBodyTail(sheet).last;
+  if (!prev) prev = readBodyTail(getYearSheet(ss, '신체기록', year - 1)).last;
+
+  sheet.appendRow([
+    date, day || '',
+    Number(weight), Number(waist),
+    (fat === '' || fat == null) ? '' : Number(fat),
+    memo || '',
+  ]);
+  return { success: true, prev };
 }
 
 // ── countActualSets ─────────────────────────────────────────

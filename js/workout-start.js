@@ -25,6 +25,8 @@ async function loadBackgroundData() {
 
   // 주차 상태: 도착하는 대로 반영, 실패해도 미션 흐름을 막지 않음
   weekP.then(res => { weekStatus = res; updateWeekAlert(); }).catch(() => {});
+  // 신체 기록 마지막 값도 독립적으로 병렬 조회 (js/body-record.js)
+  loadBodyLast();
 
   // 미션: 최신본으로 갱신하고 캐시에 저장 (백그라운드 revalidate)
   try {

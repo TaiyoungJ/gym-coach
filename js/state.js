@@ -83,8 +83,9 @@ function getSettings() {
       sheetUrl: s.sheetUrl || '',
       testMode: s.testMode || false,
       restDays: s.restDays || { weekRange: '', days: [] },
+      bodyDays: Array.isArray(s.bodyDays) ? s.bodyDays : [],   // 계체 요일 (0=일 … 6=토)
     };
-  } catch { return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] } }; }
+  } catch { return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] }, bodyDays: [] }; }
 }
 function saveSettingsData(data) {
   localStorage.setItem('gc_settings', JSON.stringify(data));

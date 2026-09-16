@@ -17,6 +17,13 @@ function renderSettings() {
     chipHTML += `<button class="day-chip${thisWeekRest.includes(iso) ? ' on' : ''}" data-date="${iso}" onclick="this.classList.toggle('on')">${label}</button>`;
   }
 
+  // 계체 요일 칩 (월~일 순, 복수 선택)
+  let bodyChipHTML = '';
+  for (let i = 1; i <= 7; i++) {
+    const idx = i % 7;
+    bodyChipHTML += `<button class="day-chip${s.bodyDays.includes(idx) ? ' on' : ''}" data-day="${idx}" onclick="this.classList.toggle('on')">${dayShort[idx]}</button>`;
+  }
+
   let dayOptions = '';
   for (let i = 1; i <= 7; i++) {
     const idx = i % 7;
@@ -47,6 +54,18 @@ function renderSettings() {
         <div class="settings-row-label">이번 주 쉬는 날</div>
         <div class="settings-row-sub">일정 충돌로 빠지는 날을 선택하세요</div>
         <div class="day-chips" id="rest-day-chips">${chipHTML}</div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">📏 신체 기록</div>
+      <div class="settings-row">
+        <div class="settings-row-label">계체 요일</div>
+        <div class="settings-row-sub">선택한 요일에 홈 화면에 체중·허리둘레 기록 카드가 보여요</div>
+        <div class="day-chips" id="body-day-chips">${bodyChipHTML}</div>
+      </div>
+      <div class="settings-row">
+        <button class="landing-ghost-btn" style="margin-bottom:0;" onclick="openBodyRecordNow()">📏 지금 기록하기</button>
       </div>
     </div>
 
@@ -86,11 +105,16 @@ function onSaveSettings() {
   const week     = getThisWeekRange();
   const chips    = document.querySelectorAll('#rest-day-chips .day-chip');
   const restDays = [...chips].filter(c => c.classList.contains('on')).map(c => c.dataset.date);
+  const bodyDays = [...document.querySelectorAll('#body-day-chips .day-chip.on')].map(c => parseInt(c.dataset.day));
+  const testMode = document.getElementById('testModeToggle').checked;
+  // 테스트 모드를 켜고 끌 때 목업 신체 기록 캐시가 실사용에 섞이지 않도록 비운다
+  if (testMode !== getSettings().testMode) localStorage.removeItem('gc_body_last');
   saveSettingsData({
     startDay: parseInt(document.getElementById('startDaySelect').value),
     sheetUrl: document.getElementById('sheetUrlInput').value.trim(),
-    testMode: document.getElementById('testModeToggle').checked,
+    testMode,
     restDays: { weekRange: week.range, days: restDays },
+    bodyDays,
   });
   missionCache = null; weekStatus = null; missionLoading = true;
   _reloadAfterNav = true;
@@ -98,4 +122,10 @@ function onSaveSettings() {
 }
 
 function openRoutineDoc() { renderRoutineDoc(); }
+
+// 예정일이 아니어도 신체 기록 카드를 열어 둔 채 홈으로 돌아간다 (js/body-record.js)
+function openBodyRecordNow() {
+  bodyForceOpen = true;
+  history.back();
+}
 

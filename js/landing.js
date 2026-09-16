@@ -18,11 +18,14 @@ function renderLanding() {
       <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄 운동 루틴</button>
       <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍 기록 검색</button>
     </div>
+    <div class="landing-side">
     <div class="week-alert" id="week-alert">
       <div class="week-alert-eyebrow">📋 주차 미등록</div>
       <div class="week-alert-body">이번 주차 중량 계획이 등록되지 않았어요</div>
       <div class="week-alert-range" id="week-alert-range">-</div>
       <button class="week-alert-btn" id="week-alert-btn" onclick="onRegisterWeek()">스프레드시트에서 등록하기 →</button>
+    </div>
+    <div class="body-card" id="body-card"></div>
     </div>
     <div class="today-card">
       <div class="today-card-header"><span class="today-card-title">오늘의 운동</span><span id="program-badge-slot"></span></div>
@@ -37,6 +40,7 @@ function renderLanding() {
       <button class="landing-start-btn" id="start-btn" onclick="startWorkout()">운동 시작하기 →</button>
       <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>
     </div>`;
+  renderBodyCard();
 }
 
 function updateLandingStatus() {
