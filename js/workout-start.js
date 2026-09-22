@@ -16,7 +16,17 @@ async function loadBackgroundData() {
   const s = getSettings();
 
   // A) 오늘 미션 캐시가 있으면 네트워크를 기다리지 않고 즉시 렌더 (테스트 모드 제외)
-  if (!s.testMode) {
+  //    루틴 변경(js/day-swap.js)이 켜져 있으면 그때 받아 둔 미션을 대신 쓰고 최신본 확인 바를 보여준다.
+  const swap = getDaySwap();
+  if (swap) {
+    const cached = readSwapMission();
+    if (cached && !cached.error) {
+      missionCache   = cached;
+      missionLoading = false;
+      missionSyncing = true;
+      updateLandingStatus();
+    }
+  } else if (!s.testMode) {
     const cached = readMissionCache();
     if (cached && !cached.error) {
       missionCache   = cached;
@@ -43,11 +53,19 @@ async function refreshMission({ showBar = false } = {}) {
   if (showBar) { missionSyncing = true; updateSyncBar(); }
 
   try {
-    const fresh = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
-    missionCache = fresh;
-    if (!s.testMode && fresh && !fresh.error) {
-      writeMissionCache(fresh);   // 정식 캐시로 저장 (_prefetched 없음)
-      prefetchMissions();         // 내일·모레도 미리 받아 둠 (백그라운드)
+    const swap = getDaySwap();   // 루틴 변경 중이면 고른 요일 기준으로 받는다 (js/day-swap.js)
+    if (swap) {
+      const raw = s.testMode ? getMockMission() : await apiGet({ action: 'getMission', testDate: swap.targetDate });
+      const fresh = applySwapToMission(raw);
+      missionCache = fresh;
+      if (!s.testMode && fresh && !fresh.error) writeSwapMission(fresh);   // 오늘의 정식 캐시는 그대로 둔다
+    } else {
+      const fresh = s.testMode ? getMockMission() : await apiGet({ action: 'getMission' });
+      missionCache = fresh;
+      if (!s.testMode && fresh && !fresh.error) {
+        writeMissionCache(fresh);   // 정식 캐시로 저장 (_prefetched 없음)
+        prefetchMissions();         // 내일·모레도 미리 받아 둠 (백그라운드)
+      }
     }
   } catch (err) {
     // 네트워크 실패 시 이미 캐시가 있으면(미리 받은 것 포함) 그대로 유지, 없을 때만 에러 표시

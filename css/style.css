@@ -284,6 +284,26 @@
     .status-rest-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .status-rest-sub { font-size: 13px; color: var(--text2); }
     .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; }
+    /* 루틴 변경 (js/day-swap.js) — 오늘의 운동 카드 하단 줄 */
+    .today-card-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border2); }
+    .today-card-foot:empty { display: none; }
+    .day-swap-btn { background: none; border: 1.5px solid var(--border2); color: var(--text2); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .day-swap-btn:active { border-color: var(--accent); color: var(--accent); }
+    .day-swap-active { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .day-swap-info { font-size: 12px; font-weight: 700; color: var(--text2); line-height: 1.5; }
+    .day-swap-info b { color: var(--accent); font-weight: 800; }
+    .day-swap-reset { background: var(--accent-dim); border: 1.5px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 800; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    /* 루틴 변경 시트의 요일 목록 (.rn-item 재사용) */
+    .ds-item { gap: 10px; }
+    .ds-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .ds-day { font-size: 12px; font-weight: 800; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+    .rn-item.selected .ds-day { color: var(--accent); }
+    .ds-today { background: var(--accent); color: #000; font-size: 10px; font-weight: 900; padding: 1px 7px; border-radius: 10px; }
+    .ds-name { font-size: 14px; font-weight: 700; color: var(--text1); word-break: keep-all; }
+    .rn-item.selected .ds-name { color: var(--accent); }
+    .ds-loading { font-size: 12px; font-weight: 600; color: var(--text3); }
+    .rn-item:disabled, .rn-item.ds-rest { opacity: 0.45; cursor: default; }
+    .rn-item.ds-rest .ds-name { color: var(--text2); }
     .status-count { font-size: 28px; font-weight: 800; color: var(--text1); }
     .status-count span { font-size: 14px; font-weight: 600; color: var(--text2); margin-left: 5px; }
     .body-part-tag { display: inline-block; background: rgba(255,140,66,0.12); border: 1px solid rgba(255,140,66,0.3); color: var(--accent); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-top: 5px; }

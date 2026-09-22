@@ -39,6 +39,7 @@ function renderLanding() {
           <div class="skel" style="width:54%;height:14px;margin-top:4px"></div>
         </div>
       </div>
+      <div class="today-card-foot" id="day-swap-slot"></div>
     </div>
     <div id="start-btn-area">
       <button class="landing-start-btn" id="start-btn" onclick="startWorkout()">운동 시작하기 →</button>
@@ -50,10 +51,12 @@ function renderLanding() {
 function updateLandingStatus() {
   const bodyEl    = document.getElementById('today-status-body');
   const startArea = document.getElementById('start-btn-area');
+  const swapSlot  = document.getElementById('day-swap-slot');
   if (!bodyEl) return;
 
   const todayIso = toIso(new Date());
   if (localStorage.getItem('gc_done_' + todayIso)) {
+    if (swapSlot) swapSlot.innerHTML = '';   // 완료한 날엔 루틴 변경 줄 숨김
     const rName   = missionCache?.routineName || '';
     const display = rName.includes(':') ? rName.split(':').slice(1).join(':').trim() : rName;
     bodyEl.innerHTML = `
@@ -67,7 +70,9 @@ function updateLandingStatus() {
     return;
   }
 
-  if (isRestDayToday()) {
+  // 루틴 변경(js/day-swap.js)이 켜져 있으면 휴식일이라도 고른 루틴을 보여준다
+  if (swapSlot) swapSlot.innerHTML = renderDaySwapRow();
+  if (!getDaySwap() && isRestDayToday()) {
     const s = getSettings(), w = getThisWeekRange();
     const isCustom = s.restDays.weekRange === w.range && s.restDays.days.includes(toIso(new Date()));
     bodyEl.innerHTML = `
@@ -82,6 +87,11 @@ function updateLandingStatus() {
 
   updateSyncBar();
   if (!missionCache || missionCache.error) return;
+
+  // 휴식일 화면(그래도 시작하기)에서 루틴 변경으로 넘어온 경우 기본 시작 버튼으로 되돌린다
+  if (startArea && !document.getElementById('start-btn')) startArea.innerHTML =
+    `<button class="landing-start-btn" id="start-btn" onclick="startWorkout()">운동 시작하기 →</button>
+     <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>`;
 
   const count  = missionCache.exercises?.length || 0;
   const rName  = missionCache.routineName || '';
