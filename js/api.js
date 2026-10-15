@@ -51,17 +51,17 @@ function getMockMission() {
     exercises: [
       {
         id: 1, name: '벤치 프레스', variation: '바벨', sets: 4, tag: null, isSuperset: false,
-        bodyPart: '가슴', targetWeight: 40, targetReps: 7, memo: '',
+        bodyPart: '가슴', targetWeight: 40, targetReps: 9, memo: '', repRange: { low: 8, high: 10 }, isMain: true,
       },
       {
         id: 2, name: 'O.H.P', variation: '바벨', sets: 4, tag: null, isSuperset: false,
-        bodyPart: '어깨', targetWeight: 20, targetReps: 7, memo: '',
+        bodyPart: '어깨', targetWeight: 20, targetReps: 10, memo: '', repRange: { low: 8, high: 10 }, isMain: true,
       },
       {
         id: 3, name: '슈퍼세트', variation: '', sets: 3, tag: '펌핑/자극', isSuperset: true,
         subExercises: [
-          { name: '시티드 체스트 프레스 머신', variation: '', bodyPart: '가슴', targetWeight: 50, targetReps: 12, memo: '' },
-          { name: '라잉 트라이셉스 익스텐션', variation: '', bodyPart: '삼두', targetWeight: 30, targetReps: 12, memo: '팔꿈치 각도 신경쓸 것' },
+          { name: '시티드 체스트 프레스 머신', variation: '', bodyPart: '가슴', targetWeight: 50, targetReps: 12, memo: '', repRange: { low: 10, high: 15 }, isMain: false },
+          { name: '라잉 트라이셉스 익스텐션', variation: '', bodyPart: '삼두', targetWeight: 30, targetReps: 9, memo: '팔꿈치 각도 신경쓸 것', repRange: { low: 8, high: 12 }, isMain: false },
         ],
       },
     ],

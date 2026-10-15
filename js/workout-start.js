@@ -152,6 +152,8 @@ async function startWorkout() {
           displayName:  displayName,  // 🆕 화면 표시용
           targetWeight: sub.targetWeight || 0,
           targetReps:   sub.targetReps || 0,
+          repRange:     sub.repRange || null,
+          isMain:       !!sub.isMain,
           lastRecord:   lastEx ? `${lastEx.weight}kg · ${lastEx.reps.join(', ')}회` : null,
           lastDetail:   buildLastDetail(lastEx),
         };
@@ -172,6 +174,8 @@ async function startWorkout() {
       bodyPart:    ex.bodyPart || '',
       targetWeight: ex.targetWeight || 0,
       targetReps:   ex.targetReps || 0,
+      repRange:     ex.repRange || null,
+      isMain:       !!ex.isMain,
       lastRecord,
       lastDetail:   buildLastDetail(lastEx),
     };

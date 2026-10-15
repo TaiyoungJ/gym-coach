@@ -155,6 +155,14 @@
     .set-input:focus { border-color: var(--accent); background: var(--surface); }
     .set-input::placeholder { color: #444; font-size: 18px; }
     .set-input.has-value { border-color: rgba(34,197,94,0.4); color: var(--green); }
+    /* 이중 진행 판정 (js/progression.js): 방지턱 세트 테두리 · 입력 후 통과/미달 */
+    .set-input.zone-floor { border-color: rgba(167,139,250,0.35); padding-left: 0; padding-right: 0; }
+    .set-input.zone-floor::placeholder { font-size: 13px; letter-spacing: -0.5px; color: #666; }
+    @media (max-width: 340px) { .set-input.zone-floor::placeholder { font-size: 11px; } }
+    .set-input.rep-pass  { border-color: rgba(34,197,94,0.6);  color: var(--green); }
+    .set-input.rep-short { border-color: rgba(245,158,11,0.65); color: #F59E0B; background: rgba(245,158,11,0.06); }
+    .set-input.zone-floor:focus, .set-input.rep-pass:focus, .set-input.rep-short:focus { border-color: var(--accent); }
+    .stage-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-top: 4px; }
     .memo-textarea { width: 100%; background: var(--surface2); border: 1.5px solid #2a2a2a; border-radius: 12px; color: var(--text1); font-size: 14px; padding: 12px; outline: none; resize: none; min-height: 90px; font-family: inherit; line-height: 1.6; }
     .memo-textarea::placeholder { color: #444; }
     .memo-textarea:focus { border-color: var(--accent); }
@@ -283,6 +291,13 @@
     .status-rest-emoji { font-size: 30px; margin-bottom: 10px; }
     .status-rest-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .status-rest-sub { font-size: 13px; color: var(--text2); }
+    /* 오늘의 판정 (js/landing.js renderJudgeList) */
+    .judge-list { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left; }
+    .judge-title { font-size: 12px; font-weight: 800; color: var(--text2); margin-bottom: 8px; }
+    .judge-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; padding: 6px 0; }
+    .judge-row + .judge-row { border-top: 1px dashed #2a2a2a; }
+    .judge-name { font-size: 13px; font-weight: 800; color: var(--text1, #f5f5f5); }
+    .judge-text { font-size: 13px; font-weight: 600; color: var(--text2); margin-left: auto; text-align: right; }
     .status-badge { display: inline-block; background: var(--accent); color: #000; font-size: 11px; font-weight: 900; padding: 4px 11px; border-radius: 20px; letter-spacing: 1.5px; }
     /* 루틴 변경 (js/day-swap.js) — 오늘의 운동 카드 하단 줄 */
     .today-card-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border2); }

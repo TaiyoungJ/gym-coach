@@ -87,6 +87,32 @@ function initSlideBtn() {
   document.addEventListener('mouseup', dragEnd);
 }
 
+/* ── 이중 진행 판정 (js/progression.js) ───────────────────────── */
+// results 는 exercises 와 같은 순서. 판정 대상({8~10} 표기가 있는 종목)의 메모 맨 윗줄에 [판정] 을 넣고,
+// 메인 화면 "오늘 운동 완료!" 카드용 목록 [{ name, icon, text }] 을 돌려준다. 생략한 종목은 판정하지 않는다.
+function applyJudgements(results) {
+  const list = [];
+  results.forEach((r, i) => {
+    const ex = exercises[i];
+    if (!ex || r.skipped) return;
+    if (r.isSuperset) {
+      r.subResults.forEach((sub, si) => {
+        const judge = judgeExercise(judgeItem(ex, ex.subExercises[si]), sub.reps, sub.weights);
+        if (!judge) return;
+        sub.memo = prependJudgeMemo(judge, sub.memo);
+        list.push({ name: ex.subExercises[si].displayName || sub.name, ...judge });
+      });
+      r.memo = r.subResults.map(sub => sub.memo).filter(Boolean).join(' / ');
+      return;
+    }
+    const judge = judgeExercise(judgeItem(ex), r.reps, r.weights);
+    if (!judge) return;
+    r.memo = prependJudgeMemo(judge, r.memo);
+    list.push({ name: ex.displayName || r.name, ...judge });
+  });
+  return list;
+}
+
 /* ── Complete ──────────────────────────────────────────────── */
 async function onComplete() {
   const results = exercises.map(ex => {
@@ -126,6 +152,7 @@ async function onComplete() {
       skipped: !!skipped[ex.id],
     };
   });
+  const judgements = applyJudgements(results);
   const condition = document.getElementById('condition')?.value?.trim() || '';
   const completeArea = document.getElementById('completeArea');
   if (completeArea) completeArea.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:14px;font-weight:700;">저장 중...</div>';
@@ -134,6 +161,7 @@ async function onComplete() {
   try {
     await apiPost({ action: 'saveResult', data: { date: missionData.date, day: missionData.day, routineName: programName, results } });
     localStorage.setItem('gc_done_' + missionData.date, '1');
+    saveJudgements(missionData.date, judgements);
     prefetchMissions();   // 내일·모레 미션의 "지난 기록"에 오늘 결과가 반영되도록 다시 받아 둠
   } catch(err) {
     if (completeArea) { completeArea.innerHTML = '<div class="slide-wrap ready" id="slideWrap"><div class="slide-handle" id="slideHandle">›</div><span class="slide-label" id="slideLabel">밀어서 운동 완료 →</span></div>'; initSlideBtn(); }

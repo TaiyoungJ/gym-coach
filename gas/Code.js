@@ -1,6 +1,11 @@
 /**
- * gym-coach Apps Script v2.1.0
+ * gym-coach Apps Script v2.2.0
  * ──────────────────────────────────────────────────────────
+ * v2.2.0 변경사항:
+ * - 루틴 문서 종목 줄의 {반복범위, 메인} 표기 파싱 (이중 진행 판정용)
+ *   · 예: "2. O.H.P [바벨] (4) {8~10, 메인}", 슈퍼세트 서브 종목도 각각 {} 표기
+ *   · getMission(): 종목/서브 종목에 repRange {low, high}, isMain 추가
+ *
  * v2.1.0 변경사항:
  * - 신체 기록(계체) 추가: "(연도) 신체기록" 시트
  *   · getBodyLast(): 마지막 두 기록 { last, prev } 반환 (GET)
@@ -166,6 +171,8 @@ function getMission(props, testDate) {
             targetWeight: match ? Number(match[5]) : null,
             targetReps:   match ? Number(match[6]) : null,
             memo:         match ? String(match[7]).trim() : '',
+            repRange:     sub.repRange || null,
+            isMain:       !!sub.isMain,
           };
         }),
       };
@@ -181,6 +188,8 @@ function getMission(props, testDate) {
       targetWeight: match ? Number(match[5]) : null,
       targetReps:   match ? Number(match[6]) : null,
       memo:         match ? String(match[7]).trim() : '',
+      repRange:     ex.repRange || null,
+      isMain:       !!ex.isMain,
     };
   });
 
@@ -827,8 +836,12 @@ function parseRoutineForDay(md, todayStr, dayKor) {
     }
 
     if (inTodaySection && /^\d+\./.test(line)) {
+      // 🆕 {반복범위, 메인} 은 슈퍼세트 구분자(:) 앞쪽에서만 떼어 낸다. 서브 종목 것은 아래에서 각각 처리.
+      const colon    = line.indexOf(':');
+      const headInfo = extractRepRange(colon >= 0 ? line.slice(0, colon) : line);
+      const parsed   = headInfo.text + (colon >= 0 ? line.slice(colon) : '');
       // 🆕 [세부종목] 파싱 포함한 정규식
-      const m = line.match(/^\d+\.\s*(.+?)\s*\((\d+)\)(?:\s*\*\*\[(.+?)\]\*\*)?(?:\s*:\s*(.+))?/);
+      const m = parsed.match(/^\d+\.\s*(.+?)\s*\((\d+)\)(?:\s*\*\*\[(.+?)\]\*\*)?(?:\s*:\s*(.+))?/);
       if (m) {
         // 운동명에서 [세부종목] 추출
         const rawName   = m[1].trim();
@@ -845,11 +858,15 @@ function parseRoutineForDay(md, todayStr, dayKor) {
             sets:         parseInt(m[2]),
             tag:          m[3] || null,
             isSuperset:   true,
-            subExercises: subNames.map(n => {
+            subExercises: subNames.map(raw => {
+              const subInfo     = extractRepRange(raw);
+              const n           = subInfo.text;
               const subVarMatch = n.match(/^(.+?)\s*\[(.+?)\]$/);
               return {
                 name:      subVarMatch ? subVarMatch[1].trim() : n,
                 variation: subVarMatch ? subVarMatch[2].trim() : '',
+                repRange:  subInfo.repRange,
+                isMain:    subInfo.isMain,
               };
             }),
           });
@@ -860,6 +877,8 @@ function parseRoutineForDay(md, todayStr, dayKor) {
             sets:       parseInt(m[2]),
             tag:        m[3] || null,
             isSuperset: false,
+            repRange:   headInfo.repRange,
+            isMain:     headInfo.isMain,
           });
         }
       }
@@ -867,6 +886,21 @@ function parseRoutineForDay(md, todayStr, dayKor) {
   }
 
   return { routineName, exercises };
+}
+
+// 🆕 "O.H.P [바벨] (4) {8~10, 메인}" → { text: "O.H.P [바벨] (4)", repRange: {low:8, high:10}, isMain: true }
+// {} 가 없으면 repRange=null (판정 대상 아님). 범위 구분자는 ~ 또는 -.
+function extractRepRange(text) {
+  let repRange = null, isMain = false;
+  const stripped = text.replace(/\s*\{([^}]*)\}/g, (_, inner) => {
+    inner.split(',').map(s => s.trim()).forEach(part => {
+      const r = part.match(/^(\d+)\s*[~\-]\s*(\d+)$/);
+      if (r && !repRange) repRange = { low: parseInt(r[1]), high: parseInt(r[2]) };
+      else if (part === '메인') isMain = true;
+    });
+    return '';
+  });
+  return { text: stripped.trim(), repRange, isMain };
 }
 
 function getThisWeekTargets(ss, todayStr) {

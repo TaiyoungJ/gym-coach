@@ -48,6 +48,21 @@ function renderLanding() {
   renderBodyCard();
 }
 
+// "오늘 운동 완료!" 카드 아래 종목별 판정 (js/progression.js, 그날 하루만)
+function renderJudgeList() {
+  const list = readJudgements();
+  if (!list.length) return '';
+  return `
+    <div class="judge-list">
+      <div class="judge-title">📊 오늘의 판정</div>
+      ${list.map(j => `
+        <div class="judge-row">
+          <span class="judge-name">${escXml(j.name)}</span>
+          <span class="judge-text">${j.icon} ${escXml(j.text)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
 function updateLandingStatus() {
   const bodyEl    = document.getElementById('today-status-body');
   const startArea = document.getElementById('start-btn-area');
@@ -62,7 +77,7 @@ function updateLandingStatus() {
     bodyEl.innerHTML = `
       <div class="status-rest-emoji">✅</div>
       <div class="status-rest-title" style="color:var(--green);">오늘 운동 완료!</div>
-      <div class="status-rest-sub">${display || '수고했어요'} · 오늘도 잘 해냈어요 💪</div>`;
+      <div class="status-rest-sub">${display || '수고했어요'} · 오늘도 잘 해냈어요 💪</div>${renderJudgeList()}`;
     if (startArea) startArea.innerHTML =
       `<button class="landing-ghost-btn" onclick="startWorkout()">다시 시작하기</button>
        <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>`;

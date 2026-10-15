@@ -106,6 +106,8 @@ function renderCards() {
       (ex.subExercises || []).forEach((sub, subIdx) => {
         const tgt = `${sub.targetWeight||0}kg × ${sub.targetReps||'-'}회`;
         const lastBadge = buildLastBadge(sub, idx, subIdx);
+        const jItem = judgeItem(ex, sub);
+        const subStage = stageLabel(jItem);
         let setsHTML = '';
         for (let s = 1; s <= ex.sets; s++) {
           const key = `${ex.id}_${subIdx}`;
@@ -113,7 +115,7 @@ function renderCards() {
           const wStored = weightData[key]?.[s];
           const wVal = (wStored !== undefined && wStored !== '') ? wStored : (sub.targetWeight || 0);
           const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (sub.targetWeight || 0));
-          setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
+          setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-right:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
         // 🆕 메모는 하위 종목별로 따로 기록한다 (키는 세트·무게 입력과 같은 `카드id_하위번호`)
@@ -128,6 +130,7 @@ function renderCards() {
               <span class="superset-section-label">${subLabels[subIdx]||''} ${subPartTag}${sub.displayName || sub.name}</span>
               <span style="color:var(--accent);font-size:12px;font-weight:800;">🎯 ${tgt}</span>
             </div>
+            ${subStage ? `<div class="stage-label" style="margin:-4px 0 8px;">${subStage}</div>` : ''}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
               <span class="sec-label" style="margin-bottom:0;">수행 결과</span>${lastBadge}
             </div>
@@ -184,6 +187,8 @@ function renderCards() {
         <span style="color: var(--accent); font-size: 16px; font-weight: 800;">🎯 ${targetText}</span>
       </div>
     `;
+    const stage = stageLabel(judgeItem(ex));
+    if (stage) metaHTML += `<div class="stage-label">${stage}</div>`;
     if (ex.tag) {
       metaHTML += `<div class="meta-tag" style="margin-top: 6px; display: inline-block;">${ex.tag}</div>`;
     }
@@ -197,12 +202,13 @@ function renderCards() {
       </div>` : '';
 
     let setsHTML = '';
+    const jItem = judgeItem(ex);
     for (let s = 1; s <= ex.sets; s++) {
       const sv = repsData[ex.id]?.[s] || '';
       const wStored = weightData[ex.id]?.[s];
       const wVal = (wStored !== undefined && wStored !== '') ? wStored : (ex.targetWeight || 0);
       const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (ex.targetWeight || 0));
-      setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetReps||'-'}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
+      setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
     const lastRecordBadge = buildLastBadge(ex, idx, -1);
     const bodyHTML = !isEditing && !isSkipped ? `
@@ -243,6 +249,25 @@ function renderCards() {
   updateSlideBtn();
 }
 
+/* ── 이중 진행 판정 표시 (js/progression.js) ─────────────────── */
+// 판정용 item — 슈퍼세트 서브 종목은 세트 수를 상위 카드에서 가져온다
+function judgeItem(ex, sub) {
+  const t = sub || ex;
+  return { sets: ex.sets, isMain: t.isMain, repRange: t.repRange, targetReps: t.targetReps, targetWeight: t.targetWeight };
+}
+// 세트 입력칸 클래스: 방지턱 세트 테두리(zone-floor) + 입력 후 통과/미달 색
+function repZoneClass(item, setNum, repsVal, weightVal) {
+  if (!isJudged(item)) return '';
+  const st = setStatus(item, setNum, repsVal, weightVal);
+  return (isFloorSet(item, setNum) ? ' zone-floor' : '') + (st ? ` rep-${st}` : '');
+}
+function refreshRepColor(item, el, setNum, repsVal, weightVal) {
+  if (!el || !isJudged(item)) return;
+  const st = setStatus(item, setNum, repsVal, weightVal);
+  el.classList.toggle('rep-pass',  st === 'pass');
+  el.classList.toggle('rep-short', st === 'short');
+}
+
 /* ── Card interactions ─────────────────────────────────────── */
 function addDoneButton(idx, id) {
   if (editingCards[id] || skipped[id]) return;
@@ -263,6 +288,7 @@ function onSetInput(idx) {
     const val = el?.value || '';
     if (val) { el.classList.add('has-value'); repsData[ex.id][s] = val; colEl?.classList.add('done'); }
     else { el?.classList.remove('has-value'); repsData[ex.id][s] = ''; all = false; colEl?.classList.remove('done'); }
+    refreshRepColor(judgeItem(ex), el, s, val, weightData[ex.id]?.[s]);
   }
   if (all) { doneCards[ex.id] = true; addDoneButton(idx, ex.id); }
 }
@@ -280,6 +306,7 @@ function onSupersetInput(idx, subIdx) {
     const val = el?.value || '';
     if (val) { el.classList.add('has-value'); repsData[key][s] = val; colEl?.classList.add('done'); }
     else     { el?.classList.remove('has-value'); repsData[key][s] = ''; colEl?.classList.remove('done'); }
+    refreshRepColor(judgeItem(ex, ex.subExercises[subIdx]), el, s, val, weightData[key]?.[s]);
   }
   const numSubs = ex.subExercises?.length || 0;
   const allDone = Array.from({ length: numSubs }, (_, si) => {
@@ -296,6 +323,7 @@ function onWeightInput(idx, setNum) {
   weightData[ex.id][setNum] = val;
   const isModified = val !== '' && parseFloat(val) !== (ex.targetWeight || 0);
   el?.classList.toggle('modified', isModified);
+  refreshRepColor(judgeItem(ex), document.getElementById(`e${ex.id}s${setNum}`), setNum, repsData[ex.id]?.[setNum], val);
 }
 function onSupersetWeightInput(idx, subIdx, setNum) {
   const ex  = exercises[idx];
@@ -307,6 +335,7 @@ function onSupersetWeightInput(idx, subIdx, setNum) {
   const sub = ex.subExercises[subIdx];
   const isModified = val !== '' && parseFloat(val) !== (sub.targetWeight || 0);
   el?.classList.toggle('modified', isModified);
+  refreshRepColor(judgeItem(ex, sub), document.getElementById(`e${ex.id}_${subIdx}s${setNum}`), setNum, repsData[key]?.[setNum], val);
 }
 function toggleCardEdit(id) { editingCards[id] = !editingCards[id]; renderCards(); }
 function toggleSkip(id)     { skipped[id]      = !skipped[id];      renderCards(); }
