@@ -115,7 +115,7 @@ function renderCards() {
           const wStored = weightData[key]?.[s];
           const wVal = (wStored !== undefined && wStored !== '') ? wStored : (sub.targetWeight || 0);
           const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (sub.targetWeight || 0));
-          setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
+          setsHTML += `<div class="set-col${sv?' done':''}${setColZoneClass(jItem, s)}" id="sc${ex.id}_${subIdx}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${sub.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onSupersetWeightInput(${idx},${subIdx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}_${subIdx}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSupersetInput(${idx},${subIdx})"></div>`;
         }
         const subPartTag = sub.bodyPart ? `<span class="body-part-tag" style="margin-right:6px;vertical-align:middle">${sub.bodyPart}</span>` : '';
         // 🆕 메모는 하위 종목별로 따로 기록한다 (키는 세트·무게 입력과 같은 `카드id_하위번호`)
@@ -208,7 +208,7 @@ function renderCards() {
       const wStored = weightData[ex.id]?.[s];
       const wVal = (wStored !== undefined && wStored !== '') ? wStored : (ex.targetWeight || 0);
       const wMod = (wStored !== undefined && wStored !== '' && parseFloat(wStored) !== (ex.targetWeight || 0));
-      setsHTML += `<div class="set-col${sv?' done':''}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
+      setsHTML += `<div class="set-col${sv?' done':''}${setColZoneClass(jItem, s)}" id="sc${ex.id}s${s}"><div class="set-num">${s}세트</div><input class="set-weight-input${wMod?' modified':''}" id="ew${ex.id}s${s}" type="number" min="0" max="999" placeholder="${ex.targetWeight||0}" inputmode="decimal" value="${wVal}" oninput="onWeightInput(${idx},${s})"><input class="set-input${sv?' has-value':''}${repZoneClass(jItem, s, sv, wStored)}" id="e${ex.id}s${s}" type="number" min="0" max="999" placeholder="${setPlaceholder(jItem, s)}" inputmode="numeric" value="${sv}" oninput="onSetInput(${idx})"></div>`;
     }
     const lastRecordBadge = buildLastBadge(ex, idx, -1);
     const bodyHTML = !isEditing && !isSkipped ? `
@@ -255,11 +255,15 @@ function judgeItem(ex, sub) {
   const t = sub || ex;
   return { sets: ex.sets, isMain: t.isMain, repRange: t.repRange, targetReps: t.targetReps, targetWeight: t.targetWeight };
 }
-// 세트 입력칸 클래스: 방지턱 세트 테두리(zone-floor) + 입력 후 통과/미달 색
+// 세트 칸(set-col) 클래스: 방지턱 세트는 은은한 파랑 테두리 (입력이 끝나면 done 초록이 덮음)
+function setColZoneClass(item, setNum) {
+  return isJudged(item) && isFloorSet(item, setNum) ? ' zone-floor' : '';
+}
+// 횟수 입력칸 클래스: 방지턱 placeholder(7~9) 글자 크기 + 입력 후 통과/미달 색
 function repZoneClass(item, setNum, repsVal, weightVal) {
   if (!isJudged(item)) return '';
   const st = setStatus(item, setNum, repsVal, weightVal);
-  return (isFloorSet(item, setNum) ? ' zone-floor' : '') + (st ? ` rep-${st}` : '');
+  return (isFloorSet(item, setNum) ? ' zone-floor-input' : '') + (st ? ` rep-${st}` : '');
 }
 function refreshRepColor(item, el, setNum, repsVal, weightVal) {
   if (!el || !isJudged(item)) return;

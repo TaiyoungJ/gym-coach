@@ -1,8 +1,10 @@
 /* ── 이중 진행 판정 (단계식 + 혼합형) ─────────────────────── */
 // 루틴 문서의 {8~10, 메인} 표기(GAS → repRange, isMain)가 있는 종목만 판정한다.
 // 세트를 앞쪽 "목표 세트"(단계 목표를 전부 채워야 함)와 뒤쪽 "방지턱 세트"(바닥만 지키면 됨)로 나눈다.
-//   · 단계 목표 = 목표치 시트의 목표 횟수(targetReps), 바닥 = 목표 × 80% 반올림
-//   · 목표 세트 수: 메인 = 세트수 − 1, 보조 = 세트수 / 2 내림 (둘 다 최소 1)
+// 규칙 값은 설정 화면 "📈 진행 판정"(getSettings().progression, 기기별 저장)을 따른다.
+//   · 판정 기능을 끄면 isJudged() 가 false → 카드 표시·메모 [판정]·메인 화면 목록이 모두 꺼진다
+//   · 단계 목표 = 목표치 시트의 목표 횟수(targetReps), 바닥 = 목표 × 바닥 비율 반올림 (기본 80%)
+//   · 목표 세트 수 = 메인/보조 × 2~5세트 표 값 (1세트는 1, 6세트 이상은 5세트 칸의 방지턱 수 유지)
 //   · 목표 무게보다 낮춘 세트는 횟수와 상관없이 미달
 //
 // item = { sets, isMain, repRange: {low, high}, targetReps, targetWeight }
@@ -11,14 +13,20 @@
 // localStorage
 //   gc_judge_<날짜> = [{ name, icon, text }]  — 메인 화면 "오늘 운동 완료!" 카드에 그날 하루만 표시
 
+function progressionOpts() {
+  return getSettings().progression;
+}
 function isJudged(item) {
-  return !!(item && item.repRange && item.targetReps > 0 && item.sets > 0);
+  return !!(item && item.repRange && item.targetReps > 0 && item.sets > 0 && progressionOpts().enabled);
 }
 function floorReps(target) {
-  return Math.round(target * 0.8);
+  return Math.round(target * progressionOpts().floorPct / 100);
 }
 function goalSetCount(sets, isMain) {
-  return Math.max(1, isMain ? sets - 1 : Math.floor(sets / 2));
+  if (sets <= 1) return 1;
+  const table = progressionOpts().goalSets[isMain ? 'main' : 'aux'];
+  if (sets <= 5) return Math.min(sets, Math.max(1, Number(table[sets]) || 1));
+  return Math.max(1, sets - (5 - Math.min(5, Number(table[5]) || 1)));   // 6세트 이상: 방지턱 수는 5세트와 같게
 }
 function isFloorSet(item, setNum) {
   return setNum > goalSetCount(item.sets, item.isMain);

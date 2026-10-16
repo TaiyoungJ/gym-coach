@@ -7,6 +7,7 @@ function renderMain() {
         <div style="display:flex;gap:8px;">
           <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄</button>
           <button class="routine-nav-btn" onclick="renderSearchHistory()">🔍</button>
+          <button class="routine-nav-btn" onclick="renderSettings()" aria-label="설정">⚙️</button>
         </div>
       </div>
       <div style="margin-bottom: 10px;">

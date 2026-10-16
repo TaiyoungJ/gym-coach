@@ -74,6 +74,25 @@ function isRestDayToday() {
 }
 
 /* ── Settings ──────────────────────────────────────────────── */
+// 진행 판정 옵션 기본값 (js/progression.js). goalSets = 세트 수별 "목표 세트 수", 나머지는 방지턱.
+const DEFAULT_PROGRESSION = {
+  enabled:  true,
+  floorPct: 80,
+  goalSets: { main: { 2: 1, 3: 2, 4: 3, 5: 4 }, aux: { 2: 1, 3: 1, 4: 2, 5: 2 } },
+};
+function normProgression(p) {
+  p = p || {};
+  const g = p.goalSets || {};
+  return {
+    enabled:  p.enabled !== false,
+    floorPct: Number(p.floorPct) || DEFAULT_PROGRESSION.floorPct,
+    goalSets: {
+      main: { ...DEFAULT_PROGRESSION.goalSets.main, ...(g.main || {}) },
+      aux:  { ...DEFAULT_PROGRESSION.goalSets.aux,  ...(g.aux  || {}) },
+    },
+  };
+}
+
 function getSettings() {
   try {
     const raw = localStorage.getItem('gc_settings');
@@ -84,8 +103,9 @@ function getSettings() {
       testMode: s.testMode || false,
       restDays: s.restDays || { weekRange: '', days: [] },
       bodyDays: Array.isArray(s.bodyDays) ? s.bodyDays : [],   // 계체 요일 (0=일 … 6=토)
+      progression: normProgression(s.progression),
     };
-  } catch { return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] }, bodyDays: [] }; }
+  } catch { return { startDay: 1, sheetUrl: '', testMode: false, restDays: { weekRange: '', days: [] }, bodyDays: [], progression: normProgression() }; }
 }
 function saveSettingsData(data) {
   localStorage.setItem('gc_settings', JSON.stringify(data));

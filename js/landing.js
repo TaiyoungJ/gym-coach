@@ -51,7 +51,7 @@ function renderLanding() {
 // "오늘 운동 완료!" 카드 아래 종목별 판정 (js/progression.js, 그날 하루만)
 function renderJudgeList() {
   const list = readJudgements();
-  if (!list.length) return '';
+  if (!list.length || !getSettings().progression.enabled) return '';
   return `
     <div class="judge-list">
       <div class="judge-title">📊 오늘의 판정</div>

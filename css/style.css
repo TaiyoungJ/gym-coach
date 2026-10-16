@@ -155,13 +155,14 @@
     .set-input:focus { border-color: var(--accent); background: var(--surface); }
     .set-input::placeholder { color: #444; font-size: 18px; }
     .set-input.has-value { border-color: rgba(34,197,94,0.4); color: var(--green); }
-    /* 이중 진행 판정 (js/progression.js): 방지턱 세트 테두리 · 입력 후 통과/미달 */
-    .set-input.zone-floor { border-color: rgba(167,139,250,0.35); padding-left: 0; padding-right: 0; }
-    .set-input.zone-floor::placeholder { font-size: 13px; letter-spacing: -0.5px; color: #666; }
-    @media (max-width: 340px) { .set-input.zone-floor::placeholder { font-size: 11px; } }
+    /* 이중 진행 판정 (js/progression.js): 방지턱 세트 칸 파랑 테두리 · 입력 후 통과/미달 */
+    .set-col.zone-floor:not(.done) { border-color: rgba(96,165,250,0.5); }
+    .set-input.zone-floor-input { padding-left: 0; padding-right: 0; }
+    .set-input.zone-floor-input::placeholder { font-size: 13px; letter-spacing: -0.5px; color: #666; }
+    @media (max-width: 340px) { .set-input.zone-floor-input::placeholder { font-size: 11px; } }
     .set-input.rep-pass  { border-color: rgba(34,197,94,0.6);  color: var(--green); }
     .set-input.rep-short { border-color: rgba(245,158,11,0.65); color: #F59E0B; background: rgba(245,158,11,0.06); }
-    .set-input.zone-floor:focus, .set-input.rep-pass:focus, .set-input.rep-short:focus { border-color: var(--accent); }
+    .set-input.rep-pass:focus, .set-input.rep-short:focus { border-color: var(--accent); }
     .stage-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-top: 4px; }
     .memo-textarea { width: 100%; background: var(--surface2); border: 1.5px solid #2a2a2a; border-radius: 12px; color: var(--text1); font-size: 14px; padding: 12px; outline: none; resize: none; min-height: 90px; font-family: inherit; line-height: 1.6; }
     .memo-textarea::placeholder { color: #444; }
@@ -359,6 +360,14 @@
     .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #555; border-radius: 50%; transition: .2s; }
     .toggle-wrap input:checked + .toggle-slider { background: rgba(255,140,66,0.25); }
     .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent); }
+
+    /* 진행 판정 옵션 (js/settings.js) — 끄면 옵션 행을 숨긴다 */
+    .prog-off .prog-opt { display: none; }
+    .prog-off .prog-toggle-row { border-bottom: none; padding-bottom: 0; }
+    .zone-grid { display: grid; grid-template-columns: 40px repeat(4, 1fr); gap: 6px; align-items: center; margin-top: 12px; }
+    .zone-grid-head { font-size: 11px; font-weight: 700; color: var(--text2); text-align: center; }
+    .zone-grid-label { font-size: 13px; font-weight: 700; color: var(--text1); }
+    .zone-select { width: 100%; min-width: 0; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 10px; color: var(--text1); font-size: 14px; font-weight: 700; padding: 7px 4px; outline: none; font-family: inherit; text-align: center; text-align-last: center; }
 
     .url-input { width: 100%; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 10px; color: var(--text1); font-size: 13px; padding: 10px 12px; outline: none; font-family: inherit; margin-top: 10px; }
     .url-input:focus { border-color: var(--accent); }
