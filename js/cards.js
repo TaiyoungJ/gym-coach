@@ -189,9 +189,6 @@ function renderCards() {
     `;
     const stage = stageLabel(judgeItem(ex));
     if (stage) metaHTML += `<div class="stage-label">${stage}</div>`;
-    if (ex.tag) {
-      metaHTML += `<div class="meta-tag" style="margin-top: 6px; display: inline-block;">${ex.tag}</div>`;
-    }
 
     const editFieldsHTML = isEditing ? `
       <div class="edit-fields">
@@ -242,8 +239,10 @@ function renderCards() {
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
     const bpBadge = ex.bodyPart ? `<span class="body-part-tag" style="margin-top:0;margin-right:8px;vertical-align:middle">${ex.bodyPart}</span>` : '';
+    // 펌핑/자극 등 태그는 부위 배지 옆에 같은 크기로 표시
+    const tagBadge = ex.tag ? `<span class="meta-tag" style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;margin-right:8px;vertical-align:middle">${ex.tag}</span>` : '';
     // 🆕 displayName 사용
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info">${bpBadge}<div class="ex-name" id="exname-${idx}" style="display:inline-block;vertical-align:middle">${ex.displayName || ex.name}</div></div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info">${bpBadge}${tagBadge}<div class="ex-name" id="exname-${idx}" style="display:inline-block;vertical-align:middle">${ex.displayName || ex.name}</div></div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
