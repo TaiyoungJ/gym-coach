@@ -139,7 +139,7 @@ function renderCards() {
           </div>`;
       });
       const sharedBody = !isSkipped ? `
-        <div class="sec-label" style="margin-top:14px;">휴식시간</div>
+        <div class="sec-label" style="margin-top:10px;">휴식시간</div>
         <div class="rest-row">
           <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}min" type="number" min="0" max="60" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.min||''}" oninput="onRestInput(${ex.id},'min',this.value)"><span class="rest-unit-abs">분</span></div></div>
           <div class="rest-col"><div class="rest-wrap"><input class="rest-num" id="e${ex.id}sec" type="number" min="0" max="59" placeholder="-" inputmode="numeric" value="${restData[ex.id]?.sec||''}" oninput="onRestInput(${ex.id},'sec',this.value)"><span class="rest-unit-abs">초</span></div></div>
@@ -172,7 +172,7 @@ function renderCards() {
       const ssDoneBtn = !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
         ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
       // 🆕 displayName 사용
-      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.displayName || ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div></div>${ssRightBtns}</div>${ssEditFieldsHTML}${!isEditing ? sectionsHTML : ''}${!isEditing ? sharedBody : ''}${ssDoneBtn}`;
+      card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info"><div class="ex-name">${ex.displayName || ex.name}</div><div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:700;">⚡ 슈퍼세트 · ${ex.sets}세트</div></div></div>${ssRightBtns}</div>${ssEditFieldsHTML}${!isEditing ? sharedBody : ''}${!isEditing ? sectionsHTML : ''}${ssDoneBtn}`;
       container.appendChild(card);
       return;
     }
