@@ -238,11 +238,12 @@ function renderCards() {
     card.className = `ex-card${isEditing?' editing':''}${isSkipped?' skipped':''}`;
     const normalDoneBtn = !isEditing && !isSkipped && (doneCards[ex.id] || completedCards[ex.id])
       ? `<button class="done-btn" onclick="onCardDone(${ex.id})">${completedCards[ex.id] ? '✓ 수정 완료' : '✓ 운동 완료'}</button>` : '';
-    const bpBadge = ex.bodyPart ? `<span class="body-part-tag" style="margin-top:0;margin-right:8px;vertical-align:middle">${ex.bodyPart}</span>` : '';
-    // 펌핑/자극 등 태그는 부위 배지 옆에 같은 크기로 표시
-    const tagBadge = ex.tag ? `<span class="meta-tag" style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;margin-right:8px;vertical-align:middle">${ex.tag}</span>` : '';
+    // 부위와 태그(펌핑/자극 등)를 한 배지로 묶어 운동 이름 윗줄에 표시
+    // 왼쪽 -9px(테두리 1 + 안쪽 여백 8): 배지 글자를 운동 이름 글자와 같은 열에 맞춤
+    const badgeText = [ex.bodyPart, ex.tag].filter(Boolean).join(' · ');
+    const bpBadge = badgeText ? `<div><span class="body-part-tag" style="margin:0 0 6px -9px">${badgeText}</span></div>` : '';
     // 🆕 displayName 사용
-    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info">${bpBadge}${tagBadge}<div class="ex-name" id="exname-${idx}" style="display:inline-block;vertical-align:middle">${ex.displayName || ex.name}</div></div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
+    card.innerHTML = `<div class="card-top"><div class="card-top-row"><div class="card-info">${bpBadge}<div class="ex-name" id="exname-${idx}">${ex.displayName || ex.name}</div></div></div>${rightBtns}<div style="margin-top:4px">${metaHTML}</div></div>${editFieldsHTML}${bodyHTML}${normalDoneBtn}`;
     container.appendChild(card);
   });
   updateSlideBtn();
