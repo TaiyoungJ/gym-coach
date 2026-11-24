@@ -56,6 +56,7 @@
   #app.page-landing #start-btn-area     { grid-area: start; }
 
   #app.page-landing .landing-date-big { font-size: 34px; }
+  #app.page-landing .judge-off-badge  { font-size: 13px; padding: 7px 14px; }
   #app.page-landing .routine-nav-btn  { font-size: 15px; padding: 12px 20px; flex: 1; }
   #app.page-landing .today-card       { min-height: 200px; }
 

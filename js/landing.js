@@ -13,6 +13,7 @@ function renderLanding() {
     </div>
     <div class="landing-date-block" style="margin-bottom: 24px;">
       <div class="landing-date-big">${y}년 ${m}월 ${d}일</div>
+      ${renderJudgeOffBadge()}
     </div>
     <div class="landing-quick-nav" style="margin-bottom: 10px; display:flex; gap:8px;">
       <button class="routine-nav-btn" onclick="renderRoutineDoc()">📄 운동 루틴</button>
@@ -46,6 +47,14 @@ function renderLanding() {
       <button class="landing-ghost-btn" onclick="startFreeWorkout()">🏃 자유 운동하기</button>
     </div>`;
   renderBodyCard();
+}
+
+// 진행 판정이 꺼져 있을 때만 날짜 밑에 알려주는 뱃지 (js/progression.js)
+// 꺼지면 카드 구역 색·완료 메모의 [판정]·"오늘의 판정" 목록이 모두 조용히 사라지므로,
+// 설정은 기기별(localStorage)이라는 점까지 감안해 홈에서 상태를 알려 준다.
+function renderJudgeOffBadge() {
+  if (getSettings().progression.enabled) return '';
+  return `<button class="judge-off-badge" onclick="renderSettings()">📈 진행 판정 꺼짐</button>`;
 }
 
 // "오늘 운동 완료!" 카드 아래 종목별 판정 (js/progression.js, 그날 하루만)
